@@ -1,0 +1,250 @@
+{
+  "/Users/macintosh/IdeaProjects/batters_eye/test/app_state_test.dart": {
+    "mtime": 1778586662.3400168,
+    "hash": "8c0ebd1f10c2aa5df3b8eebf5f22a860"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/app_smoke_test.dart": {
+    "mtime": 1778586554.597231,
+    "hash": "846f8ee061456c1c53ec542bf7dd495f"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/session_engine_test.dart": {
+    "mtime": 1778583902.7568138,
+    "hash": "09d0fe1a34f91a628f373cc223c70254"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/widget_test.dart": {
+    "mtime": 1778588406.283392,
+    "hash": "55f0a7219eea887840be753234c2cafe"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/pitch_motion_test.dart": {
+    "mtime": 1778592295.555241,
+    "hash": "dc5c18eb3360070fd5e113ce80c6c1f6"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/placement_screen_test.dart": {
+    "mtime": 1778589757.2794137,
+    "hash": "fbccd13a1cb3dfd2e704682790b383f1"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/training_screen_test.dart": {
+    "mtime": 1778592667.222792,
+    "hash": "160f6ecb0502d2951d25ccec4785a789"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/test/placement_test.dart": {
+    "mtime": 1778586662.3424108,
+    "hash": "a9d6059addc6bbd68d4e4c97c4c4f900"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/RunnerTests/RunnerTests.swift": {
+    "mtime": 1778583557.3020825,
+    "hash": "a225a382d14d7b16b6f602a5c1d49331"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Runner-Bridging-Header.h": {
+    "mtime": 1755786892.0203888,
+    "hash": "e07862ac930ed4d8479185d52c6cc66d"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/GeneratedPluginRegistrant.h": {
+    "mtime": 1778583558.1988463,
+    "hash": "decb9041b5e91a07e66f4664e5dac408"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/AppDelegate.swift": {
+    "mtime": 1755786892.0187407,
+    "hash": "303ca46dbd58544be7b816861d70a27c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/GeneratedPluginRegistrant.m": {
+    "mtime": 1778585530.0903082,
+    "hash": "fcb57f0675a16b205b0a9a62ffd593b2"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Flutter/ephemeral/flutter_lldb_helper.py": {
+    "mtime": 1778583558.1635833,
+    "hash": "98fc75412162af387e2e3461e4e58094"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/gradlew": {
+    "mtime": 1778583557.3605037,
+    "hash": "7f1cd7eb3f75a1dc85cd37753972a6e2"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/build.gradle.kts": {
+    "mtime": 1778583557.3454442,
+    "hash": "f11f360aed44d4f6871b398346af14f0"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/settings.gradle.kts": {
+    "mtime": 1778583557.3431437,
+    "hash": "16e2fa36a3875eb757511a8b0857c121"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/build.gradle.kts": {
+    "mtime": 1778583557.346003,
+    "hash": "549711a885f1f84d8ad7933316db0929"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
+    "mtime": 1778585530.086982,
+    "hash": "0ac8af6f4fde2f8ff393d86a2098ec5d"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/kotlin/com/example/batters_eye/MainActivity.kt": {
+    "mtime": 1778583557.3468564,
+    "hash": "4c954be3e68672a6dc7ca65bce4f3b84"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/training_screen.dart": {
+    "mtime": 1778593849.9499664,
+    "hash": "5fafdb5e331db5d3dbcb6b276a89b650"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/placement_screen.dart": {
+    "mtime": 1778589934.0832357,
+    "hash": "251a8e926f613655fe3188ae229acd6b"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/pitch_motion.dart": {
+    "mtime": 1778592553.1751394,
+    "hash": "8b1e267aff19d93bbd3cac8eef439b60"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/profile_screen.dart": {
+    "mtime": 1778586754.0562418,
+    "hash": "f7bd7cc2df78d80563a28c898f833c89"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/pitch_scene.dart": {
+    "mtime": 1778594409.791245,
+    "hash": "36b6fbb59c4466e5ef5fa79181b2f7f3"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/main.dart": {
+    "mtime": 1778583845.4831245,
+    "hash": "e15dbdc5a4e3d2616e568c42a5b9b9c8"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/onboarding_gate.dart": {
+    "mtime": 1778586662.198178,
+    "hash": "24f90e0ab9da53cf10f1814547891e3b"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/app_state.dart": {
+    "mtime": 1778586662.0551872,
+    "hash": "742b77c07332e449f6c817757b57430c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/result_screen.dart": {
+    "mtime": 1778583902.64225,
+    "hash": "f6bf1e3c0a2d69c258707e6c5045131c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/placement.dart": {
+    "mtime": 1778586662.2149062,
+    "hash": "8eb42e9ba572fcb2848d09e3f5426e17"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/app.dart": {
+    "mtime": 1778588156.99799,
+    "hash": "bb6ccd754cc93300325ba80524891c97"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/home_screen.dart": {
+    "mtime": 1778589927.1919866,
+    "hash": "c2602f4a8fa27dfffe47cd3d9863b958"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/session.dart": {
+    "mtime": 1778586514.6078217,
+    "hash": "ab19e80271607027cc10f15388f4dc30"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/auth_screen.dart": {
+    "mtime": 1778586733.8013542,
+    "hash": "6e431075fa21bfd4e06912f34f0d6061"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/README.md": {
+    "mtime": 1778583557.349015,
+    "hash": "8b71921364dab9db469c03f100de64f5"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/pubspec.yaml": {
+    "mtime": 1778585529.8371837,
+    "hash": "1f635e7490b9fe9d98409aeca9d1ef10"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/analysis_options.yaml": {
+    "mtime": 1778583557.3509123,
+    "hash": "66d03d7647c8e438164feaf5b922d44a"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/DESIGN.md": {
+    "mtime": 1778588134.7932277,
+    "hash": "39a25b65a9b7e35baec53ae43d958159"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": {
+    "mtime": 1755786892.0200524,
+    "hash": "e175e436acacf76c814d83532d0b662c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png": {
+    "mtime": 1755787174.233317,
+    "hash": "978c1bee49d7ad5fc1a4d81099b13e18"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png": {
+    "mtime": 1755787174.2326143,
+    "hash": "978c1bee49d7ad5fc1a4d81099b13e18"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png": {
+    "mtime": 1755787174.235009,
+    "hash": "978c1bee49d7ad5fc1a4d81099b13e18"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png": {
+    "mtime": 1755787174.2511613,
+    "hash": "643842917530acf4c5159ae851b0baf2"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png": {
+    "mtime": 1755787174.2498698,
+    "hash": "be8887071dd7ec39cb754d236aa9584f"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png": {
+    "mtime": 1755787174.2380807,
+    "hash": "2247a840b6ee72b8a069208af170e5b1"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png": {
+    "mtime": 1755787174.244458,
+    "hash": "a2f8558fb1d42514111fbbb19fb67314"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png": {
+    "mtime": 1755787174.2434149,
+    "hash": "c785f8932297af4acd5f5ccb7630f01c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png": {
+    "mtime": 1755787174.248168,
+    "hash": "665cb5e3c5729da6d639d26eff47a503"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png": {
+    "mtime": 1755787174.2468526,
+    "hash": "1b3b1538136316263c7092951e923e9d"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png": {
+    "mtime": 1755787174.2415698,
+    "hash": "2247a840b6ee72b8a069208af170e5b1"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png": {
+    "mtime": 1755787174.24599,
+    "hash": "2b1452c4c1bda6177b4fbbb832df217f"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png": {
+    "mtime": 1755787174.2489665,
+    "hash": "8245359312aea1b0d2412f79a07b0ca5"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png": {
+    "mtime": 1755787174.2359178,
+    "hash": "e419d22a37bc40ba185aca1acb6d4ac6"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png": {
+    "mtime": 1755787174.2421985,
+    "hash": "5b3c0902200ce596e9848f22e1f0fe0e"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png": {
+    "mtime": 1755787174.2402823,
+    "hash": "36c0d7a7132bdde18898ffdfcfcdc4d2"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png": {
+    "mtime": 1755787174.2389674,
+    "hash": "5b3c0902200ce596e9848f22e1f0fe0e"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png": {
+    "mtime": 1755787174.2370584,
+    "hash": "043119ef4faa026ff82bd03f241e5338"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1755786892.0163858,
+    "hash": "6270344430679711b81476e29878caa7"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1755786892.0162704,
+    "hash": "13e9c72ec37fac220397aa819fa1ef2d"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1755786892.0167801,
+    "hash": "57838d52c318faff743130c3fcfae0c6"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1755786892.0166454,
+    "hash": "afe1b655b9f32da22f9a4301bb8e6ba8"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1755786892.0165143,
+    "hash": "a0a8db5985280b3679d99a820ae2db79"
+  }
+}

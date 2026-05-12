@@ -1,0 +1,5392 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "app_state_test.dart",
+      "file_type": "code",
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "id": "test_app_state_test_dart",
+      "community": 3,
+      "norm_label": "app_state_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_app_state_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "UserProfile",
+      "file_type": "code",
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_app_state_test_dart_userprofile",
+      "community": 3,
+      "norm_label": "userprofile"
+    },
+    {
+      "label": "package:batters_eye/app_state.dart",
+      "file_type": "code",
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_app_state_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/app_state.dart"
+    },
+    {
+      "label": "package:batters_eye/placement.dart",
+      "file_type": "code",
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_placement_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/placement.dart"
+    },
+    {
+      "label": "package:flutter_test/flutter_test.dart",
+      "file_type": "code",
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "id": "package_flutter_test_flutter_test_dart",
+      "community": 3,
+      "norm_label": "package:flutter_test/flutter_test.dart"
+    },
+    {
+      "label": "app_smoke_test.dart",
+      "file_type": "code",
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "id": "test_app_smoke_test_dart",
+      "community": 3,
+      "norm_label": "app_smoke_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_app_smoke_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "package:batters_eye/app.dart",
+      "file_type": "code",
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_app_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/app.dart"
+    },
+    {
+      "label": "session_engine_test.dart",
+      "file_type": "code",
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "id": "test_session_engine_test_dart",
+      "community": 3,
+      "norm_label": "session_engine_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_session_engine_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "TrainingRound",
+      "file_type": "code",
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_session_engine_test_dart_traininground",
+      "community": 3,
+      "norm_label": "traininground"
+    },
+    {
+      "label": "package:batters_eye/session.dart",
+      "file_type": "code",
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_session_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/session.dart"
+    },
+    {
+      "label": "widget_test.dart",
+      "file_type": "code",
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "id": "test_widget_test_dart",
+      "community": 3,
+      "norm_label": "widget_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_widget_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "pitch_motion_test.dart",
+      "file_type": "code",
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "id": "test_pitch_motion_test_dart",
+      "community": 3,
+      "norm_label": "pitch_motion_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_pitch_motion_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "package:batters_eye/pitch_motion.dart",
+      "file_type": "code",
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_pitch_motion_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/pitch_motion.dart"
+    },
+    {
+      "label": "package:flutter/material.dart",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "package_flutter_material_dart",
+      "community": 0,
+      "norm_label": "package:flutter/material.dart"
+    },
+    {
+      "label": "placement_screen_test.dart",
+      "file_type": "code",
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "id": "test_placement_screen_test_dart",
+      "community": 3,
+      "norm_label": "placement_screen_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_placement_screen_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "training_screen_test.dart",
+      "file_type": "code",
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "id": "test_training_screen_test_dart",
+      "community": 3,
+      "norm_label": "training_screen_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_training_screen_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "MaterialApp",
+      "file_type": "code",
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_training_screen_test_dart_materialapp",
+      "community": 3,
+      "norm_label": "materialapp"
+    },
+    {
+      "label": "package:batters_eye/training_screen.dart",
+      "file_type": "code",
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "id": "package_batters_eye_training_screen_dart",
+      "community": 3,
+      "norm_label": "package:batters_eye/training_screen.dart"
+    },
+    {
+      "label": "placement_test.dart",
+      "file_type": "code",
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "id": "test_placement_test_dart",
+      "community": 3,
+      "norm_label": "placement_test.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_test_placement_test_dart_main",
+      "community": 3,
+      "norm_label": "main"
+    },
+    {
+      "label": "RunnerTests.swift",
+      "file_type": "code",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L1",
+      "id": "ios_runnertests_runnertests_swift",
+      "community": 12,
+      "norm_label": "runnertests.swift"
+    },
+    {
+      "label": "RunnerTests",
+      "file_type": "code",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L5",
+      "id": "runnertests_runnertests_runnertests",
+      "community": 12,
+      "norm_label": "runnertests"
+    },
+    {
+      "label": "XCTestCase",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "xctestcase",
+      "community": 12,
+      "norm_label": "xctestcase"
+    },
+    {
+      "label": ".testExample()",
+      "file_type": "code",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L7",
+      "id": "runnertests_runnertests_runnertests_testexample",
+      "community": 12,
+      "norm_label": ".testexample()"
+    },
+    {
+      "label": "Runner-Bridging-Header.h",
+      "file_type": "code",
+      "source_file": "ios/Runner/Runner-Bridging-Header.h",
+      "source_location": "L1",
+      "id": "ios_runner_runner_bridging_header_h",
+      "community": 20,
+      "norm_label": "runner-bridging-header.h"
+    },
+    {
+      "label": "GeneratedPluginRegistrant.h",
+      "file_type": "code",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
+      "source_location": "L1",
+      "id": "ios_runner_generatedpluginregistrant_h",
+      "community": 21,
+      "norm_label": "generatedpluginregistrant.h"
+    },
+    {
+      "label": "AppDelegate.swift",
+      "file_type": "code",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L1",
+      "id": "ios_runner_appdelegate_swift",
+      "community": 13,
+      "norm_label": "appdelegate.swift"
+    },
+    {
+      "label": "AppDelegate",
+      "file_type": "code",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L4",
+      "id": "runner_appdelegate_appdelegate",
+      "community": 13,
+      "norm_label": "appdelegate"
+    },
+    {
+      "label": "FlutterAppDelegate",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "flutterappdelegate",
+      "community": 13,
+      "norm_label": "flutterappdelegate"
+    },
+    {
+      "label": ".application()",
+      "file_type": "code",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L6",
+      "id": "runner_appdelegate_appdelegate_application",
+      "community": 13,
+      "norm_label": ".application()"
+    },
+    {
+      "label": "GeneratedPluginRegistrant.m",
+      "file_type": "code",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
+      "source_location": "L1",
+      "id": "ios_runner_generatedpluginregistrant_m",
+      "community": 15,
+      "norm_label": "generatedpluginregistrant.m"
+    },
+    {
+      "label": "GeneratedPluginRegistrant",
+      "file_type": "code",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
+      "source_location": "L15",
+      "id": "runner_generatedpluginregistrant_generatedpluginregistrant",
+      "community": 15,
+      "norm_label": "generatedpluginregistrant"
+    },
+    {
+      "label": "-registerWithRegistry",
+      "file_type": "code",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
+      "source_location": "L17",
+      "id": "runner_generatedpluginregistrant_generatedpluginregistrant_registerwithregistry",
+      "community": 15,
+      "norm_label": "-registerwithregistry"
+    },
+    {
+      "label": "flutter_lldb_helper.py",
+      "file_type": "code",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L1",
+      "id": "ios_flutter_ephemeral_flutter_lldb_helper_py",
+      "community": 14,
+      "norm_label": "flutter_lldb_helper.py"
+    },
+    {
+      "label": "handle_new_rx_page()",
+      "file_type": "code",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L7",
+      "id": "ephemeral_flutter_lldb_helper_handle_new_rx_page",
+      "community": 14,
+      "norm_label": "handle_new_rx_page()"
+    },
+    {
+      "label": "__lldb_init_module()",
+      "file_type": "code",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L24",
+      "id": "ephemeral_flutter_lldb_helper_lldb_init_module",
+      "community": 14,
+      "norm_label": "__lldb_init_module()"
+    },
+    {
+      "label": "Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.",
+      "file_type": "rationale",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L8",
+      "id": "ephemeral_flutter_lldb_helper_rationale_8",
+      "community": 14,
+      "norm_label": "intercept notify_debugger_about_rx_pages and touch the pages."
+    },
+    {
+      "label": "build.gradle.kts",
+      "file_type": "code",
+      "source_file": "android/build.gradle.kts",
+      "source_location": "L1",
+      "id": "android_build_gradle_kts",
+      "community": 22,
+      "norm_label": "build.gradle.kts"
+    },
+    {
+      "label": "settings.gradle.kts",
+      "file_type": "code",
+      "source_file": "android/settings.gradle.kts",
+      "source_location": "L1",
+      "id": "android_settings_gradle_kts",
+      "community": 23,
+      "norm_label": "settings.gradle.kts"
+    },
+    {
+      "label": "build.gradle.kts",
+      "file_type": "code",
+      "source_file": "android/app/build.gradle.kts",
+      "source_location": "L1",
+      "id": "android_app_build_gradle_kts",
+      "community": 24,
+      "norm_label": "build.gradle.kts"
+    },
+    {
+      "label": "GeneratedPluginRegistrant.java",
+      "file_type": "code",
+      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+      "source_location": "L1",
+      "id": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_java",
+      "community": 16,
+      "norm_label": "generatedpluginregistrant.java"
+    },
+    {
+      "label": "GeneratedPluginRegistrant",
+      "file_type": "code",
+      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+      "source_location": "L14",
+      "id": "plugins_generatedpluginregistrant_generatedpluginregistrant",
+      "community": 16,
+      "norm_label": "generatedpluginregistrant"
+    },
+    {
+      "label": ".registerWith()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+      "source_location": "L17",
+      "id": "plugins_generatedpluginregistrant_generatedpluginregistrant_registerwith",
+      "community": 16,
+      "norm_label": ".registerwith()"
+    },
+    {
+      "label": "MainActivity.kt",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/com/example/batters_eye/MainActivity.kt",
+      "source_location": "L1",
+      "id": "android_app_src_main_kotlin_com_example_batters_eye_mainactivity_kt",
+      "community": 18,
+      "norm_label": "mainactivity.kt"
+    },
+    {
+      "label": "MainActivity",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/com/example/batters_eye/MainActivity.kt",
+      "source_location": "L5",
+      "id": "batters_eye_mainactivity_mainactivity",
+      "community": 18,
+      "norm_label": "mainactivity"
+    },
+    {
+      "label": "training_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "lib_training_screen_dart",
+      "community": 4,
+      "norm_label": "training_screen.dart"
+    },
+    {
+      "label": "TrainingScreen",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_trainingscreen",
+      "community": 4,
+      "norm_label": "trainingscreen"
+    },
+    {
+      "label": "_TrainingScreenState",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_trainingscreenstate",
+      "community": 4,
+      "norm_label": "_trainingscreenstate"
+    },
+    {
+      "label": "_HeaderCard",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_headercard",
+      "community": 4,
+      "norm_label": "_headercard"
+    },
+    {
+      "label": "_ChoiceButton",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_choicebutton",
+      "community": 4,
+      "norm_label": "_choicebutton"
+    },
+    {
+      "label": "_FeedbackCard",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_feedbackcard",
+      "community": 4,
+      "norm_label": "_feedbackcard"
+    },
+    {
+      "label": "_StatChip",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_statchip",
+      "community": 4,
+      "norm_label": "_statchip"
+    },
+    {
+      "label": "initState",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_initstate",
+      "community": 4,
+      "norm_label": "initstate"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_dispose",
+      "community": 4,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "_handlePitchTick",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_handlepitchtick",
+      "community": 4,
+      "norm_label": "_handlepitchtick"
+    },
+    {
+      "label": "_startPitch",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_startpitch",
+      "community": 4,
+      "norm_label": "_startpitch"
+    },
+    {
+      "label": "_chooseAnswer",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_chooseanswer",
+      "community": 4,
+      "norm_label": "_chooseanswer"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_build",
+      "community": 4,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_scaffold",
+      "community": 4,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_sizedbox",
+      "community": 4,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "PitchScene",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_pitchscene",
+      "community": 4,
+      "norm_label": "pitchscene"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_container",
+      "community": 4,
+      "norm_label": "container"
+    },
+    {
+      "label": "Expanded",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_expanded",
+      "community": 4,
+      "norm_label": "expanded"
+    },
+    {
+      "label": "_accentForMode",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_accentformode",
+      "community": 4,
+      "norm_label": "_accentformode"
+    },
+    {
+      "label": "_iconForMode",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_iconformode",
+      "community": 4,
+      "norm_label": "_iconformode"
+    },
+    {
+      "label": "dart:async",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "dart_async",
+      "community": 4,
+      "norm_label": "dart:async"
+    },
+    {
+      "label": "pitch_scene.dart",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "pitch_scene_dart",
+      "community": 4,
+      "norm_label": "pitch_scene.dart"
+    },
+    {
+      "label": "result_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "id": "result_screen_dart",
+      "community": 4,
+      "norm_label": "result_screen.dart"
+    },
+    {
+      "label": "session.dart",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "session_dart",
+      "community": 9,
+      "norm_label": "session.dart"
+    },
+    {
+      "label": "placement_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "lib_placement_screen_dart",
+      "community": 5,
+      "norm_label": "placement_screen.dart"
+    },
+    {
+      "label": "PlacementScreen",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementscreen",
+      "community": 5,
+      "norm_label": "placementscreen"
+    },
+    {
+      "label": "_PlacementScreenState",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementscreenstate",
+      "community": 5,
+      "norm_label": "_placementscreenstate"
+    },
+    {
+      "label": "_WarmupCard",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_warmupcard",
+      "community": 5,
+      "norm_label": "_warmupcard"
+    },
+    {
+      "label": "_PlacementZoneBoard",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementzoneboard",
+      "community": 5,
+      "norm_label": "_placementzoneboard"
+    },
+    {
+      "label": "_StatPill",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_statpill",
+      "community": 5,
+      "norm_label": "_statpill"
+    },
+    {
+      "label": "_QuestionCard",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_questioncard",
+      "community": 5,
+      "norm_label": "_questioncard"
+    },
+    {
+      "label": "_ResultCard",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_resultcard",
+      "community": 5,
+      "norm_label": "_resultcard"
+    },
+    {
+      "label": "_ResultPill",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_resultpill",
+      "community": 5,
+      "norm_label": "_resultpill"
+    },
+    {
+      "label": "_PlacementHintCard",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementhintcard",
+      "community": 5,
+      "norm_label": "_placementhintcard"
+    },
+    {
+      "label": "_startPitch",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_startpitch",
+      "community": 5,
+      "norm_label": "_startpitch"
+    },
+    {
+      "label": "_selectChoice",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_selectchoice",
+      "community": 5,
+      "norm_label": "_selectchoice"
+    },
+    {
+      "label": "_next",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_next",
+      "community": 5,
+      "norm_label": "_next"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_dispose",
+      "community": 5,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_build",
+      "community": 5,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_scaffold",
+      "community": 5,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_sizedbox",
+      "community": 5,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_container",
+      "community": 5,
+      "norm_label": "container"
+    },
+    {
+      "label": "AspectRatio",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_aspectratio",
+      "community": 5,
+      "norm_label": "aspectratio"
+    },
+    {
+      "label": "Expanded",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_expanded",
+      "community": 5,
+      "norm_label": "expanded"
+    },
+    {
+      "label": "_accentForMode",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_accentformode",
+      "community": 5,
+      "norm_label": "_accentformode"
+    },
+    {
+      "label": "Padding",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_padding",
+      "community": 5,
+      "norm_label": "padding"
+    },
+    {
+      "label": "Icon",
+      "file_type": "code",
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_icon",
+      "community": 5,
+      "norm_label": "icon"
+    },
+    {
+      "label": "onboarding_gate.dart",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "onboarding_gate_dart",
+      "community": 0,
+      "norm_label": "onboarding_gate.dart"
+    },
+    {
+      "label": "placement.dart",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "placement_dart",
+      "community": 6,
+      "norm_label": "placement.dart"
+    },
+    {
+      "label": "pitch_motion.dart",
+      "file_type": "code",
+      "source_file": "lib/pitch_motion.dart",
+      "source_location": null,
+      "id": "lib_pitch_motion_dart",
+      "community": 25,
+      "norm_label": "pitch_motion.dart"
+    },
+    {
+      "label": "profile_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "lib_profile_screen_dart",
+      "community": 0,
+      "norm_label": "profile_screen.dart"
+    },
+    {
+      "label": "ProfileScreen",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilescreen",
+      "community": 0,
+      "norm_label": "profilescreen"
+    },
+    {
+      "label": "_ProfileScreenState",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilescreenstate",
+      "community": 0,
+      "norm_label": "_profilescreenstate"
+    },
+    {
+      "label": "_DropdownField",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_dropdownfield",
+      "community": 0,
+      "norm_label": "_dropdownfield"
+    },
+    {
+      "label": "_ProfileHintCard",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilehintcard",
+      "community": 0,
+      "norm_label": "_profilehintcard"
+    },
+    {
+      "label": "didChangeDependencies",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_didchangedependencies",
+      "community": 0,
+      "norm_label": "didchangedependencies"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_dispose",
+      "community": 0,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_build",
+      "community": 0,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_scaffold",
+      "community": 0,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_sizedbox",
+      "community": 0,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_container",
+      "community": 0,
+      "norm_label": "container"
+    },
+    {
+      "label": "app_state.dart",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "app_state_dart",
+      "community": 0,
+      "norm_label": "app_state.dart"
+    },
+    {
+      "label": "pitch_scene.dart",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "lib_pitch_scene_dart",
+      "community": 1,
+      "norm_label": "pitch_scene.dart"
+    },
+    {
+      "label": "PitchMotionSpec",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchmotionspec",
+      "community": 1,
+      "norm_label": "pitchmotionspec"
+    },
+    {
+      "label": "PitchScene",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchscene",
+      "community": 1,
+      "norm_label": "pitchscene"
+    },
+    {
+      "label": "_PitchBall",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchball",
+      "community": 1,
+      "norm_label": "_pitchball"
+    },
+    {
+      "label": "_BallSeamPainter",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_ballseampainter",
+      "community": 1,
+      "norm_label": "_ballseampainter"
+    },
+    {
+      "label": "_PitchFieldPainter",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchfieldpainter",
+      "community": 1,
+      "norm_label": "_pitchfieldpainter"
+    },
+    {
+      "label": "_SceneStatPill",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_scenestatpill",
+      "community": 1,
+      "norm_label": "_scenestatpill"
+    },
+    {
+      "label": "samplePoint",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_samplepoint",
+      "community": 1,
+      "norm_label": "samplepoint"
+    },
+    {
+      "label": "_cubicBezier",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_cubicbezier",
+      "community": 1,
+      "norm_label": "_cubicbezier"
+    },
+    {
+      "label": "ballRadius",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_ballradius",
+      "community": 1,
+      "norm_label": "ballradius"
+    },
+    {
+      "label": "lerpDouble",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_lerpdouble",
+      "community": 1,
+      "norm_label": "lerpdouble"
+    },
+    {
+      "label": "trailOpacity",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_trailopacity",
+      "community": 1,
+      "norm_label": "trailopacity"
+    },
+    {
+      "label": "pitchMotionForRound",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchmotionforround",
+      "community": 1,
+      "norm_label": "pitchmotionforround"
+    },
+    {
+      "label": "wobble",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_wobble",
+      "community": 1,
+      "norm_label": "wobble"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_build",
+      "community": 1,
+      "norm_label": "build"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_container",
+      "community": 1,
+      "norm_label": "container"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_sizedbox",
+      "community": 1,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Stack",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_stack",
+      "community": 1,
+      "norm_label": "stack"
+    },
+    {
+      "label": "paint",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_paint",
+      "community": 1,
+      "norm_label": "paint"
+    },
+    {
+      "label": "shouldRepaint",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_shouldrepaint",
+      "community": 1,
+      "norm_label": "shouldrepaint"
+    },
+    {
+      "label": "Color",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_color",
+      "community": 1,
+      "norm_label": "color"
+    },
+    {
+      "label": "_drawPerspectiveLanes",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawperspectivelanes",
+      "community": 1,
+      "norm_label": "_drawperspectivelanes"
+    },
+    {
+      "label": "_drawZone",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawzone",
+      "community": 1,
+      "norm_label": "_drawzone"
+    },
+    {
+      "label": "_drawMound",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawmound",
+      "community": 1,
+      "norm_label": "_drawmound"
+    },
+    {
+      "label": "_drawPlate",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawplate",
+      "community": 1,
+      "norm_label": "_drawplate"
+    },
+    {
+      "label": "_drawTrail",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawtrail",
+      "community": 1,
+      "norm_label": "_drawtrail"
+    },
+    {
+      "label": "_drawTargetGlow",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawtargetglow",
+      "community": 1,
+      "norm_label": "_drawtargetglow"
+    },
+    {
+      "label": "_drawReleaseHint",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawreleasehint",
+      "community": 1,
+      "norm_label": "_drawreleasehint"
+    },
+    {
+      "label": "_drawOutcomeAccent",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawoutcomeaccent",
+      "community": 1,
+      "norm_label": "_drawoutcomeaccent"
+    },
+    {
+      "label": "_accentForMode",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_accentformode",
+      "community": 1,
+      "norm_label": "_accentformode"
+    },
+    {
+      "label": "_iconForMode",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_iconformode",
+      "community": 1,
+      "norm_label": "_iconformode"
+    },
+    {
+      "label": "_scale",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_scale",
+      "community": 1,
+      "norm_label": "_scale"
+    },
+    {
+      "label": "Offset",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_offset",
+      "community": 1,
+      "norm_label": "offset"
+    },
+    {
+      "label": "_clamped",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_clamped",
+      "community": 1,
+      "norm_label": "_clamped"
+    },
+    {
+      "label": "dart:math",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "dart_math",
+      "community": 11,
+      "norm_label": "dart:math"
+    },
+    {
+      "label": "dart:ui",
+      "file_type": "code",
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "id": "dart_ui",
+      "community": 1,
+      "norm_label": "dart:ui"
+    },
+    {
+      "label": "main.dart",
+      "file_type": "code",
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "id": "lib_main_dart",
+      "community": 0,
+      "norm_label": "main.dart"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_main_dart_main",
+      "community": 0,
+      "norm_label": "main"
+    },
+    {
+      "label": "app.dart",
+      "file_type": "code",
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "id": "app_dart",
+      "community": 0,
+      "norm_label": "app.dart"
+    },
+    {
+      "label": "onboarding_gate.dart",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "lib_onboarding_gate_dart",
+      "community": 8,
+      "norm_label": "onboarding_gate.dart"
+    },
+    {
+      "label": "BattersEyeScope",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_batterseyescope",
+      "community": 8,
+      "norm_label": "batterseyescope"
+    },
+    {
+      "label": "OnboardingGate",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_onboardinggate",
+      "community": 8,
+      "norm_label": "onboardinggate"
+    },
+    {
+      "label": "_LoadingScreen",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_loadingscreen",
+      "community": 8,
+      "norm_label": "_loadingscreen"
+    },
+    {
+      "label": "of",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_of",
+      "community": 8,
+      "norm_label": "of"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_build",
+      "community": 8,
+      "norm_label": "build"
+    },
+    {
+      "label": "AnimatedSwitcher",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_animatedswitcher",
+      "community": 8,
+      "norm_label": "animatedswitcher"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_scaffold",
+      "community": 8,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "auth_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "auth_screen_dart",
+      "community": 8,
+      "norm_label": "auth_screen.dart"
+    },
+    {
+      "label": "home_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "home_screen_dart",
+      "community": 8,
+      "norm_label": "home_screen.dart"
+    },
+    {
+      "label": "placement_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "placement_screen_dart",
+      "community": 8,
+      "norm_label": "placement_screen.dart"
+    },
+    {
+      "label": "profile_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "id": "profile_screen_dart",
+      "community": 8,
+      "norm_label": "profile_screen.dart"
+    },
+    {
+      "label": "app_state.dart",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "lib_app_state_dart",
+      "community": 6,
+      "norm_label": "app_state.dart"
+    },
+    {
+      "label": "UserProfile",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_userprofile",
+      "community": 6,
+      "norm_label": "userprofile"
+    },
+    {
+      "label": "TrainingReport",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_trainingreport",
+      "community": 6,
+      "norm_label": "trainingreport"
+    },
+    {
+      "label": "LocalAccount",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_localaccount",
+      "community": 6,
+      "norm_label": "localaccount"
+    },
+    {
+      "label": "BattersEyeStore",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_batterseyestore",
+      "community": 6,
+      "norm_label": "batterseyestore"
+    },
+    {
+      "label": "copyWith",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_copywith",
+      "community": 6,
+      "norm_label": "copywith"
+    },
+    {
+      "label": "_persistAndNotify",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_persistandnotify",
+      "community": 6,
+      "norm_label": "_persistandnotify"
+    },
+    {
+      "label": "exportJson",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_exportjson",
+      "community": 6,
+      "norm_label": "exportjson"
+    },
+    {
+      "label": "jsonEncode",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_jsonencode",
+      "community": 6,
+      "norm_label": "jsonencode"
+    },
+    {
+      "label": "restoreForTest",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_restorefortest",
+      "community": 6,
+      "norm_label": "restorefortest"
+    },
+    {
+      "label": "hashPassword",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_hashpassword",
+      "community": 6,
+      "norm_label": "hashpassword"
+    },
+    {
+      "label": "_restoreFromJson",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_restorefromjson",
+      "community": 6,
+      "norm_label": "_restorefromjson"
+    },
+    {
+      "label": "_normalizeEmail",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_normalizeemail",
+      "community": 6,
+      "norm_label": "_normalizeemail"
+    },
+    {
+      "label": "_trainingModeFromName",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_trainingmodefromname",
+      "community": 6,
+      "norm_label": "_trainingmodefromname"
+    },
+    {
+      "label": "_readInt",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_readint",
+      "community": 6,
+      "norm_label": "_readint"
+    },
+    {
+      "label": "dart:convert",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "dart_convert",
+      "community": 6,
+      "norm_label": "dart:convert"
+    },
+    {
+      "label": "package:crypto/crypto.dart",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "package_crypto_crypto_dart",
+      "community": 6,
+      "norm_label": "package:crypto/crypto.dart"
+    },
+    {
+      "label": "package:flutter/foundation.dart",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "package_flutter_foundation_dart",
+      "community": 6,
+      "norm_label": "package:flutter/foundation.dart"
+    },
+    {
+      "label": "package:shared_preferences/shared_preferences.dart",
+      "file_type": "code",
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "id": "package_shared_preferences_shared_preferences_dart",
+      "community": 6,
+      "norm_label": "package:shared_preferences/shared_preferences.dart"
+    },
+    {
+      "label": "result_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "lib_result_screen_dart",
+      "community": 7,
+      "norm_label": "result_screen.dart"
+    },
+    {
+      "label": "ResultScreen",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_resultscreen",
+      "community": 7,
+      "norm_label": "resultscreen"
+    },
+    {
+      "label": "_ResultHero",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_resulthero",
+      "community": 7,
+      "norm_label": "_resulthero"
+    },
+    {
+      "label": "_HeroStat",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_herostat",
+      "community": 7,
+      "norm_label": "_herostat"
+    },
+    {
+      "label": "_MetricCard",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_metriccard",
+      "community": 7,
+      "norm_label": "_metriccard"
+    },
+    {
+      "label": "_CoachCard",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_coachcard",
+      "community": 7,
+      "norm_label": "_coachcard"
+    },
+    {
+      "label": "_NextStepsCard",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_nextstepscard",
+      "community": 7,
+      "norm_label": "_nextstepscard"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_build",
+      "community": 7,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_scaffold",
+      "community": 7,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_sizedbox",
+      "community": 7,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_container",
+      "community": 7,
+      "norm_label": "container"
+    },
+    {
+      "label": "Expanded",
+      "file_type": "code",
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_expanded",
+      "community": 7,
+      "norm_label": "expanded"
+    },
+    {
+      "label": "placement.dart",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "lib_placement_dart",
+      "community": 9,
+      "norm_label": "placement.dart"
+    },
+    {
+      "label": "PlacementQuestion",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementquestion",
+      "community": 9,
+      "norm_label": "placementquestion"
+    },
+    {
+      "label": "PlacementResult",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementresult",
+      "community": 9,
+      "norm_label": "placementresult"
+    },
+    {
+      "label": "PlacementEngine",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementengine",
+      "community": 9,
+      "norm_label": "placementengine"
+    },
+    {
+      "label": "evaluate",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_evaluate",
+      "community": 9,
+      "norm_label": "evaluate"
+    },
+    {
+      "label": "recommendLevel",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_recommendlevel",
+      "community": 9,
+      "norm_label": "recommendlevel"
+    },
+    {
+      "label": "_recommendMode",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_recommendmode",
+      "community": 9,
+      "norm_label": "_recommendmode"
+    },
+    {
+      "label": "_readInt",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_readint",
+      "community": 9,
+      "norm_label": "_readint"
+    },
+    {
+      "label": "_placementLevelFromName",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementlevelfromname",
+      "community": 9,
+      "norm_label": "_placementlevelfromname"
+    },
+    {
+      "label": "_trainingModeFromName",
+      "file_type": "code",
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_trainingmodefromname",
+      "community": 9,
+      "norm_label": "_trainingmodefromname"
+    },
+    {
+      "label": "app.dart",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "lib_app_dart",
+      "community": 0,
+      "norm_label": "app.dart"
+    },
+    {
+      "label": "BattersEyeApp",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyeapp",
+      "community": 0,
+      "norm_label": "batterseyeapp"
+    },
+    {
+      "label": "_BattersEyeAppState",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyeappstate",
+      "community": 0,
+      "norm_label": "_batterseyeappstate"
+    },
+    {
+      "label": "_LoadingScreen",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_loadingscreen",
+      "community": 0,
+      "norm_label": "_loadingscreen"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_build",
+      "community": 0,
+      "norm_label": "build"
+    },
+    {
+      "label": "MaterialApp",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_materialapp",
+      "community": 0,
+      "norm_label": "materialapp"
+    },
+    {
+      "label": "BattersEyeScope",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyescope",
+      "community": 0,
+      "norm_label": "batterseyescope"
+    },
+    {
+      "label": "_buildTheme",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_buildtheme",
+      "community": 0,
+      "norm_label": "_buildtheme"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_scaffold",
+      "community": 0,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "home_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "lib_home_screen_dart",
+      "community": 2,
+      "norm_label": "home_screen.dart"
+    },
+    {
+      "label": "HomeScreen",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_homescreen",
+      "community": 2,
+      "norm_label": "homescreen"
+    },
+    {
+      "label": "_HomeScreenState",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_homescreenstate",
+      "community": 2,
+      "norm_label": "_homescreenstate"
+    },
+    {
+      "label": "_SessionsBadge",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sessionsbadge",
+      "community": 2,
+      "norm_label": "_sessionsbadge"
+    },
+    {
+      "label": "_HeroCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_herocard",
+      "community": 2,
+      "norm_label": "_herocard"
+    },
+    {
+      "label": "_PitchLabPreviewCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_pitchlabpreviewcard",
+      "community": 2,
+      "norm_label": "_pitchlabpreviewcard"
+    },
+    {
+      "label": "_StrikeZoneBoard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_strikezoneboard",
+      "community": 2,
+      "norm_label": "_strikezoneboard"
+    },
+    {
+      "label": "_MetricTile",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_metrictile",
+      "community": 2,
+      "norm_label": "_metrictile"
+    },
+    {
+      "label": "_ProfileCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_profilecard",
+      "community": 2,
+      "norm_label": "_profilecard"
+    },
+    {
+      "label": "_ModeCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_modecard",
+      "community": 2,
+      "norm_label": "_modecard"
+    },
+    {
+      "label": "_ReportCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_reportcard",
+      "community": 2,
+      "norm_label": "_reportcard"
+    },
+    {
+      "label": "_SectionHeader",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sectionheader",
+      "community": 2,
+      "norm_label": "_sectionheader"
+    },
+    {
+      "label": "_StatPill",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_statpill",
+      "community": 2,
+      "norm_label": "_statpill"
+    },
+    {
+      "label": "_EmptyStateCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_emptystatecard",
+      "community": 2,
+      "norm_label": "_emptystatecard"
+    },
+    {
+      "label": "_HowItWorksCard",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_howitworkscard",
+      "community": 2,
+      "norm_label": "_howitworkscard"
+    },
+    {
+      "label": "_StepRow",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_steprow",
+      "community": 2,
+      "norm_label": "_steprow"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_build",
+      "community": 2,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_scaffold",
+      "community": 2,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sizedbox",
+      "community": 2,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_container",
+      "community": 2,
+      "norm_label": "container"
+    },
+    {
+      "label": "AspectRatio",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_aspectratio",
+      "community": 2,
+      "norm_label": "aspectratio"
+    },
+    {
+      "label": "Expanded",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_expanded",
+      "community": 2,
+      "norm_label": "expanded"
+    },
+    {
+      "label": "Material",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_material",
+      "community": 2,
+      "norm_label": "material"
+    },
+    {
+      "label": "Icon",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_icon",
+      "community": 2,
+      "norm_label": "icon"
+    },
+    {
+      "label": "Column",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_column",
+      "community": 2,
+      "norm_label": "column"
+    },
+    {
+      "label": "Row",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_row",
+      "community": 2,
+      "norm_label": "row"
+    },
+    {
+      "label": "_accentForMode",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_accentformode",
+      "community": 2,
+      "norm_label": "_accentformode"
+    },
+    {
+      "label": "_iconForMode",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_iconformode",
+      "community": 2,
+      "norm_label": "_iconformode"
+    },
+    {
+      "label": "training_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "id": "training_screen_dart",
+      "community": 2,
+      "norm_label": "training_screen.dart"
+    },
+    {
+      "label": "session.dart",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "lib_session_dart",
+      "community": 11,
+      "norm_label": "session.dart"
+    },
+    {
+      "label": "TrainingRound",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_traininground",
+      "community": 11,
+      "norm_label": "traininground"
+    },
+    {
+      "label": "RoundAttempt",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_roundattempt",
+      "community": 11,
+      "norm_label": "roundattempt"
+    },
+    {
+      "label": "TrainingSummary",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_trainingsummary",
+      "community": 11,
+      "norm_label": "trainingsummary"
+    },
+    {
+      "label": "TrainingEngine",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_trainingengine",
+      "community": 11,
+      "norm_label": "trainingengine"
+    },
+    {
+      "label": "_DeckItem",
+      "file_type": "code",
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_deckitem",
+      "community": 11,
+      "norm_label": "_deckitem"
+    },
+    {
+      "label": "auth_screen.dart",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "lib_auth_screen_dart",
+      "community": 0,
+      "norm_label": "auth_screen.dart"
+    },
+    {
+      "label": "AuthScreen",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authscreen",
+      "community": 0,
+      "norm_label": "authscreen"
+    },
+    {
+      "label": "_AuthScreenState",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authscreenstate",
+      "community": 0,
+      "norm_label": "_authscreenstate"
+    },
+    {
+      "label": "_AuthHintCard",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authhintcard",
+      "community": 0,
+      "norm_label": "_authhintcard"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_dispose",
+      "community": 0,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_build",
+      "community": 0,
+      "norm_label": "build"
+    },
+    {
+      "label": "Scaffold",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_scaffold",
+      "community": 0,
+      "norm_label": "scaffold"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_sizedbox",
+      "community": 0,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Container",
+      "file_type": "code",
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_container",
+      "community": 0,
+      "norm_label": "container"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "readme_md",
+      "community": 17,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "batters_eye",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "batters_eye_readme_batters_eye",
+      "community": 17,
+      "norm_label": "batters_eye"
+    },
+    {
+      "label": "Getting Started",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L5",
+      "id": "batters_eye_readme_getting_started",
+      "community": 17,
+      "norm_label": "getting started"
+    },
+    {
+      "label": "DESIGN.md",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L1",
+      "id": "design_md",
+      "community": 10,
+      "norm_label": "design.md"
+    },
+    {
+      "label": "Overview",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L85",
+      "id": "batters_eye_design_overview",
+      "community": 10,
+      "norm_label": "overview"
+    },
+    {
+      "label": "Colors",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L90",
+      "id": "batters_eye_design_colors",
+      "community": 10,
+      "norm_label": "colors"
+    },
+    {
+      "label": "Typography",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L99",
+      "id": "batters_eye_design_typography",
+      "community": 10,
+      "norm_label": "typography"
+    },
+    {
+      "label": "Layout & Spacing",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L103",
+      "id": "batters_eye_design_layout_spacing",
+      "community": 10,
+      "norm_label": "layout & spacing"
+    },
+    {
+      "label": "Elevation & Depth",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L107",
+      "id": "batters_eye_design_elevation_depth",
+      "community": 10,
+      "norm_label": "elevation & depth"
+    },
+    {
+      "label": "Shapes",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L111",
+      "id": "batters_eye_design_shapes",
+      "community": 10,
+      "norm_label": "shapes"
+    },
+    {
+      "label": "Components",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L115",
+      "id": "batters_eye_design_components",
+      "community": 10,
+      "norm_label": "components"
+    },
+    {
+      "label": "Do\u2019s and Don\u2019ts",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L122",
+      "id": "batters_eye_design_do_s_and_don_ts",
+      "community": 10,
+      "norm_label": "do\u2019s and don\u2019ts"
+    },
+    {
+      "label": "Do",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L124",
+      "id": "batters_eye_design_do",
+      "community": 10,
+      "norm_label": "do"
+    },
+    {
+      "label": "Don\u2019t",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "L129",
+      "id": "batters_eye_design_don_t",
+      "community": 10,
+      "norm_label": "don\u2019t"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "source_location": "L1",
+      "id": "ios_runner_assets_xcassets_launchimage_imageset_readme_md",
+      "community": 19,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "Launch Screen Assets",
+      "file_type": "document",
+      "source_file": "ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "source_location": "L1",
+      "id": "launchimage_imageset_readme_launch_screen_assets",
+      "community": 19,
+      "norm_label": "launch screen assets"
+    },
+    {
+      "label": "_ResultPreview",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "community": 4,
+      "norm_label": "_resultpreview",
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_resultpreview"
+    },
+    {
+      "label": "_prepareRound",
+      "file_type": "code",
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "community": 4,
+      "norm_label": "_prepareround",
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_prepareround"
+    },
+    {
+      "label": "Spacer",
+      "file_type": "code",
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "community": 2,
+      "norm_label": "spacer",
+      "id": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_spacer"
+    }
+  ],
+  "links": [
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_state_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_app_state_test_dart_main"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_state_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_app_state_test_dart_userprofile"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_state_test_dart",
+      "target": "package_batters_eye_app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_state_test_dart",
+      "target": "package_batters_eye_placement_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_state_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_state_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_smoke_test_dart",
+      "target": "package_batters_eye_app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "package_batters_eye_app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_screen_test_dart",
+      "target": "package_batters_eye_app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "package_batters_eye_placement_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_test_dart",
+      "target": "package_batters_eye_placement_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_smoke_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_session_engine_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_pitch_motion_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_screen_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_test_dart",
+      "target": "package_flutter_test_flutter_test_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_smoke_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_app_smoke_test_dart_main"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/app_smoke_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_app_smoke_test_dart",
+      "target": "package_batters_eye_app_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "package_batters_eye_app_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_screen_test_dart",
+      "target": "package_batters_eye_app_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_session_engine_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_session_engine_test_dart_main"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_session_engine_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_session_engine_test_dart_traininground"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/session_engine_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_session_engine_test_dart",
+      "target": "package_batters_eye_session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "package_batters_eye_session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_pitch_motion_test_dart",
+      "target": "package_batters_eye_session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "package_batters_eye_session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_test_dart",
+      "target": "package_batters_eye_session_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/widget_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_widget_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_widget_test_dart_main"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_pitch_motion_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_pitch_motion_test_dart_main"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_pitch_motion_test_dart",
+      "target": "package_batters_eye_pitch_motion_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/pitch_motion_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_pitch_motion_test_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_main_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_screen_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_placement_screen_test_dart_main"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_training_screen_test_dart_main"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_training_screen_test_dart_materialapp"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/training_screen_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_training_screen_test_dart",
+      "target": "package_batters_eye_training_screen_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/placement_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_placement_test_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_test_placement_test_dart_main"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_runnertests_runnertests_swift",
+      "target": "runnertests_runnertests_runnertests"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "runnertests_runnertests_runnertests",
+      "target": "xctestcase"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/RunnerTests/RunnerTests.swift",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "runnertests_runnertests_runnertests",
+      "target": "runnertests_runnertests_runnertests_testexample"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_runner_appdelegate_swift",
+      "target": "runner_appdelegate_appdelegate"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "runner_appdelegate_appdelegate",
+      "target": "flutterappdelegate"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/AppDelegate.swift",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "runner_appdelegate_appdelegate",
+      "target": "runner_appdelegate_appdelegate_application"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_runner_generatedpluginregistrant_m",
+      "target": "runner_generatedpluginregistrant_generatedpluginregistrant"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "runner_generatedpluginregistrant_generatedpluginregistrant",
+      "target": "runner_generatedpluginregistrant_generatedpluginregistrant_registerwithregistry"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_flutter_ephemeral_flutter_lldb_helper_py",
+      "target": "ephemeral_flutter_lldb_helper_handle_new_rx_page"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_flutter_ephemeral_flutter_lldb_helper_py",
+      "target": "ephemeral_flutter_lldb_helper_lldb_init_module"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ephemeral_flutter_lldb_helper_rationale_8",
+      "target": "ephemeral_flutter_lldb_helper_handle_new_rx_page"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_java",
+      "target": "plugins_generatedpluginregistrant_generatedpluginregistrant"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "plugins_generatedpluginregistrant_generatedpluginregistrant",
+      "target": "plugins_generatedpluginregistrant_generatedpluginregistrant_registerwith"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/com/example/batters_eye/MainActivity.kt",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_com_example_batters_eye_mainactivity_kt",
+      "target": "batters_eye_mainactivity_mainactivity"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_trainingscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_trainingscreenstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_headercard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_choicebutton"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_feedbackcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_statchip"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_initstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_handlepitchtick"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_startpitch"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_chooseanswer"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_pitchscene"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_container"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_expanded"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_accentformode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_iconformode"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "dart_async"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "pitch_scene_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "result_screen_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_resultpreview"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/training_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_training_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_training_screen_dart_prepareround"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "dart_async"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "session_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementscreenstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_warmupcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementzoneboard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_statpill"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_questioncard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_resultcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_resultpill"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_placementhintcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_startpitch"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_selectchoice"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_next"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_container"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_aspectratio"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_expanded"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_accentformode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_padding"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_screen_dart_icon"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "onboarding_gate_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_screen_dart",
+      "target": "placement_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "onboarding_gate_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "onboarding_gate_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "onboarding_gate_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "onboarding_gate_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "placement_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "placement_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilescreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilescreenstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_dropdownfield"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_profilehintcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_didchangedependencies"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_profile_screen_dart_container"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/profile_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_profile_screen_dart",
+      "target": "app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "app_state_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "app_state_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchmotionspec"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchscene"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchball"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_ballseampainter"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchfieldpainter"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_scenestatpill"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_samplepoint"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_cubicbezier"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_ballradius"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_lerpdouble"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_trailopacity"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_pitchmotionforround"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_wobble"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_container"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_stack"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_paint"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_shouldrepaint"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_color"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawperspectivelanes"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawzone"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawmound"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawplate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawtrail"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawtargetglow"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawreleasehint"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_drawoutcomeaccent"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_accentformode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_iconformode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_scale"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_offset"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_pitch_scene_dart_clamped"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "dart_math"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/pitch_scene.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_pitch_scene_dart",
+      "target": "dart_ui"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "dart_math"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_main_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_main_dart_main"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_main_dart",
+      "target": "app_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_batterseyescope"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_onboardinggate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_loadingscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_of"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_animatedswitcher"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_onboarding_gate_dart_scaffold"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "auth_screen_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "home_screen_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "placement_screen_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/onboarding_gate.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_onboarding_gate_dart",
+      "target": "profile_screen_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_userprofile"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_trainingreport"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_localaccount"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_batterseyestore"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_copywith"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_persistandnotify"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_exportjson"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_jsonencode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_restorefortest"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_hashpassword"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_restorefromjson"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_normalizeemail"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_trainingmodefromname"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_state_dart_readint"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "dart_convert"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "package_crypto_crypto_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app_state.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_state_dart",
+      "target": "package_shared_preferences_shared_preferences_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_resultscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_resulthero"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_herostat"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_metriccard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_coachcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_nextstepscard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_container"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/result_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_result_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_result_screen_dart_expanded"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementquestion"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementresult"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementengine"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_evaluate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_recommendlevel"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_recommendmode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_readint"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_placementlevelfromname"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/placement.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_placement_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_placement_dart_trainingmodefromname"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyeapp"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyeappstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_loadingscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_materialapp"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_batterseyescope"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_buildtheme"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_app_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_homescreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_homescreenstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sessionsbadge"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_herocard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_pitchlabpreviewcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_strikezoneboard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_metrictile"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_profilecard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_modecard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_reportcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sectionheader"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_statpill"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_emptystatecard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_howitworkscard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_steprow"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_container"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_aspectratio"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_expanded"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_material"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_icon"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_column"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_row"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_accentformode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_iconformode"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "training_screen_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/home_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_home_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_home_screen_dart_spacer"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_traininground"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_roundattempt"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_trainingsummary"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_trainingengine"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/session.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_session_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_session_dart_deckitem"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authscreen"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authscreenstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_authhintcard"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_scaffold"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/auth_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_auth_screen_dart",
+      "target": "users_macintosh_ideaprojects_batters_eye_lib_auth_screen_dart_container"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_md",
+      "target": "batters_eye_readme_batters_eye"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "batters_eye_readme_batters_eye",
+      "target": "batters_eye_readme_getting_started"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_overview"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_colors"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L99",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_typography"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L103",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_layout_spacing"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L107",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_elevation_depth"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L111",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_shapes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_components"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L122",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "batters_eye_design_do_s_and_don_ts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L124",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "batters_eye_design_do_s_and_don_ts",
+      "target": "batters_eye_design_do"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "DESIGN.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "batters_eye_design_do_s_and_don_ts",
+      "target": "batters_eye_design_don_t"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "ios_runner_assets_xcassets_launchimage_imageset_readme_md",
+      "target": "launchimage_imageset_readme_launch_screen_assets"
+    }
+  ],
+  "hyperedges": []
+}
