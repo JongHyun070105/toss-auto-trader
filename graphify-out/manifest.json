@@ -1,31 +1,31 @@
 {
   "/Users/macintosh/IdeaProjects/batters_eye/test/app_state_test.dart": {
-    "mtime": 1778586662.3400168,
-    "hash": "8c0ebd1f10c2aa5df3b8eebf5f22a860"
+    "mtime": 1778638722.0238278,
+    "hash": "477cf58044198770823db4ac8c810121"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/app_smoke_test.dart": {
-    "mtime": 1778586554.597231,
-    "hash": "846f8ee061456c1c53ec542bf7dd495f"
+    "mtime": 1778683165.0450737,
+    "hash": "ef05c978a884d7f3750bbd6294219b60"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/session_engine_test.dart": {
     "mtime": 1778583902.7568138,
     "hash": "09d0fe1a34f91a628f373cc223c70254"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/widget_test.dart": {
-    "mtime": 1778588406.283392,
-    "hash": "55f0a7219eea887840be753234c2cafe"
+    "mtime": 1778638722.0310905,
+    "hash": "ecfe639e856330ebc0e24d2504b47d26"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/pitch_motion_test.dart": {
     "mtime": 1778592295.555241,
     "hash": "dc5c18eb3360070fd5e113ce80c6c1f6"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/placement_screen_test.dart": {
-    "mtime": 1778589757.2794137,
-    "hash": "fbccd13a1cb3dfd2e704682790b383f1"
+    "mtime": 1778651898.3702705,
+    "hash": "9d716fab2d182aa9d46148f2dcff83ea"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/training_screen_test.dart": {
-    "mtime": 1778592667.222792,
-    "hash": "160f6ecb0502d2951d25ccec4785a789"
+    "mtime": 1778683228.8216934,
+    "hash": "483a9f243961bd0e47dbf14cb5648d59"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/test/placement_test.dart": {
     "mtime": 1778586662.3424108,
@@ -80,80 +80,156 @@
     "hash": "4c954be3e68672a6dc7ca65bce4f3b84"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/training_screen.dart": {
-    "mtime": 1778593849.9499664,
-    "hash": "5fafdb5e331db5d3dbcb6b276a89b650"
+    "mtime": 1778635551.2168798,
+    "hash": "fccb076c46cae1c4159b1196cb34ae63"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/placement_screen.dart": {
-    "mtime": 1778589934.0832357,
-    "hash": "251a8e926f613655fe3188ae229acd6b"
+    "mtime": 1778635984.1052198,
+    "hash": "da47f0c88b7e70a7337d2839e22a2ce5"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/app_copy.dart": {
+    "mtime": 1778655284.4940648,
+    "hash": "8a97f37369e23cfc6c3f2fba945265c8"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/pitch_motion.dart": {
     "mtime": 1778592553.1751394,
     "hash": "8b1e267aff19d93bbd3cac8eef439b60"
   },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/settings_screen.dart": {
+    "mtime": 1778632858.2054603,
+    "hash": "2ba8f16fba56844baa4fb682f198b1a8"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/ai_coach.dart": {
+    "mtime": 1778651906.1291628,
+    "hash": "d42f91902903a2b4c1302da3e89d7b3e"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/batters_eye_scope.dart": {
+    "mtime": 1778636220.8935206,
+    "hash": "d49bf10ac9faa4d476c568c4cd1362c7"
+  },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/profile_screen.dart": {
-    "mtime": 1778586754.0562418,
-    "hash": "f7bd7cc2df78d80563a28c898f833c89"
+    "mtime": 1778633023.3439927,
+    "hash": "53306124f0928c18b2553c1872295078"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/pitch_scene.dart": {
-    "mtime": 1778594409.791245,
-    "hash": "36b6fbb59c4466e5ef5fa79181b2f7f3"
+    "mtime": 1778682773.1881447,
+    "hash": "50cc0d76a58f998144c6813972116876"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/main.dart": {
     "mtime": 1778583845.4831245,
     "hash": "e15dbdc5a4e3d2616e568c42a5b9b9c8"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/onboarding_gate.dart": {
-    "mtime": 1778586662.198178,
-    "hash": "24f90e0ab9da53cf10f1814547891e3b"
+    "mtime": 1778638616.0606508,
+    "hash": "b3597462d58bb9687654ba1ef41b57cb"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/app_state.dart": {
-    "mtime": 1778586662.0551872,
-    "hash": "742b77c07332e449f6c817757b57430c"
+    "mtime": 1778638375.3112516,
+    "hash": "7c1b7c5fc91aba2906f716854bf99bec"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/app_theme.dart": {
+    "mtime": 1778634231.7500453,
+    "hash": "c6f9e0e05b496e17b63401f1e6860bf2"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/app_prefs.dart": {
+    "mtime": 1778596110.4884133,
+    "hash": "7e5126cecf39c8ae566d92d88b9eff73"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/result_screen.dart": {
-    "mtime": 1778583902.64225,
-    "hash": "f6bf1e3c0a2d69c258707e6c5045131c"
+    "mtime": 1778635599.4748285,
+    "hash": "475248037c0cdc43d0487096e56ccb66"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/ai_plan_screen.dart": {
+    "mtime": 1778650814.6547348,
+    "hash": "cd6813ce403f9059f1e4b5e92602f213"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/placement.dart": {
     "mtime": 1778586662.2149062,
     "hash": "8eb42e9ba572fcb2848d09e3f5426e17"
   },
+  "/Users/macintosh/IdeaProjects/batters_eye/lib/onboarding_intro_screen.dart": {
+    "mtime": 1778655390.9223247,
+    "hash": "1341beffedf9cfaf497c741e8407873a"
+  },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/app.dart": {
-    "mtime": 1778588156.99799,
-    "hash": "bb6ccd754cc93300325ba80524891c97"
+    "mtime": 1778633122.9199538,
+    "hash": "0ea837768e74aee06dc0ab8b6bb24888"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/home_screen.dart": {
-    "mtime": 1778589927.1919866,
-    "hash": "c2602f4a8fa27dfffe47cd3d9863b958"
+    "mtime": 1778638676.533387,
+    "hash": "f09f02e5a8e5c94f82d8bc1e80b57608"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/session.dart": {
     "mtime": 1778586514.6078217,
     "hash": "ab19e80271607027cc10f15388f4dc30"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/lib/auth_screen.dart": {
-    "mtime": 1778586733.8013542,
-    "hash": "6e431075fa21bfd4e06912f34f0d6061"
+    "mtime": 1778596585.1141233,
+    "hash": "d135d21ad89253db23ecff0e0b998f89"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/README.md": {
     "mtime": 1778583557.349015,
     "hash": "8b71921364dab9db469c03f100de64f5"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/pubspec.yaml": {
-    "mtime": 1778585529.8371837,
-    "hash": "1f635e7490b9fe9d98409aeca9d1ef10"
+    "mtime": 1778633088.7750728,
+    "hash": "0c9fa6693bb5db38dbb2c7be30f44f46"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/analysis_options.yaml": {
     "mtime": 1778583557.3509123,
     "hash": "66d03d7647c8e438164feaf5b922d44a"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/DESIGN.md": {
-    "mtime": 1778588134.7932277,
-    "hash": "39a25b65a9b7e35baec53ae43d958159"
+    "mtime": 1778682872.2114418,
+    "hash": "ba84fc0fd1116de55f5ae73209d69da4"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/AGENTS.md": {
+    "mtime": 1778682888.5256815,
+    "hash": "2cb7b9d11bc32c364e8022d4fe45a373"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": {
     "mtime": 1755786892.0200524,
     "hash": "e175e436acacf76c814d83532d0b662c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/README.md": {
+    "mtime": 1778650737.1726303,
+    "hash": "f31a1a719a79a428258b2f74a9bbb1be"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/plans/task-hyper-waterfall-bootstrap.md": {
+    "mtime": 1778650799.5198743,
+    "hash": "81a8ef4c09cd5eccde6a0ebd29160f3c"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/plans/task-ui-governance-and-onboarding-overhaul.md": {
+    "mtime": 1778655045.3120456,
+    "hash": "297f3b2dae823fa0c8cc9c91c121e401"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/_templates/final_report.md": {
+    "mtime": 1778650736.9687753,
+    "hash": "5ad4ff233cde1d0e7670bf9836fe3c9b"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/_templates/task_plan.md": {
+    "mtime": 1778650737.1574428,
+    "hash": "c3b2e4403e3cf383a39c47165e37eb61"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/_templates/stage_report.md": {
+    "mtime": 1778650737.1694705,
+    "hash": "4f8aed00160d936b8fbe48f947637264"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/manual/ai_workflow_inspirations.md": {
+    "mtime": 1778652003.377792,
+    "hash": "60f7fc74525040021e1423e9bf73830a"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/manual/hyper_waterfall.md": {
+    "mtime": 1778652003.6075196,
+    "hash": "12e75a1b8de77207452e2d3cde0a81c8"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/orders/20260513.md": {
+    "mtime": 1778650736.9655511,
+    "hash": "2a5521be7cb541d1799f8a0171ce1a37"
+  },
+  "/Users/macintosh/IdeaProjects/batters_eye/mydocs/reports/final-hyper-waterfall-bootstrap.md": {
+    "mtime": 1778650799.5167263,
+    "hash": "349879342fa3ccfdc1e87d51ba548ce3"
   },
   "/Users/macintosh/IdeaProjects/batters_eye/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png": {
     "mtime": 1755787174.233317,

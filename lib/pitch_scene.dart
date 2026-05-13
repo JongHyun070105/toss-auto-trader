@@ -240,6 +240,37 @@ class PitchScene extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _SceneStatPill(
+                label: copy.trainingReleaseLabel,
+                value: copy.trainingPhaseValue(promptVisible),
+              ),
+              _SceneStatPill(
+                label: copy.trainingPlateLabel,
+                value: copy.pitchLaneValue(motion.laneLabel),
+              ),
+              _SceneStatPill(
+                label: copy.trainingSpeedLabel,
+                value: '${motion.estimatedSpeedMph()} mph',
+              ),
+              _SceneStatPill(
+                label: copy.trainingWindowLabel,
+                value: '${motion.decisionWindowMs()} ms',
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${copy.trainingLaneLabel} · ${copy.pitchLaneValue(motion.laneLabel)}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.58),
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             copy.trainingSceneLine(promptVisible),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
