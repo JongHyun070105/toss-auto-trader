@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'app_copy.dart';
 import 'app_state.dart';
-import 'onboarding_gate.dart';
+import 'app_theme.dart';
+import 'batters_eye_scope.dart';
 import 'placement.dart';
 import 'session.dart';
+import 'settings_screen.dart';
 import 'training_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,24 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _logout() => BattersEyeScope.of(context).logout();
 
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
     final store = BattersEyeScope.of(context);
     final profile = store.profile;
     final placement = store.placementResult;
+    final aiPlan = store.aiPlan;
     final lastReport = store.lastTrainingReport;
     final recommendedMode = store.recommendedMode;
+    final level = placement?.level ?? PlacementLevel.rookie;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF07111F), Color(0xFF0B1730), Color(0xFF06111F)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: context.pageGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -60,17 +66,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Batter’s Eye',
+                            copy.appTitle,
                             style: theme.textTheme.headlineLarge?.copyWith(
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.04,
+                              color: context.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            '안녕, ${store.displayName}님. 오늘의 루틴을 바로 시작하자.',
+                            copy.homeGreeting(store.displayName),
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.72),
+                              color: context.textSecondary,
                               height: 1.45,
                             ),
                           ),
@@ -83,9 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         _SessionsBadge(count: store.completedSessionCount),
                         const SizedBox(width: 8),
                         IconButton.filledTonal(
+                          onPressed: _openSettings,
+                          icon: const Icon(Icons.settings_rounded),
+                          tooltip: copy.settingsTooltip,
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
                           onPressed: _logout,
                           icon: const Icon(Icons.logout_rounded),
-                          tooltip: '로그아웃',
+                          tooltip: copy.signOutTooltip,
                         ),
                       ],
                     ),
@@ -93,35 +106,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 18),
                 _HeroCard(
-                  levelLabel: placement?.level.label ?? 'Level 1 · 루키',
-                  blurb:
-                      placement?.level.coachLine ?? '레벨 테스트를 마치면 개인 난도가 맞춰진다.',
-                  recommendation:
-                      placement?.recommendationLine ??
-                      '프로필과 테스트를 쌓으면 오늘의 추천이 더 정교해진다.',
-                  actionLabel: 'Start ${recommendedMode.label}',
+                  levelLabel: copy.placementLevelLabel(level),
+                  blurb: aiPlan?.headline ??
+                      (placement?.level != null
+                          ? copy.placementLevelCoach(level)
+                          : copy.heroFallbackBlurb),
+                  recommendation: aiPlan?.focusSummary ??
+                      (placement != null
+                          ? copy.placementRecommendation(placement)
+                          : copy.heroFallbackRecommendation),
+                  actionLabel: copy.startModeLabel(recommendedMode),
                   onPressed: () => _startMode(recommendedMode),
                 ),
                 const SizedBox(height: 14),
                 _PitchLabPreviewCard(
-                  levelLabel: placement?.level.label ?? '루키',
+                  levelLabel: copy.placementLevelLabel(level),
                   mode: recommendedMode,
                   accuracyPercent: lastReport?.accuracyPercent,
                   reactionTimeMs:
                       lastReport?.averageReactionTime.inMilliseconds,
                   sessionCount: store.completedSessionCount,
                 ),
+                if (aiPlan != null) ...[
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: copy.homeAiSectionTitle,
+                    subtitle: copy.homeAiSectionSubtitle,
+                  ),
+                  const SizedBox(height: 12),
+                  _AiCoachCard(plan: aiPlan),
+                ],
                 const SizedBox(height: 18),
                 _SectionHeader(
-                  title: '프로필 요약',
-                  subtitle: '이 정보가 추천 레벨과 훈련 톤을 맞춘다.',
+                  title: copy.profileSummary,
+                  subtitle: copy.profileSubtitle,
                 ),
                 const SizedBox(height: 12),
                 _ProfileCard(profile: profile),
                 const SizedBox(height: 18),
                 _SectionHeader(
-                  title: 'Training modes',
-                  subtitle: '레벨 테스트 결과를 바탕으로 오늘의 모드를 고른다.',
+                  title: copy.trainingModes,
+                  subtitle: copy.trainingModesSubtitle,
                 ),
                 const SizedBox(height: 12),
                 _ModeCard(
@@ -143,15 +168,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 18),
                 _SectionHeader(
-                  title: 'Latest report',
-                  subtitle: '훈련 후 약점이 자동으로 기록된다.',
+                  title: copy.latestReport,
+                  subtitle: copy.latestReportSubtitle,
                 ),
                 const SizedBox(height: 12),
                 _ReportCard(report: lastReport),
                 const SizedBox(height: 18),
                 _SectionHeader(
-                  title: 'How it works',
-                  subtitle: '짧고 반복 가능해야 매일 돌아온다.',
+                  title: copy.howItWorks,
+                  subtitle: copy.howItWorksSubtitle,
                 ),
                 const SizedBox(height: 12),
                 const _HowItWorksCard(),
@@ -171,20 +196,21 @@ class _SessionsBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '세션',
+            copy.sessionsBadgeLabel,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.55),
+              color: context.textMuted,
             ),
           ),
           const SizedBox(height: 4),
@@ -218,6 +244,7 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -227,18 +254,19 @@ class _HeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF10233C), Color(0xFF162A4A), Color(0xFF0D1B31)],
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _StatPill(label: '추천 레벨', value: levelLabel),
+          _StatPill(label: copy.recommendedLevelLabel, value: levelLabel),
           const SizedBox(height: 14),
           Text(
             blurb,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.03,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 10),
@@ -256,6 +284,84 @@ class _HeroCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AiCoachCard extends StatelessWidget {
+  const _AiCoachCard({required this.plan});
+
+  final AiTrainingPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = context.copy;
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            plan.headline,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.03,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _CoachLine(
+            label: copy.aiPlanStrengthLabel,
+            body: plan.strength,
+          ),
+          const SizedBox(height: 10),
+          _CoachLine(
+            label: copy.aiPlanRiskLabel,
+            body: plan.risk,
+          ),
+          const SizedBox(height: 10),
+          _CoachLine(
+            label: copy.aiPlanWhyNowLabel,
+            body: plan.whyNow,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoachLine extends StatelessWidget {
+  const _CoachLine({required this.label, required this.body});
+
+  final String label;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: context.textMuted,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          body,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.textSecondary,
+                height: 1.45,
+              ),
+        ),
+      ],
     );
   }
 }
@@ -278,6 +384,7 @@ class _PitchLabPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
     final primary = theme.colorScheme.primary;
     final secondary = theme.colorScheme.secondary;
     final tertiary = theme.colorScheme.tertiary;
@@ -288,22 +395,22 @@ class _PitchLabPreviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _StatPill(label: 'Pitch Lab', value: '실전 맵'),
+              _StatPill(label: copy.pitchLab, value: copy.liveMapLabel),
               const SizedBox(width: 8),
-              _StatPill(label: '레벨', value: levelLabel),
+              _StatPill(label: copy.level, value: levelLabel),
             ],
           ),
           const SizedBox(height: 14),
           Text(
-            '오늘의 피치 맵',
+            copy.todayPitchMap,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.03,
@@ -311,9 +418,9 @@ class _PitchLabPreviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '작은 존을 보고, 공의 길을 빠르게 읽는 감각을 쌓자.',
+            copy.pitchMapSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: context.textSecondary,
               height: 1.45,
             ),
           ),
@@ -327,16 +434,16 @@ class _PitchLabPreviewCard extends StatelessWidget {
                 flex: 5,
                 child: Column(
                   children: [
-                    _MetricTile(label: '정확도', value: accuracy, accent: primary),
+                    _MetricTile(label: copy.reportAccuracyLabel, value: accuracy, accent: primary),
                     const SizedBox(height: 10),
                     _MetricTile(
-                      label: '반응',
+                      label: copy.reportReactionLabel,
                       value: reaction,
                       accent: secondary,
                     ),
                     const SizedBox(height: 10),
                     _MetricTile(
-                      label: '세션',
+                      label: copy.sessions,
                       value: '$sessionCount',
                       accent: tertiary,
                     ),
@@ -365,6 +472,7 @@ class _StrikeZoneBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
     final accent = theme.colorScheme.primary;
     final highlight = _highlightIndex;
 
@@ -442,7 +550,7 @@ class _StrikeZoneBoard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Strike zone',
+                    copy.strikeZoneLabel,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.78),
                       fontWeight: FontWeight.w800,
@@ -458,13 +566,13 @@ class _StrikeZoneBoard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: context.panelFill,
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
                       child: Text(
-                        mode.label,
+                        copy.trainingModeLabel(mode),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
@@ -482,7 +590,7 @@ class _StrikeZoneBoard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    mode.focusArea,
+                    copy.trainingModeFocus(mode),
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.82),
                       fontWeight: FontWeight.w800,
@@ -490,7 +598,7 @@ class _StrikeZoneBoard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    mode.subtitle,
+                    copy.trainingModeSubtitle(mode),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: Colors.white.withValues(alpha: 0.58),
                     ),
@@ -542,7 +650,7 @@ class _MetricTile extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.58),
+                    color: context.textMuted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -570,12 +678,13 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final p = profile;
 
     if (p == null) {
       return _EmptyStateCard(
-        title: '아직 프로필이 없어',
-        body: '프로필을 입력하면 나이·성별·포지션에 맞게 레벨과 루틴을 더 잘 추천할 수 있다.',
+        title: copy.emptyProfileTitle,
+        body: copy.emptyProfileBody,
       );
     }
 
@@ -583,13 +692,13 @@ class _ProfileCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
-        children: p.chips
+        children: copy.profileChipTexts(p)
             .map(
               (chip) => Container(
                 padding: const EdgeInsets.symmetric(
@@ -598,7 +707,7 @@ class _ProfileCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: context.panelSoftFill,
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.08),
                   ),
@@ -631,6 +740,7 @@ class _ModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
     final accent = _accentForMode(mode);
 
     return Material(
@@ -642,7 +752,7 @@ class _ModeCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            color: Colors.white.withValues(alpha: 0.06),
+            color: context.panelFill,
             border: Border.all(
               color: recommended
                   ? accent.withValues(alpha: 0.55)
@@ -668,7 +778,7 @@ class _ModeCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          mode.label,
+                          copy.trainingModeLabel(mode),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
@@ -685,7 +795,7 @@ class _ModeCard extends StatelessWidget {
                               color: accent.withValues(alpha: 0.16),
                             ),
                             child: Text(
-                              '추천',
+                              copy.recommendedBadgeLabel,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: accent,
                                 fontWeight: FontWeight.w800,
@@ -697,9 +807,9 @@ class _ModeCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      mode.heroBlurb,
+                      copy.trainingModeHero(mode),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
+                        color: context.textSecondary,
                         height: 1.4,
                       ),
                     ),
@@ -723,10 +833,11 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     if (report == null) {
-      return const _EmptyStateCard(
-        title: '아직 세션이 없어',
-        body: '훈련을 한 번 끝내면 정확도와 약점이 자동으로 기록된다.',
+      return _EmptyStateCard(
+        title: copy.emptyReportTitle,
+        body: copy.emptyReportBody,
       );
     }
 
@@ -735,35 +846,35 @@ class _ReportCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _StatPill(label: '정확도', value: '${r.accuracyPercent}%'),
+              _StatPill(label: copy.reportAccuracyLabel, value: '${r.accuracyPercent}%'),
               const SizedBox(width: 8),
               _StatPill(
-                label: '반응',
+                label: copy.reportReactionLabel,
                 value: '${r.averageReactionTime.inMilliseconds}ms',
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            r.coachLine,
+            copy.trainingReportCoachLine(r),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: context.textSecondary,
               height: 1.45,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '약점: ${r.primaryWeakSpot}',
+            '${copy.reportWeakSpotLabel}: ${copy.trainingRoundWeakSpot(r.primaryWeakSpot)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.58),
+              color: context.textMuted,
             ),
           ),
         ],
@@ -793,7 +904,7 @@ class _SectionHeader extends StatelessWidget {
         Text(
           subtitle,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.white.withValues(alpha: 0.58),
+            color: context.textMuted,
           ),
         ),
       ],
@@ -813,8 +924,8 @@ class _StatPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -822,7 +933,7 @@ class _StatPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.58),
+              color: context.textMuted,
             ),
           ),
           const SizedBox(height: 4),
@@ -850,8 +961,8 @@ class _EmptyStateCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,7 +977,7 @@ class _EmptyStateCard extends StatelessWidget {
           Text(
             body,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: context.textSecondary,
               height: 1.45,
             ),
           ),
@@ -881,32 +992,33 @@ class _HowItWorksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _StepRow(
             number: '1',
-            title: '프로필',
-            body: '나이·성별·포지션을 기록해 개인 기준을 만든다.',
+            title: copy.howItWorksStep1Title,
+            body: copy.howItWorksStep1Body,
           ),
           const SizedBox(height: 12),
           _StepRow(
             number: '2',
-            title: '레벨 테스트',
-            body: '한 문제씩 풀며 시작 난도와 추천 모드를 정한다.',
+            title: copy.howItWorksStep2Title,
+            body: copy.howItWorksStep2Body,
           ),
           const SizedBox(height: 12),
           _StepRow(
             number: '3',
-            title: '반복 훈련',
-            body: '짧은 세션을 쌓고 리포트로 약점을 좁힌다.',
+            title: copy.howItWorksStep3Title,
+            body: copy.howItWorksStep3Body,
           ),
         ],
       ),
@@ -958,7 +1070,7 @@ class _StepRow extends StatelessWidget {
               Text(
                 body,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.72),
+                  color: context.textSecondary,
                   height: 1.45,
                 ),
               ),

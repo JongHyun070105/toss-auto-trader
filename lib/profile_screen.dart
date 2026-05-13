@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'app_copy.dart';
 import 'app_state.dart';
-import 'onboarding_gate.dart';
+import 'app_theme.dart';
+import 'batters_eye_scope.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,42 +17,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
 
-  String _gender = '응답 안 함';
-  String _position = '타자';
-  String _battingSide = '우타';
-  String _experience = '입문';
-  String _goal = '구종 인식';
+  String _gender = 'male';
+  String _position = 'batter';
+  String _battingSide = 'right';
+  String _experience = 'beginner';
+  String _goal = 'pitch_recognition';
   bool _saving = false;
   bool _initialized = false;
   String? _errorText;
-
-  static const _genders = ['남성', '여성', '논바이너리', '응답 안 함'];
-  static const _positions = ['타자', '투수', '포수', '내야수', '외야수', '코치'];
-  static const _battingSides = ['좌타', '우타', '스위치', '모름'];
-  static const _experiences = ['입문', '1~2년', '3~5년', '5년+'];
-  static const _goals = ['구종 인식', '존 판정', '스윙 디시전', '실전 감각', '반응 속도'];
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
     final store = BattersEyeScope.of(context);
+    final copy = context.copy;
     final profile = store.profile;
     _nameController.text = profile?.name ?? store.displayName;
-    _ageController.text = (profile?.age ?? 0) <= 0
-        ? ''
-        : profile!.age.toString();
-    _gender = profile?.gender.isNotEmpty == true ? profile!.gender : _gender;
-    _position = profile?.position.isNotEmpty == true
-        ? profile!.position
-        : _position;
-    _battingSide = profile?.battingSide.isNotEmpty == true
-        ? profile!.battingSide
-        : _battingSide;
-    _experience = profile?.experience.isNotEmpty == true
-        ? profile!.experience
-        : _experience;
-    _goal = profile?.goal.isNotEmpty == true ? profile!.goal : _goal;
+    _ageController.text = (profile?.age ?? 0) <= 0 ? '' : profile!.age.toString();
+    _gender = copy.normalizeProfileGender(profile?.gender ?? _gender);
+    _position = copy.normalizeProfilePosition(profile?.position ?? _position);
+    _battingSide = copy.normalizeProfileBattingSide(
+      profile?.battingSide ?? _battingSide,
+    );
+    _experience = copy.normalizeProfileExperience(
+      profile?.experience ?? _experience,
+    );
+    _goal = copy.normalizeProfileGoal(profile?.goal ?? _goal);
     _initialized = true;
   }
 
@@ -94,16 +87,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF07111F), Color(0xFF0B1730), Color(0xFF06111F)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: context.pageGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
@@ -111,17 +99,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '프로필 설정',
+                  copy.profileTitle,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.04,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '나이, 성별, 포지션, 타석을 받으면 추천 레벨이 더 정확해진다.',
+                  copy.profileIntro,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: context.textSecondary,
                     height: 1.45,
                   ),
                 ),
@@ -130,18 +119,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF10233C),
-                        Color(0xFF162A4A),
-                        Color(0xFF0D1B31),
-                      ],
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    gradient: context.heroGradient,
+                    border: Border.all(color: context.panelBorder),
                   ),
                   child: Form(
                     key: _formKey,
@@ -150,13 +129,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         TextFormField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: '이름 / 닉네임',
-                            hintText: '예: 종현',
+                          decoration: InputDecoration(
+                            labelText: copy.profileNameLabel,
+                            hintText: copy.profileNameHint,
                           ),
                           validator: (value) {
                             if ((value ?? '').trim().isEmpty) {
-                              return '이름을 입력해줘.';
+                              return copy.profileErrorName;
                             }
                             return null;
                           },
@@ -165,79 +144,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         TextFormField(
                           controller: _ageController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: '나이',
-                            hintText: '예: 23',
+                          decoration: InputDecoration(
+                            labelText: copy.profileAgeLabel,
+                            hintText: copy.profileAgeHint,
                           ),
                           validator: (value) {
                             final text = (value ?? '').trim();
                             final parsed = int.tryParse(text);
-                            if (parsed == null) return '숫자로 입력해줘.';
-                            if (parsed <= 0) return '0보다 큰 숫자를 적어줘.';
-                            if (parsed > 100) return '나이를 다시 확인해줘.';
+                            if (text.isEmpty) return copy.profileErrorAgeRequired;
+                            if (parsed == null) return copy.profileErrorAge;
+                            if (parsed <= 0) return copy.profileErrorAgePositive;
+                            if (parsed > 100) return copy.profileErrorAgeRange;
                             return null;
                           },
                         ),
                         const SizedBox(height: 14),
-                        _DropdownField(
-                          label: '성별',
+                        _ChoiceDropdown(
+                          label: copy.profileGenderLabel,
                           value: _gender,
-                          items: _genders,
+                          choices: copy.genderChoices,
                           onChanged: (value) =>
                               setState(() => _gender = value ?? _gender),
                         ),
                         const SizedBox(height: 14),
-                        _DropdownField(
-                          label: '포지션',
+                        _ChoiceDropdown(
+                          label: copy.profilePositionLabel,
                           value: _position,
-                          items: _positions,
+                          choices: copy.positionChoices,
                           onChanged: (value) =>
                               setState(() => _position = value ?? _position),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          '타석',
+                          copy.profileBattingSideLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: Colors.white70,
+                            color: context.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 10,
                           runSpacing: 10,
-                          children: _battingSides
+                          children: copy.battingSideChoices
                               .map(
                                 (side) => ChoiceChip(
-                                  label: Text(side),
-                                  selected: _battingSide == side,
+                                  label: Text(side.label(copy.language)),
+                                  selected: _battingSide == side.code,
                                   onSelected: (_) =>
-                                      setState(() => _battingSide = side),
+                                      setState(() => _battingSide = side.code),
                                 ),
                               )
                               .toList(),
                         ),
                         const SizedBox(height: 14),
-                        _DropdownField(
-                          label: '경험치',
+                        _ChoiceDropdown(
+                          label: copy.profileExperienceLabel,
                           value: _experience,
-                          items: _experiences,
+                          choices: copy.experienceChoices,
                           onChanged: (value) => setState(
                             () => _experience = value ?? _experience,
                           ),
                         ),
                         const SizedBox(height: 14),
-                        _DropdownField(
-                          label: '오늘의 목표',
+                        _ChoiceDropdown(
+                          label: copy.profileGoalLabel,
                           value: _goal,
-                          items: _goals,
+                          choices: copy.goalChoices,
                           onChanged: (value) =>
                               setState(() => _goal = value ?? _goal),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          '이 정보는 레벨 추천과 훈련 카드만 개인화하는 데 사용된다.',
+                          copy.profileNote,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.58),
+                            color: context.textMuted,
                           ),
                         ),
                         if (_errorText != null) ...[
@@ -255,7 +235,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: double.infinity,
                           child: FilledButton(
                             onPressed: _saving ? null : _save,
-                            child: Text(_saving ? '저장 중…' : '프로필 저장하고 레벨 테스트로'),
+                            child: Text(
+                              _saving ? copy.profileSaving : copy.profileSaveCta,
+                            ),
                           ),
                         ),
                       ],
@@ -273,29 +255,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _DropdownField extends StatelessWidget {
-  const _DropdownField({
+class _ChoiceDropdown extends StatelessWidget {
+  const _ChoiceDropdown({
     required this.label,
     required this.value,
-    required this.items,
+    required this.choices,
     required this.onChanged,
   });
 
   final String label;
   final String value;
-  final List<String> items;
+  final List<ProfileChoice> choices;
   final ValueChanged<String?> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
+    final currentValue = choices.any((choice) => choice.code == value)
+        ? value
+        : choices.first.code;
+
     return DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: InputDecoration(labelText: label),
-      items: items
+      initialValue: currentValue,
+      items: choices
           .map(
-            (item) => DropdownMenuItem<String>(value: item, child: Text(item)),
+            (choice) => DropdownMenuItem<String>(
+              value: choice.code,
+              child: Text(choice.label(copy.language)),
+            ),
           )
           .toList(),
+      decoration: InputDecoration(labelText: label),
       onChanged: onChanged,
     );
   }
@@ -304,28 +294,41 @@ class _DropdownField extends StatelessWidget {
 class _ProfileHintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final copy = context.copy;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '추천 기준',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '프로필은 레벨 추천의 기준이 되고, 이후에는 훈련 리포트와 함께 누적된다.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
-              height: 1.5,
+          Icon(Icons.tune_rounded, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  copy.profileRecommendationTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  copy.profileRecommendationBody,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: context.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

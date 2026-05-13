@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_copy.dart';
+import 'app_theme.dart';
 import 'session.dart';
 
 class ResultScreen extends StatelessWidget {
@@ -9,33 +11,36 @@ class ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final accuracy = (summary.accuracy * 100).round();
     final avg = summary.averageReactionTime.inMilliseconds;
 
     return Scaffold(
-      appBar: AppBar(title: Text('${summary.mode.title} report')),
+      appBar: AppBar(
+        title: Text(copy.resultSessionComplete),
+      ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF07111F), Color(0xFF0B1730), Color(0xFF07111F)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: context.pageGradient),
         child: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
             children: [
               _ResultHero(summary: summary, accuracy: accuracy, avg: avg),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
-                    child: _MetricCard(label: 'Accuracy', value: '$accuracy%'),
+                    child: _MetricCard(
+                      label: copy.resultAccuracyLabel,
+                      value: '$accuracy%',
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _MetricCard(label: 'Avg RT', value: '${avg}ms'),
+                    child: _MetricCard(
+                      label: copy.resultAvgReactionLabel,
+                      value: '${avg}ms',
+                    ),
                   ),
                 ],
               ),
@@ -44,28 +49,31 @@ class ResultScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _MetricCard(
-                      label: 'Rounds',
+                      label: copy.resultRoundsLabel,
                       value: '${summary.totalRounds}',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MetricCard(
-                      label: 'Weak spot',
-                      value: summary.primaryWeakSpot,
+                      label: copy.resultWeakSpotLabel,
+                      value: copy.trainingRoundWeakSpot(summary.primaryWeakSpot),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _CoachCard(summary: summary),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
+              _InsightCard(summary: summary),
+              const SizedBox(height: 14),
               _NextStepsCard(summary: summary),
               const SizedBox(height: 20),
-              FilledButton(
-                key: const ValueKey('backToDashboardButton'),
-                onPressed: () => Navigator.of(context).pop(summary),
-                child: const Text('Back to dashboard'),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const ValueKey('backToDashboardButton'),
+                  onPressed: () => Navigator.of(context).pop(summary),
+                  child: Text(copy.resultBackToDashboard),
+                ),
               ),
             ],
           ),
@@ -88,40 +96,71 @@ class _ResultHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
+    final accent = _accentForMode(summary.mode);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF10233C), Color(0xFF162A4A)],
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [accent.withValues(alpha: 0.24), const Color(0xFF10233C)],
         ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: accent.withValues(alpha: 0.16),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              copy.trainingModeLabel(summary.mode),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           Text(
-            'Session complete',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            copy.resultSessionComplete,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.03,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            '이번 세션은 ${summary.mode.title} 중심으로 진행했고, 약한 지점을 바로 모았다.',
+            copy.resultSessionLine(summary),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.74),
+              color: Colors.white.withValues(alpha: 0.78),
               height: 1.45,
             ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _HeroStat(value: '$accuracy%', label: 'accuracy'),
-              const SizedBox(width: 12),
-              _HeroStat(value: '${avg}ms', label: 'avg reaction'),
-              const SizedBox(width: 12),
-              _HeroStat(value: summary.primaryWeakSpot, label: 'weak spot'),
+              Expanded(
+                child: _HeroStat(value: '$accuracy%', label: copy.resultAccuracyLabel),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _HeroStat(value: '${avg}ms', label: copy.resultAvgReactionLabel),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _HeroStat(
+                  value: copy.trainingRoundWeakSpot(summary.primaryWeakSpot),
+                  label: copy.resultWeakSpotLabel,
+                ),
+              ),
             ],
           ),
         ],
@@ -138,33 +177,31 @@ class _HeroStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          color: Colors.white.withValues(alpha: 0.07),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: Colors.white54),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.08),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white70,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -182,26 +219,26 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: context.textMuted,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -209,34 +246,36 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _CoachCard extends StatelessWidget {
-  const _CoachCard({required this.summary});
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({required this.summary});
 
   final TrainingSummary summary;
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(26),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Coach note',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            copy.resultCoachNote,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            summary.encouragement,
+            copy.trainingSummaryEncouragement(summary),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.74),
+              color: context.textSecondary,
               height: 1.45,
             ),
           ),
@@ -253,33 +292,29 @@ class _NextStepsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextStep = switch (summary.mode) {
-      TrainingMode.pitchType => '다음엔 더 빠른 직구와 느린 브레이킹볼을 섞어서 다시 읽어보자.',
-      TrainingMode.strikeZone => '바깥쪽과 높은 공을 더 자주 섞어서 chase risk를 확인하자.',
-      TrainingMode.swingDecision => '2-strike 상황을 늘려서 참아야 할 공을 더 많이 보자.',
-    };
+    final copy = context.copy;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(26),
+        color: context.panelSoftFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Next drill',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            copy.resultNextSteps,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            nextStep,
+            copy.resultNextStep(summary.mode),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.74),
+              color: context.textSecondary,
               height: 1.45,
             ),
           ),
@@ -287,4 +322,12 @@ class _NextStepsCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Color _accentForMode(TrainingMode mode) {
+  return switch (mode) {
+    TrainingMode.pitchType => const Color(0xFF62E6FF),
+    TrainingMode.strikeZone => const Color(0xFF84F58E),
+    TrainingMode.swingDecision => const Color(0xFFFFCF72),
+  };
 }

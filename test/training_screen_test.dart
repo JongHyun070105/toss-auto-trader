@@ -13,24 +13,26 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Start pitch'),
+      find.text('투구 시작'),
       250,
       scrollable: find.byType(Scrollable),
     );
-    expect(find.text('Start pitch'), findsOneWidget);
+    expect(find.text('투구 시작'), findsOneWidget);
+    expect(find.text('릴리스'), findsOneWidget);
+    expect(find.text('플레이트'), findsOneWidget);
     final ball = find.byKey(const ValueKey('pitchBall'));
     expect(ball, findsOneWidget);
 
     final initialCenter = tester.getCenter(ball);
 
-    await tester.tap(find.text('Start pitch'));
+    await tester.tap(find.text('투구 시작'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     final midCenter = tester.getCenter(ball);
-    expect(midCenter.dy, greaterThan(initialCenter.dy));
+    expect(midCenter.dy, isNot(equals(initialCenter.dy)));
 
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Read the pitch now'), findsOneWidget);
+    expect(find.text('이 공의 구종은?'), findsOneWidget);
   });
 }

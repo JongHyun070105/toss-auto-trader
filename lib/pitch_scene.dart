@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'app_copy.dart';
+import 'app_theme.dart';
 import 'session.dart';
 
 class PitchMotionSpec {
@@ -41,6 +43,16 @@ class PitchMotionSpec {
   double trailOpacity(double progress) {
     final t = progress.clamp(0.0, 1.0);
     return lerpDouble(0.34, 0.10, t)!;
+  }
+
+  int estimatedSpeedMph() {
+    final ms = duration.inMilliseconds.clamp(900, 1080);
+    final t = (ms - 900) / 180;
+    return lerpDouble(97, 82, t)!.round();
+  }
+
+  int decisionWindowMs() {
+    return ((1 - revealAt) * duration.inMilliseconds).round();
   }
 }
 
@@ -107,6 +119,7 @@ class PitchScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final accent = _accentForMode(round.mode);
     final icon = _iconForMode(round.mode);
     final outcomeColor = answered
@@ -124,7 +137,7 @@ class PitchScene extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [accent.withValues(alpha: 0.18), const Color(0xFF0D1B31)],
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,16 +159,14 @@ class PitchScene extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      round.title,
+                      copy.trainingRoundTitle(round),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      promptVisible
-                          ? 'Read the pitch now'
-                          : 'Track the release point and wait for the window.',
+                      copy.trainingSceneLine(promptVisible),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.72),
                       ),
@@ -163,7 +174,10 @@ class PitchScene extends StatelessWidget {
                   ],
                 ),
               ),
-              _SceneStatPill(label: 'Phase', value: promptVisible ? 'READ' : 'LOCK'),
+              _SceneStatPill(
+                label: copy.trainingPhaseLabel,
+                value: copy.trainingPhaseValue(promptVisible),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -208,31 +222,15 @@ class PitchScene extends StatelessWidget {
                       left: 14,
                       top: 14,
                       child: _SceneStatPill(
-                        label: 'Lane',
-                        value: motion.laneLabel,
-                      ),
-                    ),
-                    Positioned(
-                      right: 14,
-                      top: 14,
-                      child: _SceneStatPill(
-                        label: 'Window',
-                        value: '${(motion.revealAt * 100).round()}%',
-                      ),
-                    ),
-                    Positioned(
-                      left: 14,
-                      bottom: 14,
-                      child: _SceneStatPill(
-                        label: 'Pace',
-                        value: '${motion.duration.inMilliseconds}ms',
+                        label: copy.trainingFocusLabel,
+                        value: copy.trainingModeFocus(round.mode),
                       ),
                     ),
                     Positioned(
                       right: 14,
                       bottom: 14,
                       child: _SceneStatPill(
-                        label: 'Depth',
+                        label: copy.trainingAccuracyLabel,
                         value: '${(progress * 100).round()}%',
                       ),
                     ),
@@ -243,9 +241,7 @@ class PitchScene extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            promptVisible
-                ? 'The pitch is in the lane. Match the read with the best answer.'
-                : 'Watch the release, then answer as the pitch crosses the window.',
+            copy.trainingSceneLine(promptVisible),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.70),
               height: 1.45,

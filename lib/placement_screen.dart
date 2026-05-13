@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'onboarding_gate.dart';
+import 'app_copy.dart';
+import 'app_theme.dart';
+import 'batters_eye_scope.dart';
 import 'placement.dart';
 import 'session.dart';
 
@@ -107,18 +109,13 @@ class _PlacementScreenState extends State<PlacementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final theme = Theme.of(context);
     final result = _result;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF07111F), Color(0xFF0B1730), Color(0xFF06111F)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: context.pageGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
@@ -126,7 +123,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '레벨 테스트',
+                  copy.placementTitle,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.04,
@@ -134,9 +131,9 @@ class _PlacementScreenState extends State<PlacementScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '공이 날아오는 장면을 보듯, 한 번에 하나씩 읽고 판단하자.',
+                  copy.placementIntro,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: context.textSecondary,
                     height: 1.45,
                   ),
                 ),
@@ -145,10 +142,8 @@ class _PlacementScreenState extends State<PlacementScreen> {
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    color: Colors.white.withValues(alpha: 0.06),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    color: context.panelFill,
+                    border: Border.all(color: context.panelBorder),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,11 +152,12 @@ class _PlacementScreenState extends State<PlacementScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            result == null
-                                ? (_showPrompt
-                                      ? '질문 ${_index + 1}/${PlacementEngine.questions.length}'
-                                      : '릴리스 준비')
-                                : '결과',
+                            copy.placementStageLabel(
+                              showPrompt: _showPrompt,
+                              hasResult: result != null,
+                              index: _index,
+                              total: PlacementEngine.questions.length,
+                            ),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
@@ -178,6 +174,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
                         value: result == null ? _progress : 1,
+                        backgroundColor: context.panelSoftFill,
                       ),
                     ],
                   ),
@@ -241,6 +238,7 @@ class _WarmupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final theme = Theme.of(context);
     final accent = _accentForMode(question.mode, theme.colorScheme);
 
@@ -260,14 +258,20 @@ class _WarmupCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _StatPill(label: 'Prep', value: question.mode.label),
+              _StatPill(
+                label: copy.placementPrepLabel,
+                value: copy.trainingModeLabel(question.mode),
+              ),
               const SizedBox(width: 8),
-              _StatPill(label: 'Focus', value: question.mode.focusArea),
+              _StatPill(
+                label: copy.placementFocusLabel,
+                value: copy.trainingModeFocus(question.mode),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           Text(
-            question.title,
+            copy.placementQuestionTitle(question),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.03,
@@ -275,7 +279,7 @@ class _WarmupCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            question.mode.heroBlurb,
+            copy.trainingModeHero(question.mode),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.74),
               height: 1.45,
@@ -285,7 +289,7 @@ class _WarmupCard extends StatelessWidget {
           _PlacementZoneBoard(mode: question.mode, accent: accent),
           const SizedBox(height: 16),
           Text(
-            '릴리스 직후 짧게 보고 답하자. 공이 떠나는 순간에만 기준을 잡는다.',
+            copy.placementQuickHint,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.72),
               height: 1.45,
@@ -297,7 +301,7 @@ class _WarmupCard extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: onStart,
               icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Start pitch'),
+              label: Text(copy.placementStartPitch),
             ),
           ),
         ],
@@ -320,6 +324,7 @@ class _PlacementZoneBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final theme = Theme.of(context);
     final highlight = _highlightIndex;
 
@@ -410,7 +415,7 @@ class _PlacementZoneBoard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Strike zone',
+                    copy.placementZoneBoardLabel,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.78),
                       fontWeight: FontWeight.w800,
@@ -432,7 +437,7 @@ class _PlacementZoneBoard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        mode.label,
+                        copy.trainingModeLabel(mode),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
@@ -450,7 +455,7 @@ class _PlacementZoneBoard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Release lane',
+                    copy.placementReleaseLaneLabel,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.78),
                       fontWeight: FontWeight.w800,
@@ -537,6 +542,7 @@ class _QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final theme = Theme.of(context);
 
     return Container(
@@ -554,14 +560,14 @@ class _QuestionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            question.title,
+            copy.placementQuestionTitle(question),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            question.prompt,
+            copy.placementQuestionPrompt(question),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -618,7 +624,7 @@ class _QuestionCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          choice,
+                          copy.trainingChoiceLabel(choice),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -653,16 +659,17 @@ class _QuestionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    selectedChoice == question.correctIndex
-                        ? '정답이야'
-                        : '정답은 ${question.correctChoice}',
+                    copy.placementCorrectFeedback(
+                      selectedChoice == question.correctIndex,
+                      question.correctChoice,
+                    ),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    question.coachNote,
+                    copy.placementQuestionCoachNote(question),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.72),
                       height: 1.45,
@@ -677,7 +684,7 @@ class _QuestionCard extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               onPressed: revealed ? onNext : null,
-              child: Text(_buttonLabel),
+              child: Text(_buttonLabel(context)),
             ),
           ),
         ],
@@ -685,10 +692,13 @@ class _QuestionCard extends StatelessWidget {
     );
   }
 
-  String get _buttonLabel {
-    if (!revealed) return '먼저 선택해줘';
-    if (question.id == PlacementEngine.questions.last.id) return '결과 보기';
-    return '다음 질문';
+  String _buttonLabel(BuildContext context) {
+    final copy = AppCopy(BattersEyeScope.of(context).language);
+    if (!revealed) return copy.placementSelectFirst;
+    if (question.id == PlacementEngine.questions.last.id) {
+      return copy.placementViewResult;
+    }
+    return copy.placementNextQuestion;
   }
 }
 
@@ -705,6 +715,7 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     final theme = Theme.of(context);
 
     return Container(
@@ -722,14 +733,14 @@ class _ResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '추천 결과',
+            copy.placementRecommendedResultTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            result.level.label,
+            copy.placementLevelLabel(result.level),
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.03,
@@ -737,14 +748,14 @@ class _ResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${result.score}% · ${result.correctCount}/${result.totalQuestions} 정답',
+            '${result.score}% · ${result.correctCount}/${result.totalQuestions} ${copy.reportAccuracyLabel}',
             style: theme.textTheme.titleMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.72),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            result.recommendationLine,
+            copy.placementRecommendation(result),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.72),
               height: 1.45,
@@ -755,8 +766,14 @@ class _ResultCard extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _ResultPill(label: '강도', value: result.level.intensity),
-              _ResultPill(label: '추천 모드', value: result.recommendedMode.label),
+              _ResultPill(
+                label: copy.placementIntensityLabel,
+                value: copy.placementIntensity(result.level),
+              ),
+              _ResultPill(
+                label: copy.placementRecommendedModeLabel,
+                value: copy.trainingModeLabel(result.recommendedMode),
+              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -764,7 +781,9 @@ class _ResultCard extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               onPressed: saving ? null : onSave,
-              child: Text(saving ? '저장 중…' : '레벨 저장하고 홈으로'),
+              child: Text(
+                saving ? copy.profileSaving : copy.placementSaveAndGoHome,
+              ),
             ),
           ),
         ],
@@ -813,27 +832,28 @@ class _ResultPill extends StatelessWidget {
 class _PlacementHintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final copy = context.copy;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '진행 방식',
+            copy.placementFlowTitle,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            '질문은 한 번에 하나씩 나오고, 정답을 고르면 바로 코치 피드백이 붙는다. Pitch Lab처럼 짧게, 하지만 야구 감각은 진하게.',
+            copy.placementFlowBody,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: context.textSecondary,
               height: 1.5,
             ),
           ),

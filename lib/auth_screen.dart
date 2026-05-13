@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'onboarding_gate.dart';
+import 'app_copy.dart';
+import 'app_theme.dart';
+import 'batters_eye_scope.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -30,6 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final store = BattersEyeScope.of(context);
+    final copy = context.copy;
     final email = _emailController.text;
     final password = _passwordController.text;
 
@@ -53,7 +56,7 @@ class _AuthScreenState extends State<AuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _isSignUp ? '가입 완료. 프로필을 이어서 입력해줘.' : '환영해. 프로필을 이어서 확인하자.',
+            _isSignUp ? copy.authSnackSignup : copy.authSnackLogin,
           ),
         ),
       );
@@ -63,16 +66,11 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final copy = context.copy;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF07111F), Color(0xFF0B1730), Color(0xFF06111F)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: context.pageGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
@@ -80,17 +78,18 @@ class _AuthScreenState extends State<AuthScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Batter’s Eye',
+                  copy.appTitle,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.04,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '계정부터 만들고, 프로필과 레벨을 쌓아가는 개인 훈련 루프.',
+                  copy.authTitle,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: context.textSecondary,
                     height: 1.45,
                   ),
                 ),
@@ -99,18 +98,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF10233C),
-                        Color(0xFF162A4A),
-                        Color(0xFF0D1B31),
-                      ],
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    gradient: context.heroGradient,
+                    border: Border.all(color: context.panelBorder),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,19 +115,19 @@ class _AuthScreenState extends State<AuthScreen> {
                         borderRadius: BorderRadius.circular(18),
                         selectedColor: Colors.black,
                         fillColor: theme.colorScheme.primary,
-                        color: Colors.white70,
+                        color: context.textSecondary,
                         constraints: const BoxConstraints(
                           minHeight: 44,
                           minWidth: 104,
                         ),
-                        children: const [
+                        children: [
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('회원가입'),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(copy.authToggleSignUp),
                           ),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('로그인'),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(copy.authToggleLogin),
                           ),
                         ],
                       ),
@@ -152,16 +141,15 @@ class _AuthScreenState extends State<AuthScreen> {
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               autofillHints: const [AutofillHints.email],
-                              decoration: const InputDecoration(
-                                labelText: '이메일',
-                                hintText: 'you@example.com',
+                              decoration: InputDecoration(
+                                labelText: copy.authEmailLabel,
+                                hintText: copy.authEmailHint,
                               ),
                               validator: (value) {
                                 final text = (value ?? '').trim();
-                                if (text.isEmpty) return '이메일을 입력해줘.';
-                                if (!text.contains('@') ||
-                                    !text.contains('.')) {
-                                  return '이메일 형식이 아니야.';
+                                if (text.isEmpty) return copy.authErrorEmailRequired;
+                                if (!text.contains('@') || !text.contains('.')) {
+                                  return copy.authErrorEmailFormat;
                                 }
                                 return null;
                               },
@@ -174,8 +162,10 @@ class _AuthScreenState extends State<AuthScreen> {
                               autofillHints: const [AutofillHints.password],
                               onFieldSubmitted: (_) => _submit(),
                               decoration: InputDecoration(
-                                labelText: '비밀번호',
-                                hintText: _isSignUp ? '6자 이상' : '기존 비밀번호',
+                                labelText: copy.authPasswordLabel,
+                                hintText: _isSignUp
+                                    ? copy.authPasswordHintSignup
+                                    : copy.authPasswordHintLogin,
                                 suffixIcon: IconButton(
                                   onPressed: () {
                                     setState(() {
@@ -191,7 +181,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               validator: (value) {
                                 final text = (value ?? '').trim();
-                                if (text.length < 6) return '비밀번호는 6자 이상이어야 해.';
+                                if (text.length < 6) return copy.authErrorWeakPassword;
                                 return null;
                               },
                             ),
@@ -199,11 +189,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                _isSignUp
-                                    ? '가입 후 프로필에서 나이·성별·포지션을 받는다.'
-                                    : '이 기기에 저장된 계정으로 바로 이어진다.',
+                                _isSignUp ? copy.authHint : copy.authHintLogin,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.58),
+                                  color: context.textMuted,
                                 ),
                               ),
                             ),
@@ -225,9 +213,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               width: double.infinity,
                               child: FilledButton(
                                 onPressed: _submitting ? null : _submit,
-                                child: Text(
-                                  _isSignUp ? '회원가입하고 시작' : '로그인하고 이어가기',
-                                ),
+                                child: Text(_isSignUp ? copy.authJoinCta : copy.authLoginCta),
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -241,7 +227,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       });
                                     },
                               child: Text(
-                                _isSignUp ? '이미 계정이 있어? 로그인' : '새 계정 만들기',
+                                _isSignUp ? copy.authSwitchToLogin : copy.authSwitchToSignup,
                               ),
                             ),
                           ],
@@ -264,28 +250,41 @@ class _AuthScreenState extends State<AuthScreen> {
 class _AuthHintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final copy = context.copy;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: context.panelFill,
+        border: Border.all(color: context.panelBorder),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '왜 계정이 먼저인가',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '프로필과 레벨 테스트가 쌓여야 오늘의 훈련이 단순 반복이 아니라 개인화된 코치 루프로 바뀐다.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
-              height: 1.5,
+          Icon(Icons.sports_baseball_rounded, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  copy.authAccountReasonTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  copy.authAccountReasonBody,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: context.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

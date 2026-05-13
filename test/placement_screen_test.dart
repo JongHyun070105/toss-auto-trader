@@ -24,18 +24,19 @@ void main() {
           ),
         },
         currentEmail: email,
+        hasSeenIntro: true,
       );
 
       await tester.pumpWidget(BattersEyeApp(store: store));
       await tester.pumpAndSettle();
 
       expect(find.text('레벨 테스트'), findsOneWidget);
-      expect(find.text('Start pitch'), findsOneWidget);
+      expect(find.text('투구 시작'), findsOneWidget);
       expect(find.textContaining('질문 1/5'), findsNothing);
       expect(find.text('가장 가능성이 높은 구종은?'), findsNothing);
 
-      await tester.ensureVisible(find.text('Start pitch'));
-      await tester.tap(find.text('Start pitch'));
+      await tester.ensureVisible(find.text('투구 시작'));
+      await tester.tap(find.text('투구 시작'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
 

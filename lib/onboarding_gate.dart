@@ -1,24 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'ai_plan_screen.dart';
 import 'app_state.dart';
+import 'batters_eye_scope.dart';
 import 'auth_screen.dart';
 import 'home_screen.dart';
+import 'onboarding_intro_screen.dart';
 import 'placement_screen.dart';
 import 'profile_screen.dart';
-
-class BattersEyeScope extends InheritedNotifier<BattersEyeStore> {
-  const BattersEyeScope({
-    super.key,
-    required BattersEyeStore store,
-    required super.child,
-  }) : super(notifier: store);
-
-  static BattersEyeStore of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<BattersEyeScope>();
-    assert(scope != null, 'BattersEyeScope not found in widget tree.');
-    return scope!.notifier!;
-  }
-}
 
 class OnboardingGate extends StatelessWidget {
   const OnboardingGate({super.key});
@@ -36,6 +25,9 @@ class OnboardingGate extends StatelessWidget {
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       child: switch (store.stage) {
+        OnboardingStage.intro => const OnboardingIntroScreen(
+          key: ValueKey('intro'),
+        ),
         OnboardingStage.auth => const AuthScreen(key: ValueKey('auth')),
         OnboardingStage.profile => const ProfileScreen(
           key: ValueKey('profile'),
@@ -43,6 +35,7 @@ class OnboardingGate extends StatelessWidget {
         OnboardingStage.placement => const PlacementScreen(
           key: ValueKey('placement'),
         ),
+        OnboardingStage.aiPlan => const AiPlanScreen(key: ValueKey('aiPlan')),
         OnboardingStage.dashboard => const HomeScreen(
           key: ValueKey('dashboard'),
         ),
