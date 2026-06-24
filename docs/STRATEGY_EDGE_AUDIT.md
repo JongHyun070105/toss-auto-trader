@@ -55,8 +55,10 @@ From `agents.py` / `decision_engine.py`:
 - BUY signal count,
 - post-cost forward return,
 - win rate after cost,
-- whether at least one symbol in the pair has a positive audited edge,
+- whether every leg in a long-only basket has a positive audited edge,
 - whether the pair is a true pair or just an independent long basket.
+
+Important: passing an audit is not causal proof. The audit is only a blocker/triage layer. It must be strict enough to avoid approving lucky small-sample results.
 
 Outputs:
 
@@ -98,6 +100,40 @@ Do not add more guards before choosing a real hypothesis. Candidate hypotheses t
 Each hypothesis should be tested alone, with a locked train/test split and minimum signal count before touching live orders.
 
 
+## Statistical guardrails added after review
+
+The first volume-shock version was too loose: it looked at 1/3/5 day horizons and could mark a symbol as interesting from a tiny sample. That creates horizon fishing and small-sample selection bias.
+
+Current rules:
+
+- horizon is fixed before validation; default is `--horizon 3`.
+- no “best of 1/3/5” selection is allowed for edge_ok.
+- global edge requires enough cross-sectional symbols; default `--min-symbols 50`.
+- global edge requires enough aggregate signals; default `--min-total-signals 100`.
+- locked chronological test split must have enough signals; default `--min-test-signals 30`.
+- symbol-level positives are diagnostics only, not approval.
+
+Until KOSDAQ-wide or otherwise broad cached candles exist, `volume_shock_hypothesis_audit.py` should normally output `edge_ok=false` with blockers such as `insufficient_universe_symbols` or `insufficient_total_signals`.
+
+To build a broad research cache without live orders:
+
+```bash
+# one KOSDAQ/Toss/KRX symbol per line; no secrets in this file
+python3 scripts/cache_universe_candles.py \
+  --symbols-file research/kosdaq_symbols.txt \
+  --db-path data/edge_research_universe.sqlite3 \
+  --count 200 \
+  --sleep-seconds 2
+
+python3 scripts/volume_shock_hypothesis_audit.py \
+  --source-db data/edge_research_universe.sqlite3 \
+  --symbols cached \
+  --horizon 3 \
+  --min-symbols 50 \
+  --min-total-signals 100 \
+  --min-test-signals 30
+```
+
 ## First concrete hypothesis audit added
 
 `volume_shock_hypothesis_audit.py` tests:
@@ -105,13 +141,13 @@ Each hypothesis should be tested alone, with a locked train/test split and minim
 ```text
 volume >= 3x previous 20d average
 close > open
-forward net return after cost for 1/3/5 days
+locked 3-day forward net return after cost
 ```
 
-Latest smoke result:
+Current interpretation:
 
-- `204620`: possible 3-day edge, small sample.
-- `073240`: possible 1/3/5-day edge, but current spread/history makes it hard to trade safely.
-- `336570`, `032620`, `462860`: not enough post-cost evidence under this hypothesis.
+- candidate-symbol positives are only diagnostics.
+- the real next step is expanding the candle cache/universe to a broad KOSDAQ sample before trusting the hypothesis.
+- if sample size is small, the correct output is `edge_ok=false`, not “promising edge”.
 
-This is research evidence only. It is not wired into live/paper execution yet.
+This is research evidence only. It is not wired into live/paper execution as an approval signal.

@@ -88,6 +88,12 @@ def main() -> int:
         blocker_reasons.append('outside_kr_observation_window')
     if edge_audit and edge_audit.get('summary', {}).get('edge_ok_count', 0) == 0:
         blocker_reasons.append('strategy_edge_not_established')
+    vs_summary = volume_shock.get('summary', {}) if isinstance(volume_shock, dict) else {}
+    if vs_summary and not vs_summary.get('edge_ok'):
+        blocker_reasons.append('volume_shock_edge_not_established')
+        for blocker in vs_summary.get('blockers', []):
+            if blocker in {'insufficient_universe_symbols', 'insufficient_total_signals', 'insufficient_locked_test_signals'}:
+                blocker_reasons.append(f'volume_shock_{blocker}')
     report = {
         'candidate_count': len(candidates.get('candidates', [])),
         'top_candidates': top,
