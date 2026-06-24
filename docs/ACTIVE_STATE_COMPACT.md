@@ -16,7 +16,7 @@ Last updated: 2026-06-24
 Current long-running paper-only supervisor:
 
 ```text
-session_id: proc_1f1a5d3b2142
+session_id: proc_9ec36692cdec
 command: scripts/continuous_paper_improvement.sh 24 3600
 ```
 
@@ -31,6 +31,7 @@ proc_da2976773b80 killed to load observation guard + Naver ETF NAV fallback; res
 proc_0437165a82cf killed to load token health, spread-history/dynamic-slippage, and observation penalty updates; restarted as proc_63f229c67a19
 proc_63f229c67a19 ended/not_found; verified depth/time-window/stale/multi-cap/stress loop restarted as proc_7d94042a56b2
 proc_7d94042a56b2 ended/not_found; edge-audit/volume-shock hypothesis loop restarted as proc_1f1a5d3b2142
+proc_1f1a5d3b2142 superseded/not_found; strict fixed-horizon/sample-size volume-shock audit loop restarted as proc_9ec36692cdec
 ```
 
 ## Current candidate policy
@@ -108,6 +109,8 @@ status: watchlist_not_live_order
 - `scripts/dynamic_slippage_grid_runner.py` regenerates a config from recent spread-derived slippage and reruns grid backtests.
 - `scripts/strategy_edge_audit.py` writes `data/strategy_edge_audit_latest.json`; it documents the current weak momentum hypothesis and checks BUY signal count, post-cost forward return, win rate, and pair correlation.
 - `scripts/stress_test_candidates.py` writes `data/stress_test_latest.json` with -3/-5/-10% shock and 90d MDD proxy checks.
+- `scripts/volume_shock_hypothesis_audit.py` now uses a fixed horizon, minimum universe size, minimum total signals, and locked test split; small-sample symbol positives are diagnostics only.
+- `scripts/cache_universe_candles.py` can build a broad read-only candle cache from a KOSDAQ/universe symbol file for real cross-sectional edge research.
 - `scripts/strategy_edge_guard_candidates.py` blocks candidates whose strict edge audit does not pass.
 - `scripts/volume_shock_hypothesis_audit.py` tests a separate volume-shock continuation hypothesis for research.
 - `scripts/update_candidates_from_grid.py` applies observation, spread-history, and edge penalties to candidate ranking.
@@ -135,7 +138,7 @@ docs/LOW_CAPITAL_SELECTION.md
 - Historical order timestamps now use candle timestamps via `PaperBroker.simulated_now`.
 - Live orderbook spread check exists; historical replay still uses fixed slippage, not historical orderbook.
 - No-send pre-live checklist can require spread, observation, stress, and strategy-edge guards; live send path still does not exist.
-- Current strict edge audit found 0/10 candidates with all-leg post-cost edge; volume-shock research hypothesis shows possible evidence for 204620 and 073240, but 073240 remains hard to trade because of spread.
+- Current strict edge audit found 0/10 candidates with all-leg post-cost edge. The stricter volume-shock audit now also requires fixed horizon, broad universe size, minimum total signals, and locked test signals; current 5-symbol cache is insufficient and correctly blocks edge establishment.
 - ETF NAV/disparity can be collected from Naver ETF tables; KRX direct endpoint currently returns LOGOUT and KRX MDCSTAT241 LP contract page is identified but direct JSON returns 400/LOGOUT in this environment, so LP contract remains a labeled spread-proxy rather than official contract evidence.
 - Candidate readiness uses observation_guard; recent token self-invalidation was fixed by using one Toss client per paper observation run, and remaining blocks are separated into token/spread/candle categories.
 - Compact HOLD aggregate counts are stored in `backtest_aggregates`, but no per-candle HOLD detail is retained in compact mode.
