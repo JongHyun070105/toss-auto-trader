@@ -1,0 +1,63 @@
+paper:
+  initial_cash_krw: 10000
+  max_order_krw: 3000
+  daily_max_orders: 3
+  symbols:
+    - "005930"
+strategy:
+  name: "multi_agent_guarded"
+  trade_cash_krw: 1000
+risk:
+  stop_loss_pct: 0.03
+  take_profit_pct: 0.06
+  trailing_stop_pct: 0.015
+  allow_market_order: false
+  allow_short_selling: false
+  allow_leverage: false
+fees:
+  KR:
+    # Conservative retail KR stock assumptions. Check your broker's current schedule before live use.
+    buy_commission_pct: 0.00015
+    sell_commission_pct: 0.00015
+    sell_tax_pct: 0.0018
+execution:
+  # Conservative fixed slippage for historical/paper replay when no historical orderbook exists.
+  # Live paper can compare this with `orderbook --symbol SYMBOL` spread_bps.
+  buy_slippage_pct: 0.001
+  sell_slippage_pct: 0.001
+selection:
+  bull_min_score: 65
+  sideways_min_score: 70
+  bear_min_score: 80
+  min_confidence: 0.70
+market:
+  country: "KR"
+  skip_api_when_closed: true
+  fallback_open_check: true
+cache:
+  candle_ttl_seconds: 3600
+  market_context_ttl_seconds: 3600
+  news_ttl_seconds: 3600
+  keep_price_cache_per_symbol: 500
+rate_limits:
+  toss:
+    min_interval_seconds: 2
+    max_calls_per_minute: 20
+    cooldown_seconds_on_429: 120
+  news:
+    min_interval_seconds: 5
+    max_calls_per_minute: 10
+    cooldown_seconds_on_429: 300
+news:
+  enabled: false
+  provider: "none"
+  queries:
+    - "KOSPI market macro economy"
+    - "Samsung Electronics stock Korea market"
+  max_items_per_cycle: 10
+learning:
+  compare_branches:
+    - "multi_agent_guarded"
+    - "technical_only"
+  cycle_seconds: 300
+  report_every_cycles: 12
