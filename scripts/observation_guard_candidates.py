@@ -43,9 +43,10 @@ def main() -> int:
             'ok': len(recent) >= args.min_observations and not blocked,
         }
         cand['observation_guard'] = guard
+        current_status = str(cand.get('status', ''))
         if not guard['ok']:
             cand['status'] = 'blocked_observation_unstable'
-        elif guard['ok']:
+        elif guard['ok'] and (current_status == 'blocked_observation_unstable' or not current_status.startswith('blocked_')):
             cand['status'] = 'observation_checked_watchlist_not_live_order'
     data['observation_guard_updated'] = True
     data['live_order_allowed'] = False

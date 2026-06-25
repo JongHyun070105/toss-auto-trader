@@ -149,9 +149,10 @@ def main() -> int:
             'symbols': c_spreads,
             'ok': ok,
         }
+        current_status = str(c.get('status', ''))
         if not ok:
             c['status'] = 'blocked_spread_or_orderbook_unavailable'
-        else:
+        elif current_status == 'blocked_spread_or_orderbook_unavailable' or not current_status.startswith('blocked_'):
             c['status'] = 'spread_checked_watchlist_not_live_order'
 
     data['spread_guard_updated'] = True

@@ -47,10 +47,16 @@ for ((i=1; i<=CYCLES; i++)); do
     fi
     TOSS_DB_PATH=data/low_kr_backtest.sqlite3 python3 -m toss_auto_trader.cli cache-candles \
       --symbols "$SYMBOLS" --interval 1d --count 200 --pages 1 --sleep-seconds 2 || true
+    EVENT_NEWS_QUERIES="${EVENT_NEWS_QUERIES:-}"
+    if [ -z "$EVENT_NEWS_QUERIES" ] && [ -f research/event_news_queries.txt ]; then
+      EVENT_NEWS_QUERIES="$(paste -sd'|' research/event_news_queries.txt)"
+    fi
     TOSS_DB_PATH=data/news_context_latest.sqlite3 python3 -m toss_auto_trader.cli news-cycle \
       --providers naver \
-      --queries '금호타이어 주가|GC메디아이 주가|글로벌텍스프리 주가|원텍 주가|더즌 주가' \
-      --limit 3 || true
+      --queries "${EVENT_NEWS_QUERIES:-GC메디아이 공급계약|글로벌텍스프리 실적 개선|원텍 수주|더즌 자사주}" \
+      --limit 3 \
+      --max-queries "${EVENT_NEWS_MAX_QUERIES:-12}" \
+      --sleep-seconds "${EVENT_NEWS_SLEEP_SECONDS:-2}" || true
     python3 scripts/pair_grid_runner.py \
       --windows "$GRID_WINDOWS" \
       --horizons "$GRID_HORIZONS" \

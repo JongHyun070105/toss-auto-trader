@@ -12,9 +12,17 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+class ClosingConnection(sqlite3.Connection):
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
+
+
 def connect(db_path: str) -> sqlite3.Connection:
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(db_path)
+    con = sqlite3.connect(db_path, factory=ClosingConnection)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
     return con
@@ -97,7 +105,6 @@ def init_db(db_path: str) -> None:
                 created_at TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_decision_events_symbol_time ON decision_events(symbol, created_at);
-            CREATE INDEX IF NOT EXISTS idx_decision_events_branch_time ON decision_events(branch, created_at);
 
             CREATE TABLE IF NOT EXISTS api_snapshots (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -166,6 +173,14 @@ def init_db(db_path: str) -> None:
             con.execute("ALTER TABLE paper_orders ADD COLUMN fee_amount TEXT NOT NULL DEFAULT '0'")
         if "tax_amount" not in paper_order_fee_cols:
             con.execute("ALTER TABLE paper_orders ADD COLUMN tax_amount TEXT NOT NULL DEFAULT '0'")
+        decision_cols = {row[1] for row in con.execute("PRAGMA table_info(decision_events)").fetchall()}
+        if "branch" not in decision_cols:
+            con.execute("ALTER TABLE decision_events ADD COLUMN branch TEXT NOT NULL DEFAULT 'default'")
+        if "outcome_json" not in decision_cols:
+            con.execute("ALTER TABLE decision_events ADD COLUMN outcome_json TEXT")
+        if "loss" not in decision_cols:
+            con.execute("ALTER TABLE decision_events ADD COLUMN loss REAL")
+        con.execute("CREATE INDEX IF NOT EXISTS idx_decision_events_branch_time ON decision_events(branch, created_at)")
 
 
 def ensure_paper_account(db_path: str, name: str = "default", initial_cash_krw: Decimal = Decimal("10000")) -> int:
@@ -420,17 +435,30 @@ def insert_news_items(db_path: str, query: str, items: list[dict[str, Any]]) -> 
     inserted = 0
     with connect(db_path) as con:
         for item in items:
+            provider = item.get("provider", "unknown")
+            title = item.get("title", "")
+            url = item.get("url", "")
+            published_at = item.get("published_at")
+            existing = con.execute(
+                """SELECT id FROM news_context
+                   WHERE provider = ? AND query = ? AND title = ? AND url = ?
+                     AND COALESCE(published_at, '') = COALESCE(?, '')
+                   LIMIT 1""",
+                (provider, query, title, url, published_at),
+            ).fetchone()
+            if existing:
+                continue
             con.execute(
                 """INSERT INTO news_context(
                        provider, query, title, url, source, published_at, sentiment, summary, raw_json, created_at
                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    item.get("provider", "unknown"),
+                    provider,
                     query,
-                    item.get("title", ""),
-                    item.get("url", ""),
+                    title,
+                    url,
                     item.get("source"),
-                    item.get("published_at"),
+                    published_at,
                     item.get("sentiment"),
                     item.get("summary"),
                     json.dumps(_redact_sensitive(item.get("raw", {})), ensure_ascii=False),

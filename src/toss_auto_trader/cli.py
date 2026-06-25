@@ -4,6 +4,7 @@ import argparse
 from dataclasses import replace
 import copy
 import json
+from pathlib import Path
 import time
 from decimal import Decimal
 from typing import Sequence
@@ -13,6 +14,14 @@ from .collector import collect_account_snapshot, collect_exchange_rate, collect_
 from .config import Settings
 from .decision_engine import evaluate_symbol_from_candles, execute_paper_decision, mark_decision_outcome
 from .lab_config import load_simple_yaml
+from .live_order import (
+    build_buy_limit_payloads,
+    parse_pair_slots,
+    redact_order_result,
+    required_confirmation,
+    validate_candidate_for_live,
+    validate_fresh_orderbooks,
+)
 from .market import CycleCache, fallback_market_open, is_open_from_calendar
 from .news_client import NewsClientError, NewsHub
 from .orderbook_utils import best_spread_from_orderbook as _best_spread_from_orderbook
@@ -502,6 +511,8 @@ def cmd_news_cycle(args) -> None:
     hub = NewsHub()
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     queries = [q.strip() for q in args.queries.split("|") if q.strip()]
+    if args.max_queries > 0:
+        queries = queries[: args.max_queries]
     results = []
     for provider in providers:
         for query in queries:
@@ -521,6 +532,8 @@ def cmd_news_cycle(args) -> None:
                 results.append({"provider": provider, "query": query, "inserted": count, "titles": [item.title for item in items[:3]]})
             except Exception as exc:
                 results.append({"provider": provider, "query": query, "error": str(exc)})
+            if args.sleep_seconds > 0:
+                time.sleep(args.sleep_seconds)
     print_json({"results": results, "summary": db.summary(settings.db_path)})
 
 def cmd_seed_price(args) -> None:
@@ -557,6 +570,146 @@ def cmd_order_dry_run(args) -> None:
         "price": str(args.price),
     }
     print_json(client.create_order(str(args.account_seq), payload))
+
+
+def _read_json_or_none(path: str) -> dict | None:
+    p = Path(path)
+    if not p.exists():
+        return None
+    return json.loads(p.read_text())
+
+
+def _append_jsonl(path: str, row: dict) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a") as f:
+        f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+
+
+def cmd_order_live_send(args) -> None:
+    """Separate live-order path. Default is review-only; real send is gated."""
+    if args.side != "BUY":
+        print_json({"ok": False, "order_sent": False, "errors": ["only BUY candidate entry is implemented; SELL requires a separate holdings/exit gate"]})
+        raise SystemExit(2)
+
+    data = json.loads(Path(args.path).read_text())
+    candidates = data.get("candidates", [])
+    if not candidates:
+        print_json({"ok": False, "order_sent": False, "errors": ["no candidates"]})
+        raise SystemExit(2)
+    try:
+        candidate = candidates[args.candidate_index]
+    except IndexError:
+        print_json({"ok": False, "order_sent": False, "errors": [f"candidate index out of range: {args.candidate_index}"]})
+        raise SystemExit(2)
+
+    stress_report = _read_json_or_none(args.stress_path) if args.require_stress_ok else None
+    validation = validate_candidate_for_live(
+        data,
+        candidate,
+        require_spread_ok=True,
+        require_observation_ok=True,
+        require_stress_ok=args.require_stress_ok,
+        require_edge_ok=True,
+        stress_report=stress_report,
+    )
+    extra_errors: list[str] = []
+    if args.candidate_name and candidate.get("name") != args.candidate_name:
+        extra_errors.append("candidate_name_mismatch")
+    if args.candidate_fingerprint and validation.fingerprint != args.candidate_fingerprint:
+        extra_errors.append("candidate_fingerprint_mismatch")
+
+    base_report = {
+        "mode": "live_order_review_or_send",
+        "ok": validation.ok and not extra_errors,
+        "order_sent": False,
+        "candidate_name": candidate.get("name"),
+        "candidate_pair": candidate.get("pair"),
+        "candidate_fingerprint": validation.fingerprint,
+        "required_confirm": validation.required_confirm,
+        "validation_errors": validation.errors + extra_errors,
+        "validation_warnings": validation.warnings,
+        "live_safety": {
+            "default_is_plan_only": True,
+            "really_send_required": True,
+            "exact_confirm_required": True,
+            "env_required": {"TOSS_DRY_RUN": "false", "TOSS_LIVE_TRADING": "true"},
+        },
+    }
+    if validation.errors or extra_errors:
+        print_json(base_report)
+        raise SystemExit(2)
+
+    settings = Settings.from_env()
+    client = TossInvestClient(settings)
+    orderbooks: dict[str, dict] = {}
+    for symbol, _cash in parse_pair_slots(candidate.get("pair", "")):
+        orderbooks[symbol] = client.get_orderbook(symbol)
+    ob_errors, ob_warnings, ob_details = validate_fresh_orderbooks(
+        candidate,
+        orderbooks,
+        max_stale_ms=args.max_stale_ms,
+        market_impact_levels=args.market_impact_levels,
+    )
+    if ob_errors:
+        base_report.update({"ok": False, "fresh_orderbook_errors": ob_errors, "fresh_orderbook_warnings": ob_warnings, "fresh_orderbook": ob_details})
+        print_json(base_report)
+        raise SystemExit(2)
+
+    payloads = build_buy_limit_payloads(
+        candidate,
+        orderbooks,
+        client_order_id_prefix=args.client_order_id_prefix,
+        limit_buffer_bps=Decimal(str(args.limit_buffer_bps)),
+    )
+    send_payloads = [
+        {k: v for k, v in payload.items() if k in {"clientOrderId", "symbol", "side", "orderType", "quantity", "price"}}
+        for payload in payloads
+    ]
+    base_report.update({
+        "ok": True,
+        "fresh_orderbook_warnings": ob_warnings,
+        "fresh_orderbook": ob_details,
+        "payloads": payloads,
+    })
+
+    if not args.really_send:
+        base_report.update({"plan_only": True, "next_step": "review payloads; rerun with --really-send and exact --confirm only after human approval"})
+        print_json(base_report)
+        return
+
+    if args.confirm != required_confirmation(candidate):
+        base_report.update({"ok": False, "validation_errors": ["confirm_string_mismatch"], "plan_only": False})
+        print_json(base_report)
+        raise SystemExit(2)
+    if len(send_payloads) > 1 and not args.allow_multi_leg:
+        base_report.update({"ok": False, "validation_errors": ["multi_leg_live_send_requires_--allow-multi-leg"]})
+        print_json(base_report)
+        raise SystemExit(2)
+    if settings.dry_run or not settings.live_trading:
+        base_report.update({"ok": False, "validation_errors": ["env_not_live:TOSS_DRY_RUN=false_and_TOSS_LIVE_TRADING=true_required"]})
+        print_json(base_report)
+        raise SystemExit(2)
+    account_seq = args.account_seq or settings.account_seq
+    if not account_seq:
+        base_report.update({"ok": False, "validation_errors": ["account_seq_required"]})
+        print_json(base_report)
+        raise SystemExit(2)
+
+    results = []
+    for payload in send_payloads:
+        results.append({"payload": payload, "result": client.create_order(str(account_seq), payload)})
+    audit = {
+        "created_at": db.utc_now(),
+        "candidate_fingerprint": validation.fingerprint,
+        "candidate_name": candidate.get("name"),
+        "candidate_pair": candidate.get("pair"),
+        "payloads": send_payloads,
+        "results": redact_order_result(results),
+    }
+    _append_jsonl(args.approval_log, audit)
+    base_report.update({"ok": True, "order_sent": True, "results": redact_order_result(results), "approval_log": args.approval_log})
+    print_json(base_report)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -681,6 +834,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--providers", default="naver,marketaux,finnhub")
     p.add_argument("--queries", default="KOSPI market macro economy|Samsung Electronics stock Korea market")
     p.add_argument("--limit", type=int, default=3)
+    p.add_argument("--max-queries", type=int, default=0, help="cap queries per run; 0 means all")
+    p.add_argument("--sleep-seconds", type=float, default=0.0, help="sleep between provider/query calls to avoid 429")
     p.add_argument("--language", default="en")
     p.add_argument("--finnhub-category", default="general")
     p.add_argument("--alpha-tickers", default="AAPL,MSFT,NVDA")
@@ -720,6 +875,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--quantity", required=True)
     p.add_argument("--price", required=True)
     p.set_defaults(func=cmd_order_dry_run)
+
+    p = sub.add_parser("order-live-send", help="review or send a gated live BUY candidate; default is plan-only")
+    p.add_argument("--path", default="data/live_paper_candidates.json")
+    p.add_argument("--candidate-index", type=int, default=0)
+    p.add_argument("--candidate-name", default="")
+    p.add_argument("--candidate-fingerprint", default="")
+    p.add_argument("--stress-path", default="data/stress_test_latest.json")
+    p.add_argument("--no-require-stress-ok", dest="require_stress_ok", action="store_false")
+    p.add_argument("--side", choices=["BUY", "SELL"], default="BUY")
+    p.add_argument("--account-seq")
+    p.add_argument("--client-order-id-prefix", default="tossbot")
+    p.add_argument("--limit-buffer-bps", default="0")
+    p.add_argument("--max-stale-ms", type=int, default=500)
+    p.add_argument("--market-impact-levels", type=int, default=5)
+    p.add_argument("--really-send", action="store_true")
+    p.add_argument("--confirm", default="")
+    p.add_argument("--allow-multi-leg", action="store_true")
+    p.add_argument("--approval-log", default="data/live_order_approval_log.jsonl")
+    p.set_defaults(func=cmd_order_live_send, require_stress_ok=True)
     return parser
 
 

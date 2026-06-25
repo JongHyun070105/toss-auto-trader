@@ -1,0 +1,78 @@
+{
+  "mode": "research_only_no_send",
+  "live_order_allowed": false,
+  "goal": "Find new strategy hypotheses without p-hacking or live execution.",
+  "loop_policy": {
+    "allowed": [
+      "Run exploratory sweeps on already-consumed historical data.",
+      "Promote only named hypotheses, not raw best rows.",
+      "Freeze parameters before validation.",
+      "Require unseen future holdout or paper-only forward validation before pre-live review.",
+      "Record failed hypotheses instead of silently retuning them.",
+      "Run market-regime-first diagnostics before creating another short-horizon stock-selection hypothesis.",
+      "Use 20d/60d horizon or event-data tracks when the short-horizon public-price signal search keeps failing.",
+      "Use sector/theme/event/fundamental data as a new question after pure OHLCV relative-strength also fails."
+    ],
+    "blocked": [
+      "Infinite same-history optimization until the equity curve looks good.",
+      "Choosing best period/strategy/parameter after seeing locked test results and treating it as proof.",
+      "Live order promotion from ai-trader exploratory sweep output.",
+      "Ignoring KR tax, slippage, spread, limit-up/down, halts, or as-of universe selection.",
+      "Creating another 3d/5d public-price stock-selection hypothesis before checking whether market exposure is allowed.",
+      "Treating a same-history regime filter as approval; regime filters are diagnostics until frozen and forward-tested.",
+      "Running another pure OHLCV top-N cross-sectional stock-selection sweep without delisted-inclusive universe or new data source."
+    ]
+  },
+  "minimum_exploratory_report_fields": [
+    "as_of_universe_rule",
+    "cost_model",
+    "full_return",
+    "yearly_return",
+    "rolling_1y_2y_3y_return",
+    "KOSDAQ_excess_return",
+    "return_to_mdd",
+    "return_to_volatility",
+    "positive_window_rate",
+    "data_quality_proxy_flags"
+  ],
+  "promotion_gates": {
+    "future_holdout_required": true,
+    "paper_only_forward_days_min": 20,
+    "min_positive_window_rate": 0.65,
+    "min_median_excess_vs_kosdaq": 0.0,
+    "max_single_window_dependency": "No single year/rolling window may be the sole source of profit.",
+    "manual_approval_required": true
+  },
+  "auto_discovery_loop": {
+    "mode": "continuous_strategy_discovery_no_send",
+    "goal": "Continuously run/fold strategy audits, keep multiple strategy families, and promote only forward-proven strategies to human pre-live review.",
+    "live_order_allowed": false,
+    "order_sent": false,
+    "good_strategy_thresholds": {
+      "min_resolved_forward_outcomes": 20,
+      "min_avg_net_return_after_cost": 0.02,
+      "min_median_net_return_after_cost": 0.0,
+      "min_win_rate_after_cost": 0.55,
+      "max_pending_count": 0
+    },
+    "live_send_rule": "The loop must not call order-live-send. It may only write a pre_live_review_candidate_not_live_order; live send still requires candidate file approval, green pre-live gates, exact fingerprint confirmation, and live env flags in a separate command."
+  },
+  "research_pivot_2026_06_25": {
+    "finding": "Repeated public price/volume short-horizon stock-selection hypotheses failed; first ask whether the KOSDAQ regime permits long exposure at all.",
+    "evidence_file": "data/market_regime_signal_audit_latest.json",
+    "allowed_next_tracks": [
+      "market_regime_exposure_gate",
+      "20d_60d_horizon_research",
+      "event_based_data_collection"
+    ],
+    "blocked_next_track": "unbounded 3d/5d stock-selection search on the same historical OHLCV data",
+    "live_order_allowed": false,
+    "latest_regime_exposure_gate_file": "data/market_regime_exposure_gate_latest.json",
+    "latest_regime_exposure_gate_finding": "Same-history KOSDAQ-only exposure gates did not beat always-long in locked-test daily equity; avoid_weak_downtrend_only slightly improved H20 forward average but still underperformed always-long equity after switch costs.",
+    "next_concrete_track": "Stop pure public OHLCV stock-selection variants; move to sector/theme/event/fundamental data, or build a delisted-inclusive universe before further cross-sectional research.",
+    "latest_relative_strength_file": "data/relative_strength_horizon_latest.json",
+    "latest_relative_strength_finding": "H60 relative-strength top-20 monthly baskets failed both H20 and H60 locked-test excess vs eligible universe and KOSDAQ; top-N selection was worse than broad baselines.",
+    "latest_event_liquidity_file": "data/event_liquidity_reaction_latest.json",
+    "latest_event_liquidity_finding": "News DB was deduped and default collection moved from generic price queries to catalyst queries. Current event audit: 83 news rows, 44 mapped events, 2 evaluable signals, 0 pending future signals. Still fail-closed because sample breadth is 1 symbol and locked-test event return/excess are negative."
+  }
+}

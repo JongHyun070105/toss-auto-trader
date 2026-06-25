@@ -1,0 +1,248 @@
+{
+  "generated_at_kst": "2026-06-25T07:55:00+09:00",
+  "policy": {
+    "purpose": "research_only_no_send",
+    "live_order_allowed": false,
+    "do_not_choose_best_after_validation": true,
+    "locked_test_policy": "Any dataset inspected for tuning is consumed. New promotion requires a later unseen time window, newly collected longer history, or paper-only forward validation. Measurement-bug fixes may be rerun, but they do not reset hypothesis cleanliness."
+  },
+  "hypotheses": [
+    {
+      "id": "VS_BREAKOUT_H3_V1",
+      "name": "Volume Shock Breakout, filter off",
+      "status": "locked_test_failed_measurement_model_updated_for_gap_fill_rerun",
+      "definition": {
+        "universe": "KOSDAQ/Toss tradable symbols with cached 1d candles",
+        "signal_day": "volume >= 3x previous 20d average AND close > open",
+        "entry": "gap-aware stop/trigger fill on next trading day: if next open >= signal-day high, fill at next open; elif next intraday high >= signal-day high, fill at signal-day high; otherwise no fill",
+        "exit": "close after 3 trading days from entry day",
+        "cooldown": "same symbol cannot re-enter while horizon position is active",
+        "market_filter": false,
+        "cost_pct_roundtrip": 0.006
+      },
+      "promotion_gates": {
+        "min_universe_symbols": 100,
+        "min_signal_symbols": 100,
+        "min_total_signals": 300,
+        "min_locked_test_signals": 100,
+        "max_symbol_signal_share": 0.05,
+        "max_month_signal_share": 0.35,
+        "min_locked_test_win_rate": 0.52,
+        "min_locked_test_avg_net_return": 0.0,
+        "locked_test_median_should_not_be_negative": true,
+        "require_positive_candle_baseline_outperformance": true,
+        "require_equal_weight_symbol_mean_positive": true
+      }
+    },
+    {
+      "id": "PULLBACK_TREND_H5_V1",
+      "name": "Pullback after trend",
+      "status": "locked_test_failed",
+      "definition": {
+        "universe": "KOSDAQ/Toss tradable symbols with cached 1d candles",
+        "trend": "SMA20 > SMA60 AND signal close > SMA60",
+        "pullback": "at least 2 of the latest 3 closes are down AND low is within +1% of SMA20 AND close is not more than 3% below SMA20",
+        "rsi_filter": "RSI14 between 35 and 60 inclusive",
+        "entry": "next trading day open",
+        "exit": "close after 5 trading days from entry day",
+        "cooldown": "same symbol cannot re-enter while horizon position is active",
+        "cost_pct_roundtrip": 0.006
+      },
+      "promotion_gates": {
+        "min_universe_symbols": 100,
+        "min_signal_symbols": 80,
+        "min_total_signals": 200,
+        "min_locked_test_signals": 60,
+        "max_symbol_signal_share": 0.05,
+        "max_month_signal_share": 0.35,
+        "min_locked_test_win_rate": 0.52,
+        "min_locked_test_avg_net_return": 0.0,
+        "locked_test_median_should_not_be_negative": true,
+        "require_baseline_outperformance": true
+      }
+    },
+    {
+      "id": "VS_REVERSAL_H3_V1",
+      "name": "Volume Shock Reversal / Avoid Proxy",
+      "status": "post_hoc_exploratory_requires_future_holdout",
+      "definition": {
+        "universe": "KOSDAQ/Toss tradable symbols with cached 1d candles",
+        "source_of_idea": "Derived after VS_BREAKOUT_H3_V1 failed locked validation; therefore not cleanly pre-registered",
+        "signal_day": "volume >= 3x previous 20d average AND close > open",
+        "measurement": "research-only short/avoid proxy: next-open to close after 3 trading days, transformed as negative long raw return minus roundtrip cost",
+        "safe_live_use_first": "avoid_or_penalize_recent_volume_shock_names; not live short selling",
+        "entry": "next trading day open for proxy measurement",
+        "exit": "close after 3 trading days from entry day",
+        "cooldown": "same symbol cannot re-enter while horizon position is active",
+        "cost_pct_roundtrip": 0.006
+      },
+      "promotion_gates": {
+        "same_as_volume_shock_research_gate": true,
+        "future_holdout_required_for_any_promotion": true,
+        "paper_only_forward_validation_required": true,
+        "live_order_allowed": false
+      }
+    },
+    {
+      "id": "REGIME_LOW_VOL_BREAKOUT_H10_V1",
+      "name": "KOSDAQ regime-filtered low-volatility breakout",
+      "status": "new_fixed_hypothesis_before_first_validation_in_this_file",
+      "definition": {
+        "universe": "KOSDAQ/Toss tradable symbols with cached 1d candles; broad cached symbols, not live orders",
+        "market_regime": "KOSDAQ close > SMA120 and KOSDAQ 20d return > -5%",
+        "symbol_trend": "signal close > SMA60 and SMA extension <= 20%",
+        "breakout": "signal close > previous 20 trading-day high",
+        "volatility_filter": "20d daily close-return volatility <= 5% and 20d high-low range <= 35%",
+        "volume_shock_avoidance": "signal volume <= 2.5x previous 20d average volume",
+        "entry": "next trading day open; skip if next open gaps up more than 8% from signal close",
+        "exit": "conservative OHLC path: stop -6%, take +12%, otherwise close after 10 trading days; if stop and take both touched same day, assume stop first",
+        "cooldown": "same symbol cannot re-enter while horizon position is active",
+        "roundtrip_cost_pct": 0.0046
+      },
+      "promotion_gates": {
+        "min_signal_symbols": 100,
+        "min_total_signals": 300,
+        "min_locked_test_signals": 100,
+        "max_symbol_signal_share": 0.05,
+        "max_month_signal_share": 0.35,
+        "min_locked_test_win_rate": 0.52,
+        "min_locked_test_avg_net_return": 0.0,
+        "locked_test_median_should_not_be_negative": true,
+        "require_equal_weight_symbol_mean_positive": true,
+        "future_holdout_required_for_any_promotion": true,
+        "live_order_allowed": false
+      }
+    },
+    {
+      "id": "RSI_BBANDS_MEAN_REVERSION_H20_V1",
+      "name": "RSI + Bollinger lower-band mean reversion",
+      "status": "new_fixed_hypothesis_after_external_ai_trader_hint_requires_future_holdout",
+      "definition": {
+        "source_of_idea": "External ai-trader bounded sweep showed RsiBollingerBandsStrategy as the only modestly stable exploratory hint; this is not clean proof.",
+        "signal": "RSI14 <= 30 and close <= lower Bollinger Band(20, 2)",
+        "market_guard": "KOSDAQ 20d return >= -12% to avoid crash regimes",
+        "volume_guard": "signal volume <= 3x previous 20d avg to avoid distribution/volume shock extremes",
+        "entry": "next trading day open; skip if gap down < -10% or gap up > +8% from signal close",
+        "exit": "intraday stop -10%; otherwise exit next open after close >= BB mid or RSI14 >= 55; otherwise horizon 20 close",
+        "cooldown": "same symbol cannot re-enter for 20 trading days",
+        "roundtrip_cost_pct": 0.0046
+      },
+      "promotion_gates": {
+        "min_signal_symbols": 100,
+        "min_total_signals": 300,
+        "min_locked_test_signals": 100,
+        "max_symbol_signal_share": 0.05,
+        "max_month_signal_share": 0.35,
+        "min_locked_test_win_rate": 0.52,
+        "min_locked_test_avg_net_return": 0.0,
+        "locked_test_median_should_not_be_negative": true,
+        "require_equal_weight_symbol_mean_positive": true,
+        "future_holdout_required_for_any_promotion": true,
+        "live_order_allowed": false
+      }
+    },
+    {
+      "id": "RSI_BBANDS_MEAN_REVERSION_H20_V2_MARKET_GUARDED",
+      "name": "RSI+Bollinger mean reversion with stricter KOSDAQ crash/high-vol guard",
+      "status": "post_hoc_guard_candidate_from_H20_V1_failure_analysis_requires_future_holdout",
+      "definition": {
+        "source_of_idea": "H20_V1 bad months correlate with KOSDAQ monthly return; corr(avg strategy month, KOSDAQ month return)=+0.587. Worst months were market drawdown/high-vol clusters.",
+        "base_signal": "RSI14 <= 30 and close <= lower Bollinger Band(20, 2)",
+        "market_guard": "KOSDAQ 20d return >= -4% and 20d annualized volatility <= 40%",
+        "volume_guard": "signal volume <= 3x previous 20d avg",
+        "entry_exit": "same as H20_V1",
+        "status_note": "Post-hoc V2; same-history result is only a clue. Needs future/paper holdout."
+      },
+      "promotion_gates": {
+        "same_history_can_only_generate_hypothesis": true,
+        "future_holdout_required_for_any_promotion": true,
+        "live_order_allowed": false
+      }
+    },
+    {
+      "id": "RSI_BBANDS_MEAN_REVERSION_H20_V3_BBZ_VOLUME_GUARD",
+      "name": "RSI+Bollinger mean reversion with BB z-score and volume-shock guards",
+      "status": "post_hoc_guard_candidate_from_trade_diagnostics_requires_future_holdout",
+      "definition": {
+        "source_of_idea": "H20_V1 trade diagnostics: bb_z >= -2.5 was the best viable single post-hoc guard by locked average; high volume_multiple had worse removed-trade stats.",
+        "base_signal": "RSI14 <= 30 and close <= lower Bollinger Band(20,2)",
+        "additional_guards": "bb_z >= -2.5 and volume_multiple <= 2.5",
+        "entry_exit": "same as H20_V1",
+        "status_note": "Post-hoc V3; same-history result can only suggest a future/paper holdout candidate."
+      },
+      "promotion_gates": {
+        "same_history_can_only_generate_hypothesis": true,
+        "future_holdout_required_for_any_promotion": true,
+        "live_order_allowed": false
+      }
+    },
+    {
+      "id": "KOSDAQ_REGIME_EXPOSURE_GATE_H20_H60_V1",
+      "status": "new_regime_first_exposure_gate_diagnostic_requires_future_holdout",
+      "live_order_allowed": false,
+      "paper_only": true,
+      "description": "No individual stock selection. Use KOSDAQ index regime features to decide whether broad long exposure is allowed, then evaluate H20/H60 forward index returns and daily cash-vs-index equity.",
+      "fixed_before_validation": {
+        "horizons": [
+          20,
+          60
+        ],
+        "cost_model": "roundtrip 0.46%; equity exposure switch one-way cost 0.23%",
+        "gate_candidates": [
+          "always_long_index_proxy",
+          "trend_constructive_only",
+          "rebound_crash_drawdown_mixed",
+          "avoid_weak_downtrend_only",
+          "avoid_weak_and_high_vol_down"
+        ],
+        "index_source": "Naver Stock API domestic index KOSDAQ day chart"
+      },
+      "promotion_rule": "Same-history pass is not live approval; freeze one gate and require future/no-send forward validation first.",
+      "latest_result_file": "data/market_regime_exposure_gate_latest.json"
+    },
+    {
+      "id": "RELATIVE_STRENGTH_H60_H20_H60_V1",
+      "status": "rejected_same_history_diagnostic_requires_new_question_or_future_holdout",
+      "live_order_allowed": false,
+      "paper_only": true,
+      "description": "Monthly top-20 KOSDAQ stock basket by 60d relative strength vs KOSDAQ, evaluated at 20d/60d against full eligible universe and KOSDAQ baseline with KR roundtrip cost.",
+      "fixed_before_validation": {
+        "formation_days": 60,
+        "horizons": [
+          20,
+          60
+        ],
+        "top_n": 20,
+        "rebalance": "first KOSDAQ trading day each month",
+        "entry_model": "next symbol open",
+        "exit_model": "symbol close after horizon",
+        "filters": [
+          "min_price>=1000",
+          "avg_turnover_20d>=50m KRW",
+          "close>=SMA120"
+        ]
+      },
+      "latest_result_file": "data/relative_strength_horizon_latest.json",
+      "latest_finding": "Failed: top-N relative strength basket underperformed eligible universe and KOSDAQ in locked test; current symbol cache still has delisted-universe bias risk."
+    },
+    {
+      "id": "EVENT_LIQUIDITY_REACTION_H3_V1",
+      "status": "data_track_active_insufficient_sample",
+      "live_order_allowed": false,
+      "paper_only": true,
+      "description": "Positive news/filing-style catalyst keywords plus abnormal daily volume reaction, joined from cached news_context to cached daily candles; next-open entry and 3-trading-day exit, compared with same-date eligible universe baseline.",
+      "fixed_before_validation": {
+        "event_source": "news_context rows mapped by research/news_event_symbol_map.csv",
+        "signal": "catalyst_score > 0 and event-day volume >= 1.5x previous 20d avg volume",
+        "liquidity_filter": "previous 20d avg turnover >= 50m KRW and close >= 1000 KRW",
+        "entry_model": "next trading day open after event date",
+        "exit_model": "close after 3 trading days from entry day",
+        "cost_pct_roundtrip": 0.0046,
+        "baseline": "same event date eligible universe average forward return"
+      },
+      "promotion_rule": "Recent-news audit is no-send research only; promotion requires enough mapped historical events or forward paper observations.",
+      "latest_result_file": "data/event_liquidity_reaction_latest.json",
+      "latest_finding": "After news dedupe and catalyst-query collection, current cache has 83 news rows, 44 mapped events, and 2 evaluable fixed signals. Same-history result is not promotable: locked-test has only 1 event with -13.46% net return and -9.82% excess vs same-date eligible universe; live_order_allowed remains false."
+    }
+  ]
+}

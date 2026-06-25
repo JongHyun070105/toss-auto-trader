@@ -68,6 +68,8 @@ def main() -> int:
         symbol_rows = {}
         weighted_mdd = Decimal('0')
         total_cash = sum(cash.values()) or Decimal('1')
+        data_missing = False
+        infeasible_qty = False
         for sym, slot in cash.items():
             candles = cached_candles_readonly(args.db_path, sym, limit=90)
             closes = [Decimal(str(c['closePrice'])) for c in reversed(candles[:90])] if candles else []
@@ -75,8 +77,21 @@ def main() -> int:
             qty = (slot / last).to_integral_value(rounding=ROUND_DOWN) if last > 0 else Decimal('0')
             residual = slot - qty * last if last > 0 else slot
             mdd = max_drawdown(closes) if closes else Decimal('0')
+            if not closes or last <= 0:
+                data_missing = True
+            if last > 0 and qty <= 0:
+                infeasible_qty = True
             weighted_mdd += mdd * (slot / total_cash)
-            symbol_rows[sym] = {'slot_cash': str(slot), 'last_close': str(last), 'qty': str(qty), 'residual_cash': str(residual), 'mdd_90d': str(mdd)}
+            symbol_rows[sym] = {
+                'slot_cash': str(slot),
+                'last_close': str(last),
+                'qty': str(qty),
+                'residual_cash': str(residual),
+                'mdd_90d': str(mdd),
+                'cached_bars': len(closes),
+                'data_available': bool(closes and last > 0),
+                'intended_capital_feasible': bool(last > 0 and qty > 0),
+            }
         shock_results = []
         for shock in shocks:
             pnl = Decimal('0')
@@ -86,8 +101,17 @@ def main() -> int:
                 pnl += qty * last * shock
             shock_results.append({'shock': str(shock), 'pnl_krw': str(pnl), 'pnl_pct_on_total_cash': str(pnl / total_cash if total_cash else Decimal('0'))})
         worst = min(Decimal(r['pnl_pct_on_total_cash']) for r in shock_results) if shock_results else Decimal('0')
-        ok = worst > Decimal('-0.08') and weighted_mdd > Decimal('-0.25')
-        rows.append({'pair': cand.get('pair'), 'name': cand.get('name'), 'status': 'stress_checked_watchlist_not_live_order' if ok else 'blocked_stress_risk', 'ok': ok, 'weighted_mdd_90d': str(weighted_mdd), 'symbols': symbol_rows, 'shocks': shock_results})
+        ok = (not data_missing) and (not infeasible_qty) and worst > Decimal('-0.08') and weighted_mdd > Decimal('-0.25')
+        blockers = []
+        if data_missing:
+            blockers.append('stress_data_missing')
+        if infeasible_qty:
+            blockers.append('intended_capital_cannot_buy_one_share')
+        if worst <= Decimal('-0.08'):
+            blockers.append('shock_loss_too_large')
+        if weighted_mdd <= Decimal('-0.25'):
+            blockers.append('historical_mdd_too_large')
+        rows.append({'pair': cand.get('pair'), 'name': cand.get('name'), 'status': 'stress_checked_watchlist_not_live_order' if ok else 'blocked_stress_risk', 'ok': ok, 'blockers': blockers, 'weighted_mdd_90d': str(weighted_mdd), 'symbols': symbol_rows, 'shocks': shock_results})
     report = {'shocks': [str(s) for s in shocks], 'rows': rows, 'live_order_allowed': False}
     Path(args.out).write_text(json.dumps(report, ensure_ascii=False, indent=2))
     print(json.dumps(report, ensure_ascii=False, indent=2))

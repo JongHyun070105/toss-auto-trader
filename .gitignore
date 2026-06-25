@@ -10,6 +10,8 @@
 *.db
 *.log
 /graphify-out/
+/external/
+/ai-trader/
 
 # python
 __pycache__/

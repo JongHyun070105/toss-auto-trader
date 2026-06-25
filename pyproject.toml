@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toss-auto-trader-lab"
+version = "0.1.0"
+description = "Toss Invest Open API paper-trading and read-only market/account connector"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+toss-lab = "toss_auto_trader.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

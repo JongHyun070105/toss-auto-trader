@@ -92,19 +92,25 @@ class TossInvestClient:
         if params:
             query = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
             url = f"{url}?{query}"
-        final_headers = {"accept": "application/json"}
-        if auth:
-            final_headers.update(self._auth_header())
-        if headers:
-            final_headers.update(headers)
-        req = urllib.request.Request(url, data=body, headers=final_headers, method=method)
         for attempt in range(max_retries + 1):
+            final_headers = {"accept": "application/json"}
+            if auth:
+                final_headers.update(self._auth_header())
+            if headers:
+                final_headers.update(headers)
+            req = urllib.request.Request(url, data=body, headers=final_headers, method=method)
             try:
                 with urllib.request.urlopen(req, timeout=20) as resp:
                     return resp.read().decode("utf-8")
             except urllib.error.HTTPError as e:
                 err_body = e.read().decode("utf-8", errors="replace")
                 response_headers = dict(e.headers.items()) if e.headers else {}
+                if e.code == 401 and auth and attempt < max_retries:
+                    # Toss tokens can be invalidated by another client/token issuance mid-run.
+                    # Refresh once and rebuild the Authorization header on the next attempt.
+                    self._token = None
+                    time.sleep(min(2 ** attempt, 5))
+                    continue
                 if e.code == 429 and attempt < max_retries:
                     retry_after = response_headers.get("Retry-After") or response_headers.get("retry-after")
                     delay = float(retry_after) if retry_after and retry_after.isdigit() else min(2 ** attempt, 5)
