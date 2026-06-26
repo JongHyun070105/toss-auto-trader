@@ -3,8 +3,9 @@
 .env.*
 !.env.example
 
-# local runtime
+# local runtime & logs
 /data/
+/logs/
 *.sqlite
 *.sqlite3
 *.db
