@@ -252,8 +252,17 @@ def load_market_returns(db_path: str) -> dict[str, float]:
     return {str(d): float(r or 0.0) for d, r in rows}
 
 
+def broad_gap_threshold(primary_gap: float, sensitivity_gaps: list[float]) -> float:
+    """Least restrictive threshold for SQL prefilter when condition is gap <= threshold."""
+    return max([primary_gap, *sensitivity_gaps])
+
+
 def load_candidate_rows(args) -> list[dict[str, Any]]:
-    broad_gap = min(args.gap_threshold, min(args.sensitivity_gaps))
+    # gap condition is `gap_return <= threshold`; the broad query must use the
+    # least restrictive/largest threshold so later in-memory filters can narrow
+    # to -3%, -4%, -5%, etc. Using min() here would silently turn the primary
+    # -3% audit into a -5% subset.
+    broad_gap = broad_gap_threshold(args.gap_threshold, args.sensitivity_gaps)
     broad_vol = max(args.prev_vol_ratio_max, max(args.sensitivity_vol_ratios))
     params: list[Any] = []
     where = ["prev_count = 20", "prev_close > 0", "open_price > 0", "close_price > 0", "avg_prev20_volume > 0"]

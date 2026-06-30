@@ -42,6 +42,11 @@ class SimpleGapStrategyAuditTests(unittest.TestCase):
         self.assertEqual(summary["trades"], 0)
         self.assertIsNone(summary["avg_net_return_on_capital"])
 
+    def test_broad_gap_prefilter_uses_least_restrictive_threshold(self):
+        # Because the SQL predicate is gap_return <= threshold, -0.02 includes
+        # -0.03/-0.04/-0.05 rows. Using min() would silently drop -3%/-4% cases.
+        self.assertEqual(self.mod.broad_gap_threshold(-0.03, [-0.02, -0.03, -0.04, -0.05]), -0.02)
+
 
 if __name__ == "__main__":
     unittest.main()

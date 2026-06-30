@@ -39,6 +39,7 @@ class TossInvestClient:
     - GET /api/v1/holdings
     - GET /api/v1/buying-power
     - GET /api/v1/orders
+    - GET /api/v1/orders/{orderId}
     - POST /api/v1/orders guarded by live_trading flag
     """
 
@@ -210,6 +211,13 @@ class TossInvestClient:
             "GET",
             "/api/v1/orders",
             params={"status": status, "symbol": symbol},
+            headers=self._account_headers(account_seq),
+        )
+
+    def get_order(self, order_id: str, account_seq: Optional[str] = None) -> Dict[str, Any]:
+        return self.request_json(
+            "GET",
+            f"/api/v1/orders/{urllib.parse.quote(str(order_id), safe='')}",
             headers=self._account_headers(account_seq),
         )
 

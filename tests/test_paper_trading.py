@@ -110,6 +110,25 @@ class PaperTradingTests(unittest.TestCase):
         result = client.create_order("1", {"symbol": "005930", "side": "BUY"})
         self.assertTrue(result["dryRun"])
 
+    def test_get_order_uses_official_order_detail_endpoint(self):
+        class FakeClient(TossInvestClient):
+            def __init__(self):
+                super().__init__(Settings(account_seq="1"))
+                self.call = None
+
+            def request_json(self, method, path, *, params=None, headers=None, payload=None):
+                self.call = (method, path, params, headers, payload)
+                return {"result": {"orderId": "ORD/1"}}
+
+        client = FakeClient()
+        result = client.get_order("ORD/1")
+        self.assertIsNotNone(client.call)
+        assert client.call is not None
+        self.assertEqual(result["result"]["orderId"], "ORD/1")
+        self.assertEqual(client.call[0], "GET")
+        self.assertEqual(client.call[1], "/api/v1/orders/ORD%2F1")
+        self.assertEqual(client.call[3], {"X-Tossinvest-Account": "1"})
+
 
 if __name__ == "__main__":
     unittest.main()

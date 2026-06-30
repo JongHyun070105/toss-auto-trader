@@ -58,7 +58,7 @@ PYTHONPATH=src python3 scripts/cache_toss_candles_daily.py
 python3 scripts/simple_gap_strategy_audit.py
 ```
 
-macOS crontab 보고는 `scripts/toss_discord_report.py`가 담당합니다. 채널 ID는 코드에 넣지 말고 crontab에서 `--to discord:<channel_id>`로 넘깁니다.
+macOS crontab 보고는 `scripts/toss_discord_report.py`가 담당합니다. 채널 ID는 코드에 넣지 말고 crontab에서 `--to discord:<channel_id>`로 넘깁니다. 매수/매도 보고는 Toss 공식 주문 상세 API(`GET /api/v1/orders/{orderId}`)로 실제 체결수량·평균체결가·체결금액·수수료·세금을 조회해 Discord에 표시하고, 조회 실패 시 로그의 예상가로 fallback합니다.
 
 ```bash
 python3 scripts/toss_discord_report.py --action buy-report --print-only

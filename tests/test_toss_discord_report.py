@@ -1,5 +1,6 @@
 import importlib.util
 import unittest
+from decimal import Decimal
 from pathlib import Path
 
 
@@ -50,6 +51,56 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["orders"][0]["expected_price"], 10200)
         self.assertEqual(parsed["orders"][0]["expected_amount"], 102000)
         self.assertTrue(parsed["orders"][0]["success"])
+
+    def test_order_execution_parses_official_detail_schema(self):
+        detail = {
+            "result": {
+                "orderId": "ORD-1",
+                "symbol": "123456",
+                "side": "BUY",
+                "status": "FILLED",
+                "quantity": "10",
+                "orderedAt": "2026-07-01T09:01:05+09:00",
+                "execution": {
+                    "filledQuantity": "10",
+                    "averageFilledPrice": "9650",
+                    "filledAmount": "96500",
+                    "commission": "0",
+                    "tax": "0",
+                    "filledAt": "2026-07-01T09:01:06+09:00",
+                    "settlementDate": "2026-07-03",
+                },
+            }
+        }
+        parsed = self.mod.order_execution(detail)
+        self.assertEqual(parsed["status"], "FILLED")
+        self.assertEqual(parsed["filled_quantity"], Decimal("10"))
+        self.assertEqual(parsed["average_filled_price"], Decimal("9650"))
+        self.assertEqual(parsed["filled_amount"], Decimal("96500"))
+        lines = self.mod.execution_lines("매수", {"ok": True, "execution": parsed})
+        self.assertIn("FILLED", lines[0])
+        self.assertIn("9,650원", lines[0])
+
+    def test_realized_pnl_uses_filled_amount_commission_and_tax(self):
+        buy = {
+            "ok": True,
+            "execution": {
+                "filled_amount": Decimal("96500"),
+                "commission": Decimal("10"),
+                "tax": Decimal("0"),
+            },
+        }
+        sell = {
+            "ok": True,
+            "execution": {
+                "filled_amount": Decimal("102000"),
+                "commission": Decimal("10"),
+                "tax": Decimal("200"),
+            },
+        }
+        pnl, ret = self.mod.realized_pnl_from_details(buy, sell)
+        self.assertEqual(pnl, Decimal("5280"))
+        self.assertGreater(ret, Decimal("5"))
 
     def test_status_report_has_no_hardcoded_channel_id(self):
         text = Path(__file__).resolve().parents[1].joinpath("scripts", "toss_discord_report.py").read_text()
