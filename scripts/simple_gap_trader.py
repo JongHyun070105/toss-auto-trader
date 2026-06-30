@@ -6,6 +6,7 @@ TOSS API 연동 갭 하락 3% 반등 실전/모의 자동매매 봇
 """
 import argparse
 import json
+import os
 import sqlite3
 import urllib.request
 import urllib.parse
@@ -21,15 +22,24 @@ from toss_auto_trader.config import Settings
 from toss_auto_trader.toss_client import TossInvestClient, TossApiError
 
 DB_PATH = "data/edge_research_universe_15y.sqlite3"
-MAX_BUY_AMOUNT_KRW = 10000  # 안전 상한선: 실제 예수금이 더 적으면 실제 예수금 우선
+MAX_BUY_AMOUNT_KRW = 0  # 0 또는 미설정이면 Toss cashBuyingPower 전체 사용. TOSS_MAX_BUY_AMOUNT_KRW로 선택 상한 가능.
 MIN_PRICE = 5000
 MAX_PRICE = 50000
+
+
+def configured_max_buy_amount_krw() -> float | None:
+    """선택 상한. 기본값은 None=계좌 매수가능금액 전체 사용."""
+    raw = os.getenv("TOSS_MAX_BUY_AMOUNT_KRW", str(MAX_BUY_AMOUNT_KRW)).strip().replace(",", "")
+    if not raw:
+        return None
+    value = float(raw)
+    return value if value > 0 else None
 
 
 def fetch_kosdaq_index() -> list[float]:
     """네이버 증권 API로부터 최근 코스닥 지수 일봉 종가 가져오기"""
     today_str = datetime.now().strftime("%Y%m%d")
-    query = urllib.parse.urlencode({'startDateTime': '202601010000', 'endDateTime': f'{today_str}0000'})
+    query = urllib.parse.urlencode({'startDateTime': '202601010000', 'endDateTime': f'{today_str}2359'})
     url = f'https://api.stock.naver.com/chart/domestic/index/KOSDAQ/day?{query}'
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'https://finance.naver.com/'})
     try:
@@ -90,13 +100,13 @@ def get_base_stocks_from_db():
     rows = cur.fetchall()
 
     for symbol, close_price, prev_volume in rows:
-        # 3. 20일 평균 거래량: 전일(latest_date) 자신을 제외한 직전 20일 기준
-        #    (OFFSET 1 으로 최신일을 건너뜀 → prev_vol 이중포함 방지, 백테스트 조건 일치)
+        # 3. 20일 평균 거래량: latest_date 이전 20일 기준
+        #    (날짜 상한선으로 DB에 당일 데이터가 들어와도 항상 정확한 직전 20일만 조회)
         cur.execute("""
             SELECT volume FROM candle_cache
-            WHERE symbol = ?
-            ORDER BY timestamp DESC LIMIT 20 OFFSET 1
-        """, (symbol,))
+            WHERE symbol = ? AND substring(timestamp, 1, 10) < ?
+            ORDER BY timestamp DESC LIMIT 20
+        """, (symbol, latest_date))
         vols = [int(v[0]) for v in cur.fetchall()]
         if len(vols) >= 20:
             avg_vol = sum(vols) / 20.0
@@ -113,18 +123,24 @@ def get_base_stocks_from_db():
 
 
 def get_actual_budget(client: TossInvestClient, settings: Settings) -> float:
-    """실제 예수금을 API로 조회하여 MAX_BUY_AMOUNT_KRW와 비교 후 실제 사용 가능 금액 반환"""
+    """실제 예수금을 API로 조회하여 실제 사용 가능 금액 반환.
+
+    기본은 Toss cashBuyingPower 전체 사용. 필요하면 TOSS_MAX_BUY_AMOUNT_KRW로 별도 상한을 건다.
+    """
     try:
         resp = client.get_buying_power(settings.account_seq)
-        # Toss API 응답: {"result": {"amount": "10000", "currency": "KRW", ...}}
-        amount_str = resp.get("result", {}).get("amount", "0")
+        # Toss API 응답은 환경/버전에 따라 cashBuyingPower 또는 amount를 줄 수 있다.
+        res_data = resp.get("result", {})
+        amount_str = res_data.get("cashBuyingPower") or res_data.get("amount") or "0"
         actual = float(str(amount_str).replace(",", ""))
-        budget = min(actual, MAX_BUY_AMOUNT_KRW)
-        print(f"실제 예수금: {actual:,.0f}원 | 이번 매수 사용 예산: {budget:,.0f}원 (상한: {MAX_BUY_AMOUNT_KRW:,}원)")
+        cap = configured_max_buy_amount_krw()
+        budget = actual if cap is None else min(actual, cap)
+        cap_label = "계좌 매수가능금액 전체" if cap is None else f"상한 {cap:,.0f}원"
+        print(f"실제 예수금: {actual:,.0f}원 | 이번 매수 사용 예산: {budget:,.0f}원 ({cap_label})")
         return budget
     except Exception as e:
-        print(f"[경고] 예수금 조회 실패, 안전 기본값({MAX_BUY_AMOUNT_KRW:,}원) 사용: {e}")
-        return float(MAX_BUY_AMOUNT_KRW)
+        print(f"[오류] 예수금 조회 실패, 매수 안전 중단(예산 0원 처리): {e}")
+        return 0.0
 
 
 def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):

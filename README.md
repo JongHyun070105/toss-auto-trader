@@ -44,6 +44,20 @@ cp .env.example .env
 PYTHONPATH=src TOSS_DRY_RUN=true TOSS_LIVE_TRADING=false python3 -m unittest discover -s tests -v
 ```
 
+## 운영 보조 스크립트
+
+최신 일봉 캐시는 장마감 후 Toss API로 최근 봉만 `INSERT OR REPLACE` 하도록 갱신할 수 있습니다. 기존 장기 DB는 유지하고 최신 구간만 Toss 포맷으로 정규화합니다.
+
+```bash
+PYTHONPATH=src python3 scripts/cache_toss_candles_daily.py
+```
+
+대시보드 HTML은 로컬 로그/DB를 읽어 생성합니다. `logs/dashboard.html`은 런타임 산출물이므로 커밋하지 않습니다.
+
+```bash
+python3 scripts/dashboard.py
+```
+
 ## 전략 탐색 루프
 
 현재 전략 탐색 루프는 여러 전략 산출물을 평가하지만, 주문을 보내지 않습니다.
