@@ -280,10 +280,25 @@ def run_sell(client: TossInvestClient, settings: Settings):
 
     print(f"현재 보유 종목 수: {len(active_holdings)}개. 전량 시장가 종가 매도를 실행합니다.")
 
+    # 매도 보고/손익 추정을 위해 주문 직전 현재가를 남긴다.
+    price_map = {}
+    try:
+        symbols = [h["symbol"] for h in active_holdings]
+        prices_resp = client.get_prices(symbols)
+        for p in prices_resp.get("result", []) or []:
+            last_price = float(p.get("lastPrice", "0") or 0)
+            if last_price > 0:
+                price_map[p["symbol"]] = last_price
+    except Exception as e:
+        print(f"[경고] 매도 직전 현재가 조회 실패, 예상 매도금액 없이 주문 진행: {e}")
+
     for h in active_holdings:
         symbol = h["symbol"]
         qty = h["quantity"]
         name = h.get("name", symbol)
+        qty_int = int(qty)
+        expected_price = price_map.get(symbol)
+        expected_amount = expected_price * qty_int if expected_price else None
 
         payload = {
             "symbol": symbol,
@@ -293,7 +308,10 @@ def run_sell(client: TossInvestClient, settings: Settings):
             "price": "0"
         }
         try:
-            print(f"  🚀 [{name}] {qty}주 매도 주문 발송...")
+            if expected_price:
+                print(f"  🚀 [{name}] {qty}주 매도 주문 발송 (예상단가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
+            else:
+                print(f"  🚀 [{name}] {qty}주 매도 주문 발송...")
             res = client.create_order(settings.account_seq, payload)
             if res.get('dryRun'):
                 print(f"  * [모의 실행] 매도 주문 가상 응답: {res['wouldSend']}")

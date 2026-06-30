@@ -58,11 +58,16 @@ PYTHONPATH=src python3 scripts/cache_toss_candles_daily.py
 python3 scripts/simple_gap_strategy_audit.py
 ```
 
-대시보드 HTML은 로컬 로그/DB/audit JSON을 읽어 생성합니다. `logs/dashboard.html`은 런타임 산출물이므로 커밋하지 않습니다.
+macOS crontab 보고는 `scripts/toss_discord_report.py`가 담당합니다. 채널 ID는 코드에 넣지 말고 crontab에서 `--to discord:<channel_id>`로 넘깁니다.
 
 ```bash
-python3 scripts/dashboard.py
+python3 scripts/toss_discord_report.py --action buy-report --print-only
+python3 scripts/toss_discord_report.py --action sell-report --print-only
+python3 scripts/toss_discord_report.py --action kosdaq-close --print-only
+python3 scripts/toss_discord_report.py --action candle-update --dry-run-update --update-limit 3 --print-only
 ```
+
+주의: `--action candle-update`는 기본적으로 실제 DB 업데이트를 실행합니다. 검증만 할 때는 `--dry-run-update`를 붙입니다.
 
 ## 전략 탐색 루프
 
