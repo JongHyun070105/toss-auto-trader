@@ -3,9 +3,11 @@
 TOSS 자동매매 대시보드
 사용법: python scripts/dashboard.py
 """
+import html as html_lib
 import json
 import re
 import sqlite3
+import subprocess
 import sys
 import webbrowser
 import urllib.request
@@ -17,6 +19,7 @@ ROOT    = Path(__file__).resolve().parents[1]
 BUY_LOG = ROOT / "logs" / "simple_gap_trader_buy.log"
 SELL_LOG= ROOT / "logs" / "simple_gap_trader_sell.log"
 DB_PATH = ROOT / "data" / "edge_research_universe_15y.sqlite3"
+AUDIT_PATH = ROOT / "data" / "simple_gap_strategy_audit_latest.json"
 OUT     = ROOT / "logs" / "dashboard.html"
 
 INITIAL_CAPITAL = 10_000  # 1만원
@@ -159,6 +162,81 @@ def fetch_kosdaq():
 
 
 # ──────────────────────────────────────────────
+# 운영/검증 데이터
+# ──────────────────────────────────────────────
+
+def pct_text(value, digits=2):
+    if value is None:
+        return "N/A"
+    return f"{value * 100:+.{digits}f}%"
+
+
+def num_text(value, digits=0):
+    if value is None:
+        return "N/A"
+    if isinstance(value, float) and not value.is_integer():
+        return f"{value:,.{digits}f}"
+    return f"{int(value):,}"
+
+
+def load_strategy_audit():
+    if not AUDIT_PATH.exists():
+        return None
+    try:
+        return json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def load_db_summary():
+    if not DB_PATH.exists():
+        return {"exists": False}
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        cur = conn.cursor()
+        cur.execute("SELECT count(*), count(distinct symbol), min(substr(timestamp,1,10)), max(substr(timestamp,1,10)) FROM candle_cache")
+        rows, symbols, start_date, latest_date = cur.fetchone()
+        cur.execute("SELECT count(*) FROM candle_cache WHERE substr(timestamp,1,10)=?", (latest_date,))
+        latest_rows = cur.fetchone()[0]
+        cur.execute("SELECT count(*) FROM candle_cache WHERE timestamp LIKE '%.000+09:00'")
+        bad_timestamp_rows = cur.fetchone()[0]
+        cur.execute("SELECT count(*) FROM candle_cache WHERE raw_json LIKE '%\"source\": \"toss\"%' AND substr(timestamp,1,10)=?", (latest_date,))
+        latest_toss_rows = cur.fetchone()[0]
+        conn.close()
+        return {
+            "exists": True,
+            "rows": rows,
+            "symbols": symbols,
+            "start_date": start_date,
+            "latest_date": latest_date,
+            "latest_rows": latest_rows,
+            "latest_toss_rows": latest_toss_rows,
+            "bad_timestamp_rows": bad_timestamp_rows,
+        }
+    except Exception as e:
+        return {"exists": True, "error": str(e)}
+
+
+def load_crontab_summary():
+    try:
+        proc = subprocess.run(["crontab", "-l"], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
+        if proc.returncode != 0:
+            return {"available": False, "error": proc.stderr.strip()}
+        lines = [line.strip() for line in proc.stdout.splitlines() if line.strip() and not line.strip().startswith("#")]
+        simple_lines = [line for line in lines if "simple_gap_trader.py" in line]
+        toss_cache_lines = [line for line in lines if "cache_toss_candles_daily.py" in line]
+        return {
+            "available": True,
+            "simple_gap_trader_lines": simple_lines,
+            "toss_cache_lines": toss_cache_lines,
+            "buy_0901": any(line.startswith("1 9 * * 1-5") and "--action buy" in line for line in simple_lines),
+            "sell_1520": any(line.startswith("20 15 * * 1-5") and "--action sell" in line for line in simple_lines),
+        }
+    except Exception as e:
+        return {"available": False, "error": str(e)}
+
+
+# ──────────────────────────────────────────────
 # 데이터 조합
 # ──────────────────────────────────────────────
 
@@ -254,7 +332,139 @@ def build_data():
              "kosdaq": t["kosdaq"], "sma5": t["sma5"]}
             for t in reversed(trades)
         ][-7:],
+        "strategy_audit": load_strategy_audit(),
+        "db_summary": load_db_summary(),
+        "crontab": load_crontab_summary(),
     }
+
+
+# ──────────────────────────────────────────────
+# HTML 렌더 보조
+# ──────────────────────────────────────────────
+
+def render_strategy_audit(audit):
+    if not audit:
+        return """
+  <div class="section-title">🧪 전략 2차 검증</div>
+  <div class="card"><div class="risk-caution">아직 audit 결과 없음 — <code>python3 scripts/simple_gap_strategy_audit.py</code> 실행 필요</div></div>
+"""
+    if audit.get("error"):
+        return f"""
+  <div class="section-title">🧪 전략 2차 검증</div>
+  <div class="card"><div class="risk-warn">audit 로드 실패: {html_lib.escape(str(audit['error']))}</div></div>
+"""
+    decision = audit.get("promotion_decision", {})
+    decision_cls = "pos" if decision.get("historical_edge_gate_passed") else "neg"
+    signal = audit.get("all_signals_no_daily_top_invested_return", {}).get("after_index_guard", {})
+    caps = audit.get("daily_top_by_capital", {})
+    cap_order = ["10000", "30000", "100000", "1000000"]
+    cap_cards = ""
+    for key in cap_order:
+        item = caps.get(key)
+        if not item:
+            continue
+        sm = item.get("summary", {})
+        avg = sm.get("avg_net_return_on_capital")
+        avg_cls = "pos" if (avg or 0) >= 0 else "neg"
+        cap_cards += f"""
+    <div class="card">
+      <div class="card-title">고정자본 {int(float(key)):,}원</div>
+      <div class="stat-val {avg_cls}">{pct_text(avg)}</div>
+      <div class="stat-sub">평균/거래 · 중앙 {pct_text(sm.get('median_net_return_on_capital'))}</div>
+      <div class="metric-row"><span>거래</span><strong>{sm.get('trades', 0):,}회</strong></div>
+      <div class="metric-row"><span>승률</span><strong>{pct_text(sm.get('win_rate_net'))}</strong></div>
+      <div class="metric-row"><span>PF</span><strong>{num_text(sm.get('profit_factor_net_pnl'), 2)}</strong></div>
+      <div class="metric-row"><span>MDD</span><strong>{pct_text(sm.get('max_drawdown_on_capital'))}</strong></div>
+      <div class="metric-row"><span>평균 현금 사용</span><strong>{pct_text(sm.get('avg_cash_used_pct'))}</strong></div>
+    </div>"""
+    ref_key = "1000000" if "1000000" in caps else next(iter(caps), None)
+    slip_rows = ""
+    worst_rows = ""
+    year_rows = ""
+    if ref_key:
+        for row in caps[ref_key].get("slippage_sensitivity", []):
+            slip_rows += f"<tr><td>{pct_text(row.get('extra_slippage'))}</td><td class='right'>{pct_text(row.get('avg_net_return_on_capital'))}</td><td class='right'>{pct_text(row.get('median_net_return_on_capital'))}</td><td class='right'>{pct_text(row.get('win_rate_net'))}</td><td class='right'>{pct_text(row.get('max_drawdown_on_capital'))}</td></tr>"
+        for row in caps[ref_key].get("sample_worst_trades", [])[:6]:
+            worst_rows += f"<tr><td>{html_lib.escape(str(row.get('date')))}</td><td>{html_lib.escape(str(row.get('symbol')))}</td><td class='right'>{pct_text(row.get('gap_return'))}</td><td class='right neg'>{pct_text(row.get('net_return_on_capital'))}</td><td class='right'>{num_text(row.get('net_pnl_krw'), 0)}원</td></tr>"
+        for row in caps[ref_key].get("by_year", [])[-8:]:
+            cls = "pos" if (row.get("avg_net_return_on_capital") or 0) >= 0 else "neg"
+            year_rows += f"<tr><td>{row.get('year')}</td><td class='right'>{row.get('trades', 0):,}</td><td class='right {cls}'>{pct_text(row.get('avg_net_return_on_capital'))}</td><td class='right'>{pct_text(row.get('win_rate_net'))}</td><td class='right'>{pct_text(row.get('max_drawdown_on_capital'))}</td></tr>"
+    caveats = "".join(f"<li>{html_lib.escape(str(c))}</li>" for c in audit.get("caveats", []))
+    return f"""
+  <div class="section-title">🧪 전략 2차 검증 <span class="dim small">open→close daily proxy</span></div>
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-title">판정</div>
+      <div class="stat-val {decision_cls}" style="font-size:22px">{'EDGE 후보' if decision.get('historical_edge_gate_passed') else '보류'}</div>
+      <div class="stat-sub">{html_lib.escape(str(decision.get('decision', 'unknown')))}</div>
+      <div class="stat-sub">live_order_allowed=false · generated {html_lib.escape(str(audit.get('generated_at')))}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">신호 품질</div>
+      <div class="stat-val pos">{pct_text(signal.get('avg_net_return'))}</div>
+      <div class="stat-sub">지수 가드 후 전체 신호 평균 · 중앙 {pct_text(signal.get('median_net_return'))}</div>
+      <div class="metric-row"><span>신호</span><strong>{signal.get('trades', 0):,}건</strong></div>
+      <div class="metric-row"><span>승률</span><strong>{pct_text(signal.get('win_rate_net'))}</strong></div>
+    </div>
+    <div class="card">
+      <div class="card-title">비용 모델</div>
+      <div class="stat-val">{pct_text(audit.get('assumptions', {}).get('roundtrip_cost'))}</div>
+      <div class="stat-sub">왕복 수수료/세금 근사. 슬리피지는 아래 표 별도</div>
+    </div>
+    <div class="card">
+      <div class="card-title">가드 모델</div>
+      <div class="stat-val" style="font-size:18px">KOSDAQ SMA5</div>
+      <div class="stat-sub">{html_lib.escape(str(audit.get('kosdaq_index_guard', {}).get('guard_model', '')))}</div>
+    </div>
+  </div>
+  <div class="grid-4">{cap_cards}</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">슬리피지 민감도 <span class="dim">기준 {int(float(ref_key or 0)):,}원</span></div>
+      <table><thead><tr><th>추가 슬립</th><th class="right">평균</th><th class="right">중앙</th><th class="right">승률</th><th class="right">MDD</th></tr></thead><tbody>{slip_rows}</tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">최근/연도별 검증 <span class="dim">최근 8개 연도</span></div>
+      <table><thead><tr><th>연도</th><th class="right">거래</th><th class="right">평균</th><th class="right">승률</th><th class="right">MDD</th></tr></thead><tbody>{year_rows}</tbody></table>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">최악 거래 샘플 <span class="dim">기준 {int(float(ref_key or 0)):,}원</span></div>
+      <table><thead><tr><th>일자</th><th>종목</th><th class="right">갭</th><th class="right">자본손익률</th><th class="right">손익</th></tr></thead><tbody>{worst_rows}</tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">해석 주의</div>
+      <ul class="note-list">{caveats}</ul>
+    </div>
+  </div>
+"""
+
+
+def render_ops_status(db, cron):
+    db = db or {}
+    cron = cron or {}
+    if db.get("exists"):
+        db_html = f"""
+      <div class="metric-row"><span>전체 행</span><strong>{db.get('rows', 0):,}</strong></div>
+      <div class="metric-row"><span>종목 수</span><strong>{db.get('symbols', 0):,}</strong></div>
+      <div class="metric-row"><span>기간</span><strong>{db.get('start_date')} → {db.get('latest_date')}</strong></div>
+      <div class="metric-row"><span>최신일 행</span><strong>{db.get('latest_rows', 0):,}</strong></div>
+      <div class="metric-row"><span>Toss 최신행</span><strong>{db.get('latest_toss_rows', 0):,}</strong></div>
+      <div class="metric-row"><span>잘못된 .000 timestamp</span><strong>{db.get('bad_timestamp_rows', 0):,}</strong></div>"""
+    else:
+        db_html = '<div class="risk-warn">DB 없음</div>'
+    buy_badge = '<span class="badge badge-green">09:01 buy OK</span>' if cron.get('buy_0901') else '<span class="badge badge-red">09:01 buy 확인 필요</span>'
+    sell_badge = '<span class="badge badge-green">15:20 sell OK</span>' if cron.get('sell_1520') else '<span class="badge badge-red">15:20 sell 확인 필요</span>'
+    cron_lines = cron.get('simple_gap_trader_lines') or []
+    cron_text = '<br>'.join(html_lib.escape(line) for line in cron_lines) if cron_lines else 'simple_gap_trader cron 없음'
+    return f"""
+  <div class="section-title">🗄️ 데이터/스케줄 상태</div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">캔들 DB</div>{db_html}</div>
+    <div class="card"><div class="card-title">macOS crontab</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">{buy_badge}{sell_badge}</div><div class="mono small dim">{cron_text}</div></div>
+  </div>
+"""
 
 
 # ──────────────────────────────────────────────
@@ -267,6 +477,8 @@ def render(data):
     today  = d["today"]
     kosdaq = d["kosdaq"]
     trades = d["trades"]
+    audit_html = render_strategy_audit(d.get("strategy_audit"))
+    ops_html = render_ops_status(d.get("db_summary"), d.get("crontab"))
 
     # 오늘 현황 값
     if today:
@@ -470,8 +682,13 @@ header {{
 .neg {{ color: var(--red); }}
 .dim {{ color: var(--dim); }}
 .small {{ font-size: 11px; }}
+.mono {{ font-family: 'JetBrains Mono', monospace; }}
 .center {{ text-align: center; }}
 .right  {{ text-align: right; }}
+.metric-row {{ display:flex; justify-content:space-between; gap:12px; margin-top:8px; font-size:12px; color:var(--dim); }}
+.metric-row strong {{ color:var(--text); font-weight:700; }}
+.note-list {{ margin-left:18px; color:var(--dim); font-size:13px; line-height:1.65; }}
+code {{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--blue); }}
 .badge {{ display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }}
 .badge-green {{ background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }}
 .badge-red   {{ background: rgba(239,68,68,.15);  color: var(--red);   border: 1px solid rgba(239,68,68,.3); }}
@@ -597,6 +814,10 @@ tr:hover td {{ background: rgba(255,255,255,.025); }}
       </div>
     </div>
   </div>
+
+  {audit_html}
+
+  {ops_html}
 
   <!-- ④ 오늘 스캔 퍼널 -->
   <div class="section-title">🔍 오늘 스캔 퍼널</div>

@@ -52,7 +52,13 @@ PYTHONPATH=src TOSS_DRY_RUN=true TOSS_LIVE_TRADING=false python3 -m unittest dis
 PYTHONPATH=src python3 scripts/cache_toss_candles_daily.py
 ```
 
-대시보드 HTML은 로컬 로그/DB를 읽어 생성합니다. `logs/dashboard.html`은 런타임 산출물이므로 커밋하지 않습니다.
+`simple_gap_trader.py`의 2차 검증은 daily candle 기반 no-send audit으로 실행합니다. 결과 JSON은 로컬 `data/` 아래에 저장되며 커밋하지 않습니다.
+
+```bash
+python3 scripts/simple_gap_strategy_audit.py
+```
+
+대시보드 HTML은 로컬 로그/DB/audit JSON을 읽어 생성합니다. `logs/dashboard.html`은 런타임 산출물이므로 커밋하지 않습니다.
 
 ```bash
 python3 scripts/dashboard.py
