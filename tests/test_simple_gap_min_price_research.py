@@ -46,6 +46,27 @@ class SimpleGapMinPriceResearchTests(unittest.TestCase):
         self.assertIn("live MIN_PRICE unchanged: 5,000원", text)
         self.assertIn("clean(C)", text)
 
+    def test_snapshot_outcomes_computes_capital_return(self):
+        mod = load_research()
+        outcomes = mod.format_outcomes(
+            {
+                1000: [
+                    {
+                        "symbol": "A",
+                        "name": "alpha",
+                        "entry": 1000,
+                        "close": 1100,
+                        "quantity": 10,
+                        "net_return_on_capital": 0.0965,
+                        "cash_used_pct": 1.0,
+                    }
+                ]
+            }
+        )
+        text = "\n".join(outcomes)
+        self.assertIn("Same-day open→close outcome", text)
+        self.assertIn("+9.65%", text)
+
 
 if __name__ == "__main__":
     unittest.main()

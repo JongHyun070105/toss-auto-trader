@@ -90,12 +90,35 @@ class SimpleGapTraderTests(unittest.TestCase):
 
         class WarningErrorClient:
             def get_stock_warnings(self, symbol):
-                raise RuntimeError("boom")
+                raise RuntimeError("network down")
 
         with patch.object(mod, "naver_warning_badges", return_value=[]):
-            warnings = mod.blocking_warnings_for_symbol(WarningErrorClient(), "091590")
+            warnings = mod.blocking_warnings_for_symbol(WarningErrorClient(), "000000")
         self.assertTrue(warnings[0].startswith("TOSS_WARNING_CHECK_FAILED:RuntimeError"))
 
+    def test_today_open_price_uses_daily_candle_not_last_price(self):
+        mod = load_simple_gap_trader()
+
+        class CandleClient:
+            def get_candles(self, symbol, interval="1d", count=100, before=None, adjusted=True):
+                return {
+                    "result": {
+                        "candles": [
+                            {"timestamp": "2026-07-01T00:00:00+09:00", "openPrice": "1279", "closePrice": "1066"}
+                        ]
+                    }
+                }
+
+        self.assertEqual(mod.get_today_open_price(CandleClient(), "056090", today="2026-07-01"), 1279)
+
+    def test_today_open_price_returns_none_when_today_missing(self):
+        mod = load_simple_gap_trader()
+
+        class CandleClient:
+            def get_candles(self, symbol, interval="1d", count=100, before=None, adjusted=True):
+                return {"result": {"candles": [{"timestamp": "2026-06-30T00:00:00+09:00", "openPrice": "100"}]}}
+
+        self.assertIsNone(mod.get_today_open_price(CandleClient(), "056090", today="2026-07-01"))
     def test_naver_badge_blocks_investment_caution_missing_from_toss_api(self):
         mod = load_simple_gap_trader()
 

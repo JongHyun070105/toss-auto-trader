@@ -268,6 +268,28 @@ def get_actual_budget(client: TossInvestClient, settings: Settings) -> float:
         return 0.0
 
 
+def get_today_open_price(client: TossInvestClient, symbol: str, *, today: str | None = None) -> float | None:
+    """Return today's official daily-candle open price.
+
+    Toss /prices does not reliably include openPrice. Do not fall back to lastPrice,
+    because that breaks the backtest entry assumption.
+    """
+    target_date = today or datetime.now().strftime("%Y-%m-%d")
+    resp = client.get_candles(symbol, "1d", count=3)
+    result = resp.get("result", {}) if isinstance(resp, dict) else {}
+    candles = result.get("candles", []) if isinstance(result, dict) else []
+    for candle in candles or []:
+        if str(candle.get("timestamp", ""))[:10] != target_date:
+            continue
+        raw = candle.get("openPrice") or candle.get("open_price")
+        try:
+            open_price = float(str(raw).replace(",", ""))
+        except Exception:
+            return None
+        return open_price if open_price > 0 else None
+    return None
+
+
 def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
     """오전 9시 갭하락 종목 매수 로직"""
     if not force:
@@ -306,18 +328,30 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
                 if last_price <= 0:
                     continue
 
-                # 갭 계산: 9시 확정 시가(openPrice) 기준 (백테스트 조건과 일치)
-                open_price = float(p.get("openPrice", "0"))
-                if open_price <= 0:
-                    open_price = last_price  # 시가 데이터 누락 시 현재가로 폴백
-
                 prev_close = base_map[sym]['prev_close']
-                gap = (open_price - prev_close) / prev_close
+                if prev_close <= 0:
+                    continue
 
                 # 거래량 필터: 전일 확정 거래량 vs 전일 제외 직전 20일 평균 (백테스트 조건과 일치)
-                prev_vol_ratio = base_map[sym]['prev_vol'] / base_map[sym]['avg_vol']
+                prev_vol_avg = base_map[sym]['avg_vol']
+                if prev_vol_avg <= 0:
+                    continue
+                prev_vol_ratio = base_map[sym]['prev_vol'] / prev_vol_avg
                 if prev_vol_ratio >= 1.0:
                     continue  # 전일 거래량이 이미 평균 초과 → 투매 신호, 제외
+
+                # /prices는 openPrice를 주지 않을 수 있다. lastPrice는 API 부하 절감용 provisional gate로만 쓴다.
+                provisional_gap = (last_price - prev_close) / prev_close
+                if provisional_gap > -0.03:
+                    continue
+
+                # 최종 갭 계산/주문가는 당일 일봉 시가 기준 (백테스트 조건과 일치). lastPrice로 폴백 금지.
+                open_price = get_today_open_price(client, sym)
+                if open_price is None:
+                    print(f"  ⏭️ [{sym}] 당일 일봉 시가 확인 실패 → 백테스트 불일치 방지를 위해 제외")
+                    continue
+
+                gap = (open_price - prev_close) / prev_close
 
                 # 갭 하락 3% 이하 종목 탐색
                 if gap <= -0.03:

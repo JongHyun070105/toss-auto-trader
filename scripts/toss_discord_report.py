@@ -602,12 +602,14 @@ def candle_update_report(*, dry_run: bool = False, limit: int = 0) -> str:
     ]
     if parsed:
         lines += [
-            f"- 종목 처리: ok={parsed.get('ok_symbols')} failed={parsed.get('failed_symbols')}",
+            f"- 종목 처리: ok={parsed.get('ok_symbols')} soft_skipped={parsed.get('soft_skipped_symbols', 0)} hard_failed={parsed.get('failed_symbols')}",
             f"- candles fetched/replaced: {parsed.get('total_fetched')} / {parsed.get('total_inserted_or_replaced')}",
             f"- latest 분포: {parsed.get('latest_distribution_tail')}",
         ]
+        if parsed.get("soft_errors_tail"):
+            lines.append(f"- stale/미지원 종목 스킵 샘플: {parsed.get('soft_errors_tail')}")
         if parsed.get("errors_tail"):
-            lines.append(f"- 오류 샘플: {parsed.get('errors_tail')}")
+            lines.append(f"- hard 오류 샘플: {parsed.get('errors_tail')}")
     else:
         lines.append("- updater JSON 파싱 실패: stdout tail 확인 필요")
     if stderr.strip():

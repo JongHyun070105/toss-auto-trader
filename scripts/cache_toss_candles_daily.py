@@ -28,6 +28,25 @@ from toss_auto_trader.toss_client import TossApiError, TossInvestClient
 
 DEFAULT_DB_PATH = "data/edge_research_universe_15y.sqlite3"
 DEFAULT_SYMBOLS_FILE = "research/kosdaq_symbols.txt"
+SOFT_SKIP_TOSS_ERROR_CODES = {"stock-not-found"}
+
+
+def toss_error_code(exc: BaseException) -> str | None:
+    if not isinstance(exc, TossApiError):
+        return None
+    try:
+        data = json.loads(exc.body or "{}")
+    except Exception:
+        return None
+    error = data.get("error") if isinstance(data, dict) else None
+    if isinstance(error, dict):
+        code = error.get("code")
+        return str(code) if code else None
+    return None
+
+
+def is_soft_skip_error(exc: BaseException) -> bool:
+    return isinstance(exc, TossApiError) and exc.status == 404 and toss_error_code(exc) in SOFT_SKIP_TOSS_ERROR_CODES
 
 
 def load_symbols(path: str, *, limit: int | None = None) -> list[str]:
@@ -139,11 +158,13 @@ def main() -> int:
     print(f"DB before: {json.dumps(db_summary(args.db_path), ensure_ascii=False)}")
 
     ok = 0
+    soft_skipped = 0
     failed = 0
     total_fetched = 0
     total_inserted = 0
     latest_dates: dict[str, int] = {}
     errors: list[dict[str, str]] = []
+    soft_errors: list[dict[str, str]] = []
 
     for i, symbol in enumerate(symbols, 1):
         try:
@@ -154,11 +175,16 @@ def main() -> int:
             if row["latest_date"]:
                 latest_dates[row["latest_date"]] = latest_dates.get(row["latest_date"], 0) + 1
         except (TossApiError, Exception) as exc:
-            failed += 1
-            if len(errors) < 10:
-                errors.append({"symbol": symbol, "error": str(exc)[:300]})
+            if is_soft_skip_error(exc):
+                soft_skipped += 1
+                if len(soft_errors) < 10:
+                    soft_errors.append({"symbol": symbol, "code": toss_error_code(exc) or "unknown", "error": str(exc)[:300]})
+            else:
+                failed += 1
+                if len(errors) < 10:
+                    errors.append({"symbol": symbol, "error": str(exc)[:300]})
         if i % 100 == 0 or i == len(symbols):
-            print(f"진행: {i}/{len(symbols)} ok={ok} failed={failed} fetched={total_fetched} inserted={total_inserted}")
+            print(f"진행: {i}/{len(symbols)} ok={ok} soft_skipped={soft_skipped} failed={failed} fetched={total_fetched} inserted={total_inserted}")
         if i < len(symbols) and args.sleep_seconds > 0:
             time.sleep(args.sleep_seconds)
 
@@ -167,11 +193,13 @@ def main() -> int:
     report = {
         "success": failed == 0,
         "ok_symbols": ok,
+        "soft_skipped_symbols": soft_skipped,
         "failed_symbols": failed,
         "total_fetched": total_fetched,
         "total_inserted_or_replaced": total_inserted,
         "latest_distribution_tail": latest_distribution,
         "db_after": after,
+        "soft_errors_tail": soft_errors,
         "errors_tail": errors,
     }
     print("Toss 일봉 캐시 업데이트 완료")

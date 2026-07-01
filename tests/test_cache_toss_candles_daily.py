@@ -2,6 +2,8 @@ import importlib.util
 import unittest
 from pathlib import Path
 
+from toss_auto_trader.toss_client import TossApiError
+
 
 def load_cache_toss_candles_daily():
     path = Path(__file__).resolve().parents[1] / "scripts" / "cache_toss_candles_daily.py"
@@ -31,6 +33,21 @@ class CacheTossCandlesDailyTests(unittest.TestCase):
         self.assertEqual(row["timestamp"], "2026-06-30T00:00:00+09:00")
         self.assertEqual(row["currency"], "KRW")
         self.assertEqual(row["source"], "toss")
+
+    def test_stock_not_found_is_soft_skip(self):
+        mod = load_cache_toss_candles_daily()
+        exc = TossApiError(
+            404,
+            "Not Found",
+            '{"error":{"code":"stock-not-found","message":"종목을 찾을 수 없습니다."}}',
+        )
+        self.assertEqual(mod.toss_error_code(exc), "stock-not-found")
+        self.assertTrue(mod.is_soft_skip_error(exc))
+
+    def test_non_stock_not_found_is_hard_failure(self):
+        mod = load_cache_toss_candles_daily()
+        exc = TossApiError(500, "Server Error", '{"error":{"code":"internal"}}')
+        self.assertFalse(mod.is_soft_skip_error(exc))
 
 
 if __name__ == "__main__":

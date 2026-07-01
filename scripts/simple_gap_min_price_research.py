@@ -151,13 +151,23 @@ def live_candidates_for_min_price(
             if sym not in base_map:
                 continue
             last_price = float(str(p.get("lastPrice", 0) or 0).replace(",", ""))
-            open_price = float(str(p.get("openPrice", 0) or 0).replace(",", "")) or last_price
-            if last_price <= 0 or open_price <= 0:
+            if last_price <= 0:
                 continue
             b = base_map[sym]
             prev_close = float(b["prev_close"])
-            prev_vol_ratio = float(b["prev_vol"]) / float(b["avg_vol"])
+            if prev_close <= 0:
+                continue
+            avg_vol = float(b["avg_vol"])
+            if avg_vol <= 0:
+                continue
+            prev_vol_ratio = float(b["prev_vol"]) / avg_vol
             if prev_vol_ratio >= prev_vol_ratio_max:
+                continue
+            provisional_gap = (last_price - prev_close) / prev_close
+            if provisional_gap > gap_threshold:
+                continue
+            open_price = SG.get_today_open_price(client, sym)
+            if open_price is None:
                 continue
             gap_return = (open_price - prev_close) / prev_close
             if gap_return <= gap_threshold:
@@ -360,6 +370,94 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def daily_open_close_for_date(db_path: Path, symbol: str, date: str) -> tuple[float, float] | None:
+    con = sqlite3.connect(f"file:{db_path.resolve()}?mode=ro", uri=True)
+    try:
+        row = con.execute(
+            """
+            SELECT open_price, close_price FROM candle_cache
+            WHERE symbol=? AND interval='1d' AND substr(timestamp,1,10)=?
+            """,
+            (symbol, date),
+        ).fetchone()
+        if not row:
+            return None
+        return float(row[0]), float(row[1])
+    finally:
+        con.close()
+
+
+def snapshot_outcomes(snapshots: list[dict[str, Any]], *, db_path: Path, roundtrip_cost: float) -> dict[int, list[dict[str, Any]]]:
+    out: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    daily_cache: dict[tuple[str, str], tuple[float, float] | None] = {}
+    for snap in snapshots:
+        date = str(snap.get("generated_at", ""))[:10]
+        capital = float(snap.get("capital_krw") or 0)
+        if not date or capital <= 0:
+            continue
+        for row in snap.get("rows", []):
+            sel = row.get("selected") or {}
+            symbol = str(sel.get("symbol") or "")
+            if not symbol:
+                continue
+            entry = float(sel.get("limit_price") or sel.get("open_price") or 0)
+            qty = int(sel.get("quantity") or 0)
+            if entry <= 0 or qty <= 0:
+                continue
+            key = (symbol, date)
+            if key not in daily_cache:
+                daily_cache[key] = daily_open_close_for_date(db_path, symbol, date)
+            daily = daily_cache[key]
+            if daily is None:
+                continue
+            db_open, close = daily
+            gross_pnl = (close - entry) * qty
+            cash_used = entry * qty
+            net_pnl = gross_pnl - (cash_used * roundtrip_cost)
+            out[int(row["min_price"])].append(
+                {
+                    "symbol": symbol,
+                    "name": sel.get("name") or symbol,
+                    "date": date,
+                    "entry": entry,
+                    "db_open": db_open,
+                    "entry_matches_daily_open": abs(entry - db_open) < 0.5,
+                    "close": close,
+                    "quantity": qty,
+                    "net_return_on_capital": net_pnl / capital,
+                    "gross_return_on_entry": (close / entry) - 1.0,
+                    "cash_used_pct": cash_used / capital,
+                }
+            )
+    return out
+
+
+def format_outcomes(outcomes: dict[int, list[dict[str, Any]]]) -> list[str]:
+    lines = ["## Same-day open→close outcome by threshold"]
+    if not outcomes:
+        lines.append("- outcome unavailable: no matching close rows yet")
+        return lines
+    lines.append("| min_price | samples | avg net cap | median | win | avg cash used | latest |")
+    lines.append("|---:|---:|---:|---:|---:|---:|---|")
+    mismatch_count = 0
+    for mp in sorted(outcomes):
+        rows = outcomes[mp]
+        mismatch_count += sum(1 for r in rows if r.get("entry_matches_daily_open") is False)
+        rets = [float(r["net_return_on_capital"]) for r in rows]
+        wins = [r for r in rows if float(r["net_return_on_capital"]) > 0]
+        cash = [float(r["cash_used_pct"]) for r in rows]
+        latest = rows[-1]
+        mismatch_tag = " ⚠ entry≠DB-open" if latest.get("entry_matches_daily_open") is False else ""
+        latest_text = f"{latest['name']}({latest['symbol']}): {money(latest['entry'])}→{money(latest['close'])}, {pct(latest['net_return_on_capital'])}{mismatch_tag}"
+        lines.append(
+            f"| {mp:,} | {len(rows)} | {pct(statistics.mean(rets))} | {pct(statistics.median(rets))} | "
+            f"{pct(len(wins) / len(rows))} | {pct(statistics.mean(cash))} | {latest_text} |"
+        )
+    if mismatch_count:
+        lines.append(f"- Note: {mismatch_count} snapshot outcomes used recorded entry prices that differed from the final daily open; future snapshots use daily-candle open only.")
+    return lines
+
+
 def run_final(args) -> str:
     snapshots = load_jsonl(Path(args.snapshot_out))
     hist = json.loads(Path(args.historical_out).read_text(encoding="utf-8")) if Path(args.historical_out).exists() else None
@@ -390,6 +488,9 @@ def run_final(args) -> str:
         if warning_counts:
             lines.append("## Warning-filter hits")
             lines.append(", ".join(f"{k}:{v}" for k, v in warning_counts.most_common(10)))
+        lines.append("")
+        outcomes = snapshot_outcomes(snapshots, db_path=Path(args.db_path), roundtrip_cost=float(args.roundtrip_cost))
+        lines.extend(format_outcomes(outcomes))
         lines.append("")
         lines.append("## Latest snapshot")
         lines.append(format_snapshot(snapshots[-1]))
