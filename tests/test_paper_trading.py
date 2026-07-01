@@ -107,8 +107,14 @@ class PaperTradingTests(unittest.TestCase):
 
     def test_live_order_is_guarded_by_default(self):
         client = TossInvestClient(Settings(dry_run=True, live_trading=False))
-        result = client.create_order("1", {"symbol": "005930", "side": "BUY"})
+        result = client.create_order("1", {"symbol": "005930", "side": "BUY", "orderType": "MARKET", "quantity": "1"})
         self.assertTrue(result["dryRun"])
+
+    def test_order_payload_rejects_legacy_market_shape(self):
+        with self.assertRaisesRegex(ValueError, "orderType"):
+            TossInvestClient.validate_order_payload({"symbol": "005930", "side": "BUY", "type": "MARKET", "quantity": "1", "price": "0"})
+        with self.assertRaisesRegex(ValueError, "must not include price"):
+            TossInvestClient.validate_order_payload({"symbol": "005930", "side": "BUY", "orderType": "MARKET", "quantity": "1", "price": "0"})
 
     def test_get_order_uses_official_order_detail_endpoint(self):
         class FakeClient(TossInvestClient):

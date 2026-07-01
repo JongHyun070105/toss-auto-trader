@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 
@@ -65,6 +66,18 @@ class SimpleGapTraderTests(unittest.TestCase):
             FakeSettings(),
         )
         self.assertEqual(budget, 0.0)
+
+    def test_market_order_payload_matches_official_toss_schema(self):
+        mod = load_simple_gap_trader()
+        payload = mod.build_market_quantity_order("091590", "BUY", 1, now=datetime(2026, 7, 1, 9, 1))
+        self.assertEqual(payload["symbol"], "091590")
+        self.assertEqual(payload["side"], "BUY")
+        self.assertEqual(payload["orderType"], "MARKET")
+        self.assertEqual(payload["timeInForce"], "DAY")
+        self.assertEqual(payload["quantity"], "1")
+        self.assertEqual(payload["clientOrderId"], "sg-202607010901-B-091590")
+        self.assertNotIn("type", payload)
+        self.assertNotIn("price", payload)
 
 
 if __name__ == "__main__":

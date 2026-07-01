@@ -221,7 +221,30 @@ class TossInvestClient:
             headers=self._account_headers(account_seq),
         )
 
+    @staticmethod
+    def validate_order_payload(payload: Dict[str, Any]) -> None:
+        """Preflight official Toss order payload shape before any live send."""
+        if "type" in payload:
+            raise ValueError("Toss order payload uses 'orderType', not legacy 'type'")
+        for field in ["symbol", "side", "orderType"]:
+            if not payload.get(field):
+                raise ValueError(f"Toss order payload missing required field: {field}")
+        if payload["side"] not in {"BUY", "SELL"}:
+            raise ValueError("Toss order payload side must be BUY or SELL")
+        if payload["orderType"] not in {"LIMIT", "MARKET"}:
+            raise ValueError("Toss order payload orderType must be LIMIT or MARKET")
+        has_quantity = payload.get("quantity") not in {None, ""}
+        has_amount = payload.get("orderAmount") not in {None, ""}
+        if has_quantity == has_amount:
+            raise ValueError("Toss order payload must contain exactly one of quantity or orderAmount")
+        if payload["orderType"] == "LIMIT":
+            if payload.get("price") in {None, ""}:
+                raise ValueError("Toss LIMIT order requires price")
+        elif "price" in payload:
+            raise ValueError("Toss MARKET order must not include price")
+
     def create_order(self, account_seq: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        self.validate_order_payload(payload)
         if self.settings.dry_run or not self.settings.live_trading:
             return {"dryRun": True, "wouldSend": payload}
         return self.request_json("POST", "/api/v1/orders", headers=self._account_headers(account_seq), payload=payload)

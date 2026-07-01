@@ -27,6 +27,32 @@ MIN_PRICE = 5000
 MAX_PRICE = 50000
 
 
+def build_client_order_id(side: str, symbol: str, *, now: datetime | None = None) -> str:
+    """Short idempotency key accepted by Toss: alnum, '-' and '_' only, max 36 chars."""
+    ts = (now or datetime.now()).strftime("%Y%m%d%H%M")
+    side_code = "B" if side.upper() == "BUY" else "S"
+    safe_symbol = "".join(ch for ch in str(symbol) if ch.isalnum())[:10]
+    return f"sg-{ts}-{side_code}-{safe_symbol}"[:36]
+
+
+def build_market_quantity_order(symbol: str, side: str, quantity: int | str, *, now: datetime | None = None) -> dict:
+    """Official Toss quantity-based MARKET order payload.
+
+    Open API v1.1.x requires `orderType`; MARKET orders must not include `price`.
+    """
+    qty_int = int(float(quantity))
+    if qty_int <= 0:
+        raise ValueError("quantity must be positive")
+    return {
+        "clientOrderId": build_client_order_id(side, symbol, now=now),
+        "symbol": str(symbol),
+        "side": side.upper(),
+        "orderType": "MARKET",
+        "timeInForce": "DAY",
+        "quantity": str(qty_int),
+    }
+
+
 def configured_max_buy_amount_krw() -> float | None:
     """선택 상한. 기본값은 None=계좌 매수가능금액 전체 사용."""
     raw = os.getenv("TOSS_MAX_BUY_AMOUNT_KRW", str(MAX_BUY_AMOUNT_KRW)).strip().replace(",", "")
@@ -239,13 +265,7 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
     print(f"\n최종 매수 대상 종목 수: {len(orders_to_send)}개 (남은 예수금: {remaining_budget:,.0f}원)")
 
     for target, qty, cost in orders_to_send:
-        payload = {
-            "symbol": target['symbol'],
-            "side": "BUY",
-            "type": "MARKET",
-            "quantity": str(qty),
-            "price": "0"
-        }
+        payload = build_market_quantity_order(target['symbol'], "BUY", qty)
         try:
             print(f"  🚀 [{target['name']}] {qty}주 매수 주문 발송 (배정금액 {cost:,.0f}원, 예상단가 {target['last_price']:,}원)...")
             res = client.create_order(settings.account_seq, payload)
@@ -300,13 +320,7 @@ def run_sell(client: TossInvestClient, settings: Settings):
         expected_price = price_map.get(symbol)
         expected_amount = expected_price * qty_int if expected_price else None
 
-        payload = {
-            "symbol": symbol,
-            "side": "SELL",
-            "type": "MARKET",
-            "quantity": qty,
-            "price": "0"
-        }
+        payload = build_market_quantity_order(symbol, "SELL", qty)
         try:
             if expected_price:
                 print(f"  🚀 [{name}] {qty}주 매도 주문 발송 (예상단가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
