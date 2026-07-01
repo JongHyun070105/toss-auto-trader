@@ -25,6 +25,16 @@ DB_PATH = "data/edge_research_universe_15y.sqlite3"
 MAX_BUY_AMOUNT_KRW = 0  # 0 또는 미설정이면 Toss cashBuyingPower 전체 사용. TOSS_MAX_BUY_AMOUNT_KRW로 선택 상한 가능.
 MIN_PRICE = 5000
 MAX_PRICE = 50000
+BLOCKED_WARNING_TYPES = {
+    "LIQUIDATION_TRADING",     # 정리매매
+    "OVERHEATED",              # 단기과열
+    "INVESTMENT_WARNING",      # 투자경고
+    "INVESTMENT_RISK",         # 투자위험
+    "VI_STATIC_AND_DYNAMIC",   # VI 동시 발동
+    "VI_STATIC",
+    "VI_DYNAMIC",
+    "STOCK_WARRANTS",          # 신주인수권
+}
 
 
 def build_client_order_id(side: str, symbol: str, *, now: datetime | None = None) -> str:
@@ -51,6 +61,64 @@ def build_market_quantity_order(symbol: str, side: str, quantity: int | str, *, 
         "timeInForce": "DAY",
         "quantity": str(qty_int),
     }
+
+
+def build_limit_quantity_order(symbol: str, side: str, quantity: int | str, price: int | float | str, *, now: datetime | None = None) -> dict:
+    """Official Toss quantity-based LIMIT order payload for KR stocks."""
+    qty_int = int(float(quantity))
+    price_int = int(float(str(price).replace(",", "")))
+    if qty_int <= 0:
+        raise ValueError("quantity must be positive")
+    if price_int <= 0:
+        raise ValueError("price must be positive")
+    return {
+        "clientOrderId": build_client_order_id(side, symbol, now=now),
+        "symbol": str(symbol),
+        "side": side.upper(),
+        "orderType": "LIMIT",
+        "timeInForce": "DAY",
+        "quantity": str(qty_int),
+        "price": str(price_int),
+    }
+
+
+def extract_blocking_warnings(warnings_resp: dict) -> list[str]:
+    warnings = warnings_resp.get("result", []) if isinstance(warnings_resp, dict) else []
+    blocked = []
+    for item in warnings or []:
+        if not isinstance(item, dict):
+            continue
+        warning_type = str(item.get("warningType") or "").strip()
+        if warning_type in BLOCKED_WARNING_TYPES:
+            blocked.append(warning_type)
+    return blocked
+
+
+def blocking_warnings_for_symbol(client: TossInvestClient, symbol: str) -> list[str]:
+    """Return active buy-warning types; fail closed if warnings cannot be checked."""
+    try:
+        return extract_blocking_warnings(client.get_stock_warnings(symbol))
+    except Exception as e:
+        return [f"WARNING_CHECK_FAILED:{type(e).__name__}:{str(e)[:120]}"]
+
+
+def best_limit_price(client: TossInvestClient, symbol: str, side: str, fallback_price: float) -> int:
+    """Use best ask for BUY and best bid for SELL. Fallback to known current price."""
+    try:
+        ob = client.get_orderbook(symbol).get("result", {})
+        if side.upper() == "BUY":
+            prices = [float(level.get("price", 0) or 0) for level in ob.get("asks", [])]
+            valid = [p for p in prices if p > 0]
+            if valid:
+                return int(min(valid))
+        else:
+            prices = [float(level.get("price", 0) or 0) for level in ob.get("bids", [])]
+            valid = [p for p in prices if p > 0]
+            if valid:
+                return int(max(valid))
+    except Exception as e:
+        print(f"[경고] {symbol} 호가 조회 실패, 현재가 기준 지정가 사용: {e}")
+    return int(float(fallback_price))
 
 
 def configured_max_buy_amount_krw() -> float | None:
@@ -248,26 +316,41 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
     for f in triggered[:5]:
         print(f"  [{f['symbol']}] {f['name']} | 갭률: {f['gap_pct']:.2f}% | 시가: {f['open_price']:,}원 | 현재가: {f['last_price']:,}원 | 전일종가: {f['prev_close']:,}원")
 
-    # 1종목 집중 매수: 최상위 1종목에 예산 전액 투입
+    # 1종목 집중 매수: 최상위 1종목에 예산 전액 투입.
+    # 단, Toss 매수 유의사항(투자경고/단기과열/VI 등)은 주문 전 fail-closed로 제외.
     orders_to_send = []
     for target in triggered:
-        price = target['last_price']
-        if remaining_budget < price:
+        approx_price = target['last_price']
+        if remaining_budget < approx_price:
             continue  # 1주도 살 수 없으면 패스
 
-        qty = int(remaining_budget // price)
+        warnings = blocking_warnings_for_symbol(client, target['symbol'])
+        if warnings:
+            print(f"  ⛔ [{target['symbol']}] {target['name']} 매수 유의사항 필터 제외: {', '.join(warnings)}")
+            time.sleep(0.25)
+            continue
+        time.sleep(0.25)
+
+        limit_price = best_limit_price(client, target['symbol'], "BUY", approx_price)
+        if remaining_budget < limit_price:
+            print(f"  ⏭️ [{target['symbol']}] {target['name']} best ask {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
+            continue
+
+        qty = int(remaining_budget // limit_price)
         if qty > 0:
-            cost = qty * price
+            cost = qty * limit_price
             remaining_budget -= cost
+            target['limit_price'] = limit_price
             orders_to_send.append((target, qty, cost))
             break  # 최상위 1종목만 매수하고 종료
 
     print(f"\n최종 매수 대상 종목 수: {len(orders_to_send)}개 (남은 예수금: {remaining_budget:,.0f}원)")
 
     for target, qty, cost in orders_to_send:
-        payload = build_market_quantity_order(target['symbol'], "BUY", qty)
+        limit_price = int(target.get('limit_price') or target['last_price'])
+        payload = build_limit_quantity_order(target['symbol'], "BUY", qty, limit_price)
         try:
-            print(f"  🚀 [{target['name']}] {qty}주 매수 주문 발송 (배정금액 {cost:,.0f}원, 예상단가 {target['last_price']:,}원)...")
+            print(f"  🚀 [{target['name']}] {qty}주 지정가 매수 주문 발송 (배정금액 {cost:,.0f}원, 지정가 {limit_price:,}원)...")
             res = client.create_order(settings.account_seq, payload)
             if res.get('dryRun'):
                 print(f"  * [모의 실행] 주문 발송 가상 응답: {res['wouldSend']}")
@@ -298,7 +381,7 @@ def run_sell(client: TossInvestClient, settings: Settings):
         print("현재 보유 중인 종목이 없습니다. 당일 매도를 종료합니다.")
         return
 
-    print(f"현재 보유 종목 수: {len(active_holdings)}개. 전량 시장가 종가 매도를 실행합니다.")
+    print(f"현재 보유 종목 수: {len(active_holdings)}개. 전량 지정가 종가 매도를 실행합니다.")
 
     # 매도 보고/손익 추정을 위해 주문 직전 현재가를 남긴다.
     price_map = {}
@@ -317,15 +400,20 @@ def run_sell(client: TossInvestClient, settings: Settings):
         qty = h["quantity"]
         name = h.get("name", symbol)
         qty_int = int(qty)
-        expected_price = price_map.get(symbol)
+        raw_expected_price = price_map.get(symbol)
+        limit_price = best_limit_price(client, symbol, "SELL", raw_expected_price or 0)
+        if limit_price <= 0:
+            print(f"  ❌ [{name}] 매도 지정가 산출 실패, 안전상 매도 주문 중단")
+            continue
+        expected_price = float(limit_price)
         expected_amount = expected_price * qty_int if expected_price else None
 
-        payload = build_market_quantity_order(symbol, "SELL", qty)
+        payload = build_limit_quantity_order(symbol, "SELL", qty, limit_price)
         try:
             if expected_price:
-                print(f"  🚀 [{name}] {qty}주 매도 주문 발송 (예상단가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
+                print(f"  🚀 [{name}] {qty}주 지정가 매도 주문 발송 (지정가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
             else:
-                print(f"  🚀 [{name}] {qty}주 매도 주문 발송...")
+                print(f"  🚀 [{name}] {qty}주 지정가 매도 주문 발송...")
             res = client.create_order(settings.account_seq, payload)
             if res.get('dryRun'):
                 print(f"  * [모의 실행] 매도 주문 가상 응답: {res['wouldSend']}")

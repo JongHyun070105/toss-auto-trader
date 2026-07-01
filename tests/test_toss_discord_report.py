@@ -29,7 +29,8 @@ class TossDiscordReportTests(unittest.TestCase):
             "실제 예수금: 100,000원 | 이번 매수 사용 예산: 100,000원 (계좌 매수가능금액 전체)",
             "갭 하락 3% 돌파 종목 수: 2개",
             "  [123456] 테스트 | 갭률: -3.20% | 시가: 9,600원 | 현재가: 9,650원 | 전일종가: 10,000원",
-            "  🚀 [테스트] 10주 매수 주문 발송 (배정금액 96,500원, 예상단가 9,650원)...",
+            "  ⛔ [091590] 091590 매수 유의사항 필터 제외: OVERHEATED, INVESTMENT_WARNING",
+            "  🚀 [테스트] 10주 지정가 매수 주문 발송 (배정금액 96,500원, 지정가 9,650원)...",
             "  * [실전 주문] 주문 성공! 주문ID: ORD-1",
         ]
         parsed = self.mod.parse_buy_session(lines)
@@ -37,14 +38,16 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["order"]["name"], "테스트")
         self.assertEqual(parsed["order"]["qty"], 10)
         self.assertTrue(parsed["order_success"])
+        self.assertEqual(parsed["warning_exclusions"][0]["symbol"], "091590")
+        self.assertIn("INVESTMENT_WARNING", parsed["warning_exclusions"][0]["warnings"])
         self.assertIn("갭하락", parsed["reason"])
 
     def test_parse_sell_session_reads_expected_price(self):
         lines = [
             "실행 시간: 2026-07-01 15:20:00",
             "모드: 실전 매매",
-            "현재 보유 종목 수: 1개. 전량 시장가 종가 매도를 실행합니다.",
-            "  🚀 [테스트] 10주 매도 주문 발송 (예상단가 10,200원, 예상금액 102,000원)...",
+            "현재 보유 종목 수: 1개. 전량 지정가 종가 매도를 실행합니다.",
+            "  🚀 [테스트] 10주 지정가 매도 주문 발송 (지정가 10,200원, 예상금액 102,000원)...",
             "  * [실전 주문] 매도 주문 성공! 주문ID: ORD-2",
         ]
         parsed = self.mod.parse_sell_session(lines)

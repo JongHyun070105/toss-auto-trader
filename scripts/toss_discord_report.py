@@ -262,6 +262,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         "budget": None,
         "gap_count": None,
         "candidates": [],
+        "warning_exclusions": [],
         "order": None,
         "order_success": None,
         "order_id": None,
@@ -314,7 +315,10 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
                     "prev_close": clean_int(m.group(6)),
                 }
             )
-        m = re.search(r"\[(.+?)\] (\d+)주 매수 주문 발송 \(배정금액 ([\d,]+)원, 예상단가 ([\d,]+)원\)", line)
+        m = re.search(r"\[(\w+)\] (.+?) 매수 유의사항 필터 제외: (.+)", line)
+        if m:
+            info["warning_exclusions"].append({"symbol": m.group(1), "name": m.group(2), "warnings": m.group(3).strip()})
+        m = re.search(r"\[(.+?)\] (\d+)주 (?:지정가 )?매수 주문 발송 \(배정금액 ([\d,]+)원, (?:예상단가|지정가) ([\d,]+)원\)", line)
         if m:
             info["order"] = {
                 "name": m.group(1),
@@ -331,6 +335,8 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
             info["reason"] = line.strip()
     if info["order"] and info["reason"] is None:
         info["reason"] = "KOSDAQ 가드 통과 + 전일 종가 5천~5만원 + 전일 거래량<20일 평균 + 당일 시가 갭하락 -3% 이하 중 최상위"
+    if not info["order"] and info["reason"] is None and info.get("warning_exclusions"):
+        info["reason"] = "매수 유의사항 필터로 위험 종목 제외"
     return info
 
 
@@ -356,7 +362,7 @@ def parse_sell_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"현재 보유 종목 수: (\d+)개", line)
         if m:
             info["holding_count"] = int(m.group(1))
-        m = re.search(r"\[(.+?)\] (\d+)주 매도 주문 발송 \(예상단가 ([\d,]+)원, 예상금액 ([\d,]+)원\)", line)
+        m = re.search(r"\[(.+?)\] (\d+)주 (?:지정가 )?매도 주문 발송 \((?:예상단가|지정가) ([\d,]+)원, 예상금액 ([\d,]+)원\)", line)
         if m:
             current_order = {
                 "name": m.group(1),
@@ -410,13 +416,17 @@ def buy_report(date: str | None = None) -> str:
         lines.append("- 상위 후보:")
         for c in b["candidates"][:5]:
             lines.append(f"  - {c['name']}({c['symbol']}): 갭 {pct(c['gap_pct'])}, 시가 {money(c['open_price'])}, 현재 {money(c['last_price'])}, 전일종가 {money(c['prev_close'])}")
+    if b.get("warning_exclusions"):
+        lines.append("- 매수 유의사항 제외:")
+        for x in b["warning_exclusions"][:5]:
+            lines.append(f"  - {x['name']}({x['symbol']}): {x['warnings']}")
     order = b.get("order")
     if order:
         status = "성공" if b.get("order_success") else "실패/확인 필요"
         lines += [
             f"- 매수: {status}",
             f"  - 종목: {order['name']}",
-            f"  - 수량/예상단가/배정: {order['qty']}주 / {money(order['expected_price'])} / {money(order['amount'])}",
+            f"  - 수량/지정가/배정: {order['qty']}주 / {money(order['expected_price'])} / {money(order['amount'])}",
             f"  - 주문ID: {b.get('order_id') or '확인 필요'}",
             f"  - 매수 이유: {b.get('reason')}",
         ]
