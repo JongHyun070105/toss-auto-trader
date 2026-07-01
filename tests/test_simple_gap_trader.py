@@ -3,6 +3,7 @@ import os
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 
 def load_simple_gap_trader():
@@ -91,8 +92,35 @@ class SimpleGapTraderTests(unittest.TestCase):
             def get_stock_warnings(self, symbol):
                 raise RuntimeError("boom")
 
-        warnings = mod.blocking_warnings_for_symbol(WarningErrorClient(), "091590")
-        self.assertTrue(warnings[0].startswith("WARNING_CHECK_FAILED:RuntimeError"))
+        with patch.object(mod, "naver_warning_badges", return_value=[]):
+            warnings = mod.blocking_warnings_for_symbol(WarningErrorClient(), "091590")
+        self.assertTrue(warnings[0].startswith("TOSS_WARNING_CHECK_FAILED:RuntimeError"))
+
+    def test_naver_badge_blocks_investment_caution_missing_from_toss_api(self):
+        mod = load_simple_gap_trader()
+
+        class CleanTossClient:
+            def get_stock_warnings(self, symbol):
+                return {"result": []}
+
+        with patch.object(mod, "naver_warning_badges", return_value=["투자주의"]):
+            warnings = mod.blocking_warnings_for_symbol(CleanTossClient(), "217190")
+        self.assertEqual(warnings, ["NAVER_BADGE:투자주의"])
+
+    def test_naver_badge_parser_reads_header_caution_only(self):
+        mod = load_simple_gap_trader()
+        html = b'<html><em class="caution"> <span class="blind">\xed\x88\xac\xec\x9e\x90\xec\xa3\xbc\xec\x9d\x98</span></em><a>\xed\x88\xac\xec\x9e\x90\xec\xa3\xbc\xec\x9d\x98</a></html>'
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
+            def read(self):
+                return html
+
+        with patch.object(mod.urllib.request, "urlopen", return_value=FakeResponse()):
+            self.assertEqual(mod.naver_warning_badges("217190"), ["투자주의"])
 
     def test_best_limit_price_uses_ask_for_buy_bid_for_sell(self):
         mod = load_simple_gap_trader()

@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import sqlite3
+import re
 import urllib.request
 import urllib.parse
 import sys
@@ -34,6 +35,14 @@ BLOCKED_WARNING_TYPES = {
     "VI_STATIC",
     "VI_DYNAMIC",
     "STOCK_WARRANTS",          # 신주인수권
+}
+NAVER_BLOCKED_BADGES = {
+    "투자주의",
+    "투자경고",
+    "투자위험",
+    "단기과열",
+    "관리종목",
+    "거래정지",
 }
 
 
@@ -94,12 +103,34 @@ def extract_blocking_warnings(warnings_resp: dict) -> list[str]:
     return blocked
 
 
+def naver_warning_badges(symbol: str) -> list[str]:
+    """Read Naver/KRX badge labels not exposed by Toss warnings, e.g. 투자주의."""
+    url = f"https://finance.naver.com/item/main.naver?code={urllib.parse.quote(str(symbol))}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=6) as resp:
+        html = resp.read().decode("utf-8", "ignore")
+    # Badge near the stock header: <em class="caution"><span class="blind">투자주의</span></em>
+    badges = []
+    for m in re.finditer(r'<em[^>]*class="[^"]*caution[^"]*"[^>]*>.*?<span[^>]*class="blind"[^>]*>(.*?)</span>.*?</em>', html, re.S):
+        label = re.sub(r"\s+", "", m.group(1) or "")
+        if label in NAVER_BLOCKED_BADGES and label not in badges:
+            badges.append(label)
+    return badges
+
+
 def blocking_warnings_for_symbol(client: TossInvestClient, symbol: str) -> list[str]:
     """Return active buy-warning types; fail closed if warnings cannot be checked."""
+    blocked = []
     try:
-        return extract_blocking_warnings(client.get_stock_warnings(symbol))
+        blocked.extend(extract_blocking_warnings(client.get_stock_warnings(symbol)))
     except Exception as e:
-        return [f"WARNING_CHECK_FAILED:{type(e).__name__}:{str(e)[:120]}"]
+        blocked.append(f"TOSS_WARNING_CHECK_FAILED:{type(e).__name__}:{str(e)[:120]}")
+    try:
+        for badge in naver_warning_badges(symbol):
+            blocked.append(f"NAVER_BADGE:{badge}")
+    except Exception as e:
+        blocked.append(f"NAVER_BADGE_CHECK_FAILED:{type(e).__name__}:{str(e)[:120]}")
+    return blocked
 
 
 def best_limit_price(client: TossInvestClient, symbol: str, side: str, fallback_price: float) -> int:
@@ -331,9 +362,9 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
             continue
         time.sleep(0.25)
 
-        limit_price = best_limit_price(client, target['symbol'], "BUY", approx_price)
+        limit_price = int(float(target['open_price']))  # 백테스트 진입가와 일치: 당일 시가 기준 지정가
         if remaining_budget < limit_price:
-            print(f"  ⏭️ [{target['symbol']}] {target['name']} best ask {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
+            print(f"  ⏭️ [{target['symbol']}] {target['name']} 시가 지정가 {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
             continue
 
         qty = int(remaining_budget // limit_price)
