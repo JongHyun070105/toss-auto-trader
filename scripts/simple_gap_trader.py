@@ -316,12 +316,23 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
     chunks = [symbols[i:i + chunk_size] for i in range(0, len(symbols), chunk_size)]
 
     triggered = []
+    perf = {
+        'price_chunks': 0,
+        'price_rows': 0,
+        'provisional_gap_hits': 0,
+        'daily_open_calls': 0,
+        'daily_open_missing': 0,
+        'daily_open_confirmed_hits': 0,
+    }
+    scan_started = time.perf_counter()
     print("실시간 현재가 수집 및 갭 하락 검사 시작...")
 
     for chunk in chunks:
         try:
+            perf['price_chunks'] += 1
             prices_resp = client.get_prices(chunk)
             prices = prices_resp.get("result", [])
+            perf['price_rows'] += len(prices or [])
             for p in prices:
                 sym = p["symbol"]
                 last_price = float(p.get("lastPrice", "0"))
@@ -344,10 +355,13 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
                 provisional_gap = (last_price - prev_close) / prev_close
                 if provisional_gap > -0.03:
                     continue
+                perf['provisional_gap_hits'] += 1
 
                 # 최종 갭 계산/주문가는 당일 일봉 시가 기준 (백테스트 조건과 일치). lastPrice로 폴백 금지.
+                perf['daily_open_calls'] += 1
                 open_price = get_today_open_price(client, sym)
                 if open_price is None:
+                    perf['daily_open_missing'] += 1
                     print(f"  ⏭️ [{sym}] 당일 일봉 시가 확인 실패 → 백테스트 불일치 방지를 위해 제외")
                     continue
 
@@ -355,6 +369,7 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
 
                 # 갭 하락 3% 이하 종목 탐색
                 if gap <= -0.03:
+                    perf['daily_open_confirmed_hits'] += 1
                     triggered.append({
                         'symbol': sym,
                         'name': p.get('name', sym),
@@ -368,6 +383,17 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
             continue
         time.sleep(0.5)
 
+    scan_elapsed = time.perf_counter() - scan_started
+    print(
+        "성능 측정: "
+        f"price_chunks={perf['price_chunks']} "
+        f"price_rows={perf['price_rows']} "
+        f"provisional_gap_hits={perf['provisional_gap_hits']} "
+        f"daily_open_calls={perf['daily_open_calls']} "
+        f"daily_open_missing={perf['daily_open_missing']} "
+        f"daily_open_confirmed_hits={perf['daily_open_confirmed_hits']} "
+        f"scan_elapsed={scan_elapsed:.2f}s"
+    )
     print(f"갭 하락 3% 돌파 종목 수: {len(triggered)}개")
 
     # 갭 하락률이 큰 순서로 정렬 (가장 크게 빠진 종목 우선)
@@ -385,9 +411,10 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
     # 단, Toss 매수 유의사항(투자경고/단기과열/VI 등)은 주문 전 fail-closed로 제외.
     orders_to_send = []
     for target in triggered:
-        approx_price = target['last_price']
-        if remaining_budget < approx_price:
-            continue  # 1주도 살 수 없으면 패스
+        limit_price = int(float(target['open_price']))  # 백테스트 진입가와 일치: 당일 시가 기준 지정가
+        if remaining_budget < limit_price:
+            print(f"  ⏭️ [{target['symbol']}] {target['name']} 시가 지정가 {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
+            continue
 
         warnings = blocking_warnings_for_symbol(client, target['symbol'])
         if warnings:
@@ -395,11 +422,6 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
             time.sleep(0.25)
             continue
         time.sleep(0.25)
-
-        limit_price = int(float(target['open_price']))  # 백테스트 진입가와 일치: 당일 시가 기준 지정가
-        if remaining_budget < limit_price:
-            print(f"  ⏭️ [{target['symbol']}] {target['name']} 시가 지정가 {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
-            continue
 
         qty = int(remaining_budget // limit_price)
         if qty > 0:
@@ -499,7 +521,9 @@ def main():
     settings = Settings.from_env()
     client = TossInvestClient(settings)
 
-    print(f"실행 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    started_at = datetime.now()
+    started_perf = time.perf_counter()
+    print(f"실행 시간: {started_at.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"모드: {'실전 매매' if settings.live_trading else '모의 매매 (DRY RUN)'}")
     print("=" * 60)
 
@@ -508,8 +532,10 @@ def main():
     elif args.action == "sell":
         run_sell(client, settings)
 
+    ended_at = datetime.now()
+    elapsed = time.perf_counter() - started_perf
     print("=" * 60)
-    print("프로그램 종료")
+    print(f"프로그램 종료: {ended_at.strftime('%Y-%m-%d %H:%M:%S')} / 총 실행시간: {elapsed:.2f}초")
 
 
 if __name__ == "__main__":

@@ -27,17 +27,23 @@ class TossDiscordReportTests(unittest.TestCase):
             "최근 데이터 영업일: 2026-06-30",
             "로컬 스크리닝 필터 통과 종목 수: 671개",
             "실제 예수금: 100,000원 | 이번 매수 사용 예산: 100,000원 (계좌 매수가능금액 전체)",
+            "성능 측정: price_chunks=7 price_rows=665 provisional_gap_hits=12 daily_open_calls=12 daily_open_missing=1 daily_open_confirmed_hits=2 scan_elapsed=18.50s",
             "갭 하락 3% 돌파 종목 수: 2개",
             "  [123456] 테스트 | 갭률: -3.20% | 시가: 9,600원 | 현재가: 9,650원 | 전일종가: 10,000원",
             "  ⛔ [091590] 091590 매수 유의사항 필터 제외: OVERHEATED, INVESTMENT_WARNING",
             "  🚀 [테스트] 10주 지정가 매수 주문 발송 (배정금액 96,500원, 지정가 9,650원)...",
             "  * [실전 주문] 주문 성공! 주문ID: ORD-1",
+            "프로그램 종료: 2026-07-01 09:01:24 / 총 실행시간: 19.25초",
         ]
         parsed = self.mod.parse_buy_session(lines)
         self.assertEqual(parsed["guard"], "통과")
         self.assertEqual(parsed["order"]["name"], "테스트")
         self.assertEqual(parsed["order"]["qty"], 10)
         self.assertTrue(parsed["order_success"])
+        self.assertEqual(parsed["end_datetime"], "2026-07-01 09:01:24")
+        self.assertEqual(parsed["total_elapsed_sec"], 19.25)
+        self.assertEqual(parsed["perf"]["daily_open_calls"], 12)
+        self.assertEqual(parsed["perf"]["scan_elapsed_sec"], 18.5)
         self.assertEqual(parsed["warning_exclusions"][0]["symbol"], "091590")
         self.assertIn("INVESTMENT_WARNING", parsed["warning_exclusions"][0]["warnings"])
         self.assertIn("갭하락", parsed["reason"])

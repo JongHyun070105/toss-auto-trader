@@ -472,12 +472,18 @@ def run_final(args) -> str:
         lines.append("")
     if snapshots:
         by_min: dict[int, Counter] = defaultdict(Counter)
+        selected_prices: dict[int, list[tuple[str, float]]] = defaultdict(list)
         warning_counts: Counter[str] = Counter()
         for snap in snapshots:
             for row in snap.get("rows", []):
                 mp = int(row["min_price"])
                 sel = row.get("selected") or {}
-                by_min[mp][str(sel.get("symbol") or "NO_PICK")] += 1
+                symbol = str(sel.get("symbol") or "NO_PICK")
+                by_min[mp][symbol] += 1
+                if symbol != "NO_PICK":
+                    price = float(sel.get("limit_price") or sel.get("open_price") or 0)
+                    if price > 0:
+                        selected_prices[mp].append((symbol, price))
                 for ex in row.get("warning_exclusions") or []:
                     for w in ex.get("warnings") or []:
                         warning_counts[w] += 1
@@ -485,6 +491,24 @@ def run_final(args) -> str:
         for mp in sorted(by_min):
             top = ", ".join(f"{sym}:{cnt}" for sym, cnt in by_min[mp].most_common(5))
             lines.append(f"- min {mp:,}: {top}")
+        lines.append("## Low-price concentration check")
+        for mp in sorted(by_min):
+            total = sum(by_min[mp].values())
+            top_symbol, top_count = by_min[mp].most_common(1)[0]
+            non_no_pick = [(sym, price) for sym, price in selected_prices.get(mp, []) if sym != "NO_PICK"]
+            low_price_count = sum(1 for _, price in non_no_pick if price < 2000)
+            avg_selected_price = statistics.mean([price for _, price in non_no_pick]) if non_no_pick else None
+            flags = []
+            if total and top_symbol != "NO_PICK" and top_count / total >= 0.8:
+                flags.append("단일종목쏠림")
+            if non_no_pick and low_price_count / len(non_no_pick) >= 0.8:
+                flags.append("2천원미만편향")
+            flag_text = f" / ⚠ {', '.join(flags)}" if flags else ""
+            lines.append(
+                f"- min {mp:,}: top={top_symbol} {top_count}/{total}({top_count / total:.0%}), "
+                f"avg_selected_price={money(avg_selected_price) if avg_selected_price is not None else 'N/A'}, "
+                f"under_2k={low_price_count}/{len(non_no_pick)}{flag_text}"
+            )
         if warning_counts:
             lines.append("## Warning-filter hits")
             lines.append(", ".join(f"{k}:{v}" for k, v in warning_counts.most_common(10)))

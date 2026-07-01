@@ -252,6 +252,8 @@ def pct_decimal(value: Decimal | None, digits: int = 2) -> str:
 def parse_buy_session(lines: list[str]) -> dict[str, Any]:
     info: dict[str, Any] = {
         "datetime": None,
+        "end_datetime": None,
+        "total_elapsed_sec": None,
         "mode": None,
         "kosdaq": None,
         "sma5": None,
@@ -261,6 +263,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         "actual_cash": None,
         "budget": None,
         "gap_count": None,
+        "perf": {},
         "candidates": [],
         "warning_exclusions": [],
         "order": None,
@@ -273,6 +276,10 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"실행 시간: (.+)", line)
         if m:
             info["datetime"] = m.group(1).strip()
+        m = re.search(r"프로그램 종료: (.+?) / 총 실행시간: ([\d.]+)초", line)
+        if m:
+            info["end_datetime"] = m.group(1).strip()
+            info["total_elapsed_sec"] = clean_float(m.group(2))
         m = re.search(r"모드: (.+)", line)
         if m:
             info["mode"] = m.group(1).strip()
@@ -301,6 +308,20 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"갭 하락 3% 돌파 종목 수: (\d+)개", line)
         if m:
             info["gap_count"] = int(m.group(1))
+        m = re.search(
+            r"성능 측정: .*?price_chunks=(\d+) .*?price_rows=(\d+) .*?provisional_gap_hits=(\d+) .*?daily_open_calls=(\d+) .*?daily_open_missing=(\d+) .*?daily_open_confirmed_hits=(\d+) .*?scan_elapsed=([\d.]+)s",
+            line,
+        )
+        if m:
+            info["perf"] = {
+                "price_chunks": int(m.group(1)),
+                "price_rows": int(m.group(2)),
+                "provisional_gap_hits": int(m.group(3)),
+                "daily_open_calls": int(m.group(4)),
+                "daily_open_missing": int(m.group(5)),
+                "daily_open_confirmed_hits": int(m.group(6)),
+                "scan_elapsed_sec": clean_float(m.group(7)),
+            }
         if "매수 진입 조건을 통과한 최종 종목이 없습니다" in line:
             info["reason"] = "갭하락 -3% + 전일 거래량 필터 통과 종목 없음"
         m = re.search(r"\[(\w+)\] (.+?) \| 갭률: ([-\d.]+)% \| 시가: ([\d,]+)원 \| 현재가: ([\d,]+)원 \| 전일종가: ([\d,]+)원", line)
@@ -408,10 +429,33 @@ def buy_report(date: str | None = None) -> str:
     lines = [
         f"[Toss 자동매매] {date} 09:01 매수 보고",
         f"- 실행: {b.get('datetime') or '확인 필요'} / {b.get('mode') or '모드 확인 필요'}",
+        f"- 종료: {b.get('end_datetime') or '확인 필요'} / 총 실행시간: {b.get('total_elapsed_sec') if b.get('total_elapsed_sec') is not None else '확인 필요'}초",
         f"- KOSDAQ: {b.get('kosdaq') if b.get('kosdaq') is not None else '확인 필요'} / SMA5: {b.get('sma5') if b.get('sma5') is not None else '확인 필요'} / 가드: {b.get('guard') or '확인 필요'}",
         f"- DB 기준일: {b.get('latest_db_date') or '확인 필요'} / 스크리닝: {b.get('scan_total') if b.get('scan_total') is not None else '확인 필요'}개 / 갭 후보: {b.get('gap_count') if b.get('gap_count') is not None else '확인 필요'}개",
         f"- 예수금: {money(b.get('actual_cash'))} / 사용예산: {money(b.get('budget'))}",
     ]
+    # Timing gate for the 09:01 open-price strategy: finish before 09:05, preferably well under 240s.
+    if b.get("datetime") and b.get("end_datetime"):
+        timing_status = "확인 필요"
+        try:
+            end_dt = datetime.strptime(str(b["end_datetime"]), "%Y-%m-%d %H:%M:%S")
+            cutoff = end_dt.replace(hour=9, minute=5, second=0, microsecond=0)
+            elapsed = b.get("total_elapsed_sec")
+            ok = end_dt <= cutoff and (elapsed is None or float(elapsed) <= 240.0)
+            timing_status = "OK(09:05 전 종료)" if ok else "주의(09:05 초과 또는 240초 초과)"
+        except Exception:
+            pass
+        lines.append(f"- 09:01 실행시간 판정: {timing_status}")
+    perf = b.get("perf") or {}
+    if perf:
+        lines.append(
+            "- API 성능: "
+            f"prices {perf.get('price_chunks')}회/{perf.get('price_rows')}행, "
+            f"provisional 후보 {perf.get('provisional_gap_hits')}개, "
+            f"daily open candle {perf.get('daily_open_calls')}회, "
+            f"open 누락 {perf.get('daily_open_missing')}개, "
+            f"scan {perf.get('scan_elapsed_sec')}초"
+        )
     if b.get("candidates"):
         lines.append("- 상위 후보:")
         for c in b["candidates"][:5]:
