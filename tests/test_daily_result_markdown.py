@@ -2,7 +2,9 @@ import importlib.util
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 
 def load_daily_result_markdown():
@@ -48,6 +50,46 @@ class DailyResultMarkdownTests(unittest.TestCase):
         self.assertNotIn("ORD-BUY", row)
         self.assertNotIn("ORD-STOP", row)
         self.assertNotIn("5주", row)
+
+    def test_load_daily_result_prefers_toss_actual_return_when_available(self):
+        mod = load_daily_result_markdown()
+        buy = {
+            "order": {"name": "센서뷰", "qty": 5, "expected_price": 1782},
+            "order_id": "ORD-BUY",
+            "reason": "조건 충족",
+        }
+        monitor = {
+            "orders": [
+                {
+                    "name": "센서뷰",
+                    "qty": 5,
+                    "trigger": "손절",
+                    "expected_price": 1726,
+                    "success": True,
+                    "order_id": "ORD-STOP",
+                }
+            ]
+        }
+
+        with (
+            patch.object(mod.report, "estimate_buy_from_log", return_value=buy),
+            patch.object(mod.report, "estimate_monitor_from_log", return_value=monitor),
+            patch.object(mod.report, "latest_session_for_date", return_value=[]),
+            patch.object(mod.report, "fetch_order_details", return_value={"ORD-BUY": {}, "ORD-STOP": {}}) as fetch,
+            patch.object(
+                mod.report,
+                "realized_pnl_from_details",
+                return_value=(Decimal("-241"), Decimal("-2.70")),
+            ),
+        ):
+            result = mod.load_daily_result("2026-07-07")
+
+        row = mod.render_row(result)
+        fetch.assert_called_once_with(["ORD-BUY", "ORD-STOP"])
+        self.assertIn("-2.70%", row)
+        self.assertIn("실제 체결 기준", row)
+        self.assertNotIn("ORD-BUY", row)
+        self.assertNotIn("ORD-STOP", row)
 
     def test_upsert_replaces_same_date_without_duplicate_rows(self):
         mod = load_daily_result_markdown()
