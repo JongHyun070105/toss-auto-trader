@@ -28,6 +28,7 @@ from toss_auto_trader.toss_client import TossApiError, TossInvestClient
 
 DEFAULT_DB_PATH = "data/edge_research_universe_15y.sqlite3"
 DEFAULT_SYMBOLS_FILE = "research/kosdaq_symbols.txt"
+DEFAULT_UNSUPPORTED_SYMBOLS_FILE = "data/toss_unsupported_symbols.txt"
 SOFT_SKIP_TOSS_ERROR_CODES = {"stock-not-found"}
 
 
@@ -36,7 +37,7 @@ def toss_error_code(exc: BaseException) -> str | None:
         return None
     try:
         data = json.loads(exc.body or "{}")
-    except Exception:
+    except json.JSONDecodeError:
         return None
     error = data.get("error") if isinstance(data, dict) else None
     if isinstance(error, dict):
@@ -49,17 +50,47 @@ def is_soft_skip_error(exc: BaseException) -> bool:
     return isinstance(exc, TossApiError) and exc.status == 404 and toss_error_code(exc) in SOFT_SKIP_TOSS_ERROR_CODES
 
 
-def load_symbols(path: str, *, limit: int | None = None) -> list[str]:
-    symbols: list[str] = []
+def load_unsupported_symbols(path: str) -> set[str]:
     p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(f"symbols file not found: {path}")
-    for raw in p.read_text().splitlines():
+    if not path or not p.exists():
+        return set()
+    symbols: set[str] = set()
+    for raw in p.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         sym = line.split(",", 1)[0].strip()
         if sym:
+            symbols.add(sym)
+    return symbols
+
+
+def record_unsupported_symbols(path: str, symbols: set[str]) -> list[str]:
+    if not path or not symbols:
+        return []
+    p = Path(path)
+    existing = load_unsupported_symbols(path)
+    new_symbols = sorted(symbols - existing)
+    if not new_symbols:
+        return []
+    p.parent.mkdir(parents=True, exist_ok=True)
+    all_symbols = sorted(existing | set(new_symbols))
+    p.write_text("\n".join(all_symbols) + "\n", encoding="utf-8")
+    return new_symbols
+
+
+def load_symbols(path: str, *, limit: int | None = None, skip_symbols: set[str] | None = None) -> list[str]:
+    symbols: list[str] = []
+    skipped = skip_symbols or set()
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"symbols file not found: {path}")
+    for raw in p.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        sym = line.split(",", 1)[0].strip()
+        if sym and sym not in skipped:
             symbols.append(sym)
         if limit is not None and len(symbols) >= limit:
             break
@@ -136,6 +167,7 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="Limit symbol count for smoke tests; 0 means all")
     ap.add_argument("--sleep-seconds", type=float, default=0.05, help="Delay between Toss API calls")
     ap.add_argument("--dry-run", action="store_true", help="Fetch and report without writing DB")
+    ap.add_argument("--unsupported-symbols-file", default=DEFAULT_UNSUPPORTED_SYMBOLS_FILE, help="Symbols proven unsupported by Toss candles; skipped before API calls")
     args = ap.parse_args()
 
     settings = Settings.from_env()
@@ -150,11 +182,15 @@ def main() -> int:
     )
     db.init_db(args.db_path)
     client = TossInvestClient(settings)
-    symbols = load_symbols(args.symbols_file, limit=args.limit or None)
+    unsupported_symbols = load_unsupported_symbols(args.unsupported_symbols_file)
+    symbols = load_symbols(args.symbols_file, limit=args.limit or None, skip_symbols=unsupported_symbols)
+    known_unsupported_in_file = unsupported_symbols & set(load_symbols(args.symbols_file))
 
     started = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"Toss 일봉 캐시 업데이트 시작: {started}")
     print(f"대상 종목 수: {len(symbols)} | count={args.count} | dry_run={args.dry_run}")
+    if known_unsupported_in_file:
+        print(f"기록된 Toss 미지원 종목 사전 제외: {len(known_unsupported_in_file)}개")
     print(f"DB before: {json.dumps(db_summary(args.db_path), ensure_ascii=False)}")
 
     ok = 0
@@ -165,6 +201,7 @@ def main() -> int:
     latest_dates: dict[str, int] = {}
     errors: list[dict[str, str]] = []
     soft_errors: list[dict[str, str]] = []
+    newly_unsupported_symbols: set[str] = set()
 
     for i, symbol in enumerate(symbols, 1):
         try:
@@ -174,15 +211,20 @@ def main() -> int:
             total_inserted += int(row["inserted_or_replaced"])
             if row["latest_date"]:
                 latest_dates[row["latest_date"]] = latest_dates.get(row["latest_date"], 0) + 1
-        except (TossApiError, Exception) as exc:
+        except TossApiError as exc:
             if is_soft_skip_error(exc):
                 soft_skipped += 1
+                newly_unsupported_symbols.add(symbol)
                 if len(soft_errors) < 10:
                     soft_errors.append({"symbol": symbol, "code": toss_error_code(exc) or "unknown", "error": str(exc)[:300]})
             else:
                 failed += 1
                 if len(errors) < 10:
                     errors.append({"symbol": symbol, "error": str(exc)[:300]})
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as exc:
+            failed += 1
+            if len(errors) < 10:
+                errors.append({"symbol": symbol, "error": f"{type(exc).__name__}: {str(exc)[:250]}"})
         if i % 100 == 0 or i == len(symbols):
             print(f"진행: {i}/{len(symbols)} ok={ok} soft_skipped={soft_skipped} failed={failed} fetched={total_fetched} inserted={total_inserted}")
         if i < len(symbols) and args.sleep_seconds > 0:
@@ -190,10 +232,13 @@ def main() -> int:
 
     after = db_summary(args.db_path)
     latest_distribution = dict(sorted(latest_dates.items())[-10:])
+    recorded_unsupported = [] if args.dry_run else record_unsupported_symbols(args.unsupported_symbols_file, newly_unsupported_symbols)
     report = {
         "success": failed == 0,
         "ok_symbols": ok,
+        "known_unsupported_skipped_symbols": len(known_unsupported_in_file),
         "soft_skipped_symbols": soft_skipped,
+        "newly_recorded_unsupported_symbols": recorded_unsupported,
         "failed_symbols": failed,
         "total_fetched": total_fetched,
         "total_inserted_or_replaced": total_inserted,

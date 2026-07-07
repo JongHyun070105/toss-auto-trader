@@ -35,6 +35,7 @@ from toss_auto_trader.config import Settings
 from toss_auto_trader.toss_client import TossApiError, TossInvestClient
 
 BUY_LOG = ROOT / "logs" / "simple_gap_trader_buy.log"
+MONITOR_LOG = ROOT / "logs" / "simple_gap_trader_monitor.log"
 SELL_LOG = ROOT / "logs" / "simple_gap_trader_sell.log"
 REPORT_LOG = ROOT / "logs" / "toss_discord_report.log"
 DB_PATH = ROOT / "data" / "edge_research_universe_15y.sqlite3"
@@ -124,6 +125,15 @@ def decimal_value(raw: Any) -> Decimal | None:
         return None
 
 
+def normalize_order_id(raw: Any) -> str | None:
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    if not value or value.lower() in {"none", "null"} or value == "확인 필요":
+        return None
+    return value
+
+
 def money_decimal(value: Decimal | int | float | None) -> str:
     if value is None:
         return "확인 필요"
@@ -186,7 +196,8 @@ def fetch_order_details(order_ids: list[str]) -> dict[str, dict[str, Any]]:
     Read-only. Returns per-order records with either {ok, raw, execution} or {ok=False, error}.
     """
     result: dict[str, dict[str, Any]] = {}
-    unique_order_ids = [oid for i, oid in enumerate(order_ids) if oid and oid not in order_ids[:i]]
+    clean_order_ids = [oid for oid in (normalize_order_id(raw) for raw in order_ids) if oid is not None]
+    unique_order_ids = [oid for i, oid in enumerate(clean_order_ids) if oid not in clean_order_ids[:i]]
     if not unique_order_ids:
         return result
     try:
@@ -287,9 +298,9 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         if m:
             info["kosdaq"] = clean_float(m.group(1))
             info["sma5"] = clean_float(m.group(2))
-        if "시장 하락 가드 발동" in line:
+        if "시장 가드 발동" in line or "시장 하락 가드 발동" in line:
             info["guard"] = "차단"
-            info["reason"] = "KOSDAQ 지수가 5일선 아래라 시장 가드 차단"
+            info["reason"] = "KOSDAQ이 5일선보다 1% 이상 아래가 아니라 시장 가드 차단"
         if "지수 가드 통과" in line:
             info["guard"] = "통과"
         m = re.search(r"최근 데이터 영업일: (\d{4}-\d{2}-\d{2})", line)
@@ -305,7 +316,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"예수금\(([\d,]+)원\).*매수 불가", line)
         if m:
             info["reason"] = f"예수금 {m.group(1)}원으로 최소 주가 미달"
-        m = re.search(r"갭 하락 3% 돌파 종목 수: (\d+)개", line)
+        m = re.search(r"갭 하락 [\d.]+% 돌파 종목 수: (\d+)개", line)
         if m:
             info["gap_count"] = int(m.group(1))
         m = re.search(
@@ -323,7 +334,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
                 "scan_elapsed_sec": clean_float(m.group(7)),
             }
         if "매수 진입 조건을 통과한 최종 종목이 없습니다" in line:
-            info["reason"] = "갭하락 -3% + 전일 거래량 필터 통과 종목 없음"
+            info["reason"] = "robust 갭하락 + 전일 거래량 필터 통과 종목 없음"
         m = re.search(r"\[(\w+)\] (.+?) \| 갭률: ([-\d.]+)% \| 시가: ([\d,]+)원 \| 현재가: ([\d,]+)원 \| 전일종가: ([\d,]+)원", line)
         if m and len(info["candidates"]) < 5:
             info["candidates"].append(
@@ -339,7 +350,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"\[(\w+)\] (.+?) 매수 유의사항 필터 제외: (.+)", line)
         if m:
             info["warning_exclusions"].append({"symbol": m.group(1), "name": m.group(2), "warnings": m.group(3).strip()})
-        m = re.search(r"\[(.+?)\] (\d+)주 (?:지정가 )?매수 주문 발송 \(배정금액 ([\d,]+)원, (?:예상단가|지정가) ([\d,]+)원\)", line)
+        m = re.search(r"\[(.+?)\] (\d+)주 (?:지정가 )?매수 주문 발송 \(.*?배정금액 ([\d,]+)원, (?:예상단가|지정가) ([\d,]+)원", line)
         if m:
             info["order"] = {
                 "name": m.group(1),
@@ -350,12 +361,12 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"주문 성공! 주문ID: (.+)", line)
         if m:
             info["order_success"] = True
-            info["order_id"] = m.group(1).strip()
+            info["order_id"] = normalize_order_id(m.group(1))
         if "매수 주문 실패" in line or "시스템 에러" in line:
             info["order_success"] = False
             info["reason"] = line.strip()
     if info["order"] and info["reason"] is None:
-        info["reason"] = "KOSDAQ 가드 통과 + 전일 종가 5천~5만원 + 전일 거래량<20일 평균 + 당일 시가 갭하락 -3% 이하 중 최상위"
+        info["reason"] = "KOSDAQ 5일선 대비 -1% 이하 가드 통과 + 전일 종가 1천~8천원 + 전일 거래량<20일 평균 0.8배 + 당일 시가 갭하락 -5% 이하 중 최저가"
     if not info["order"] and info["reason"] is None and info.get("warning_exclusions"):
         info["reason"] = "매수 유의사항 필터로 위험 종목 제외"
     return info
@@ -410,8 +421,61 @@ def parse_sell_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"매도 주문 성공! 주문ID: (.+)", line)
         if m and current_order is not None:
             current_order["success"] = True
-            current_order["order_id"] = m.group(1).strip()
+            current_order["order_id"] = normalize_order_id(m.group(1))
         if "매도 주문 실패" in line or "매도 에러" in line:
+            if current_order is not None:
+                current_order["success"] = False
+                current_order["error"] = line.strip()
+    return info
+
+
+def parse_monitor_session(lines: list[str]) -> dict[str, Any]:
+    info: dict[str, Any] = {
+        "datetime": None,
+        "mode": None,
+        "no_holdings": False,
+        "holding_count": None,
+        "orders": [],
+        "raw_tail": lines[-12:],
+    }
+    current_order: dict[str, Any] | None = None
+    for line in lines:
+        m = re.search(r"실행 시간: (.+)", line)
+        if m:
+            info["datetime"] = m.group(1).strip()
+        m = re.search(r"모드: (.+)", line)
+        if m:
+            info["mode"] = m.group(1).strip()
+        if "현재 보유 중인 종목이 없습니다" in line:
+            info["no_holdings"] = True
+        m = re.search(r"현재 보유 종목 수: (\d+)개", line)
+        if m:
+            info["holding_count"] = int(m.group(1))
+        m = re.search(
+            r"\[(.+?)\] (\d+)주 (손절|익절) 매도 주문 발송 "
+            r"\(진입가 ([\d,]+)원, 현재가 ([\d,]+)원, 트리거 ([\d,]+)원, 지정가 ([\d,]+)원, 예상금액 ([\d,]+)원\)",
+            line,
+        )
+        if m:
+            current_order = {
+                "name": m.group(1),
+                "qty": int(m.group(2)),
+                "trigger": m.group(3),
+                "entry_price": clean_int(m.group(4)),
+                "last_price": clean_int(m.group(5)),
+                "trigger_price": clean_int(m.group(6)),
+                "expected_price": clean_int(m.group(7)),
+                "expected_amount": clean_int(m.group(8)),
+                "success": None,
+                "order_id": None,
+            }
+            info["orders"].append(current_order)
+            continue
+        m = re.search(r"모니터 매도 주문 성공! 주문ID: (.+)", line)
+        if m and current_order is not None:
+            current_order["success"] = True
+            current_order["order_id"] = normalize_order_id(m.group(1))
+        if "모니터 매도 주문 실패" in line or "모니터 매도 에러" in line:
             if current_order is not None:
                 current_order["success"] = False
                 current_order["error"] = line.strip()
@@ -488,19 +552,42 @@ def estimate_buy_from_log(date: str) -> dict[str, Any] | None:
     return parse_buy_session(sess)
 
 
+def estimate_monitor_from_log(date: str) -> dict[str, Any] | None:
+    sessions = [sess for sess in split_sessions(MONITOR_LOG) if sess and date in sess[0]]
+    if not sessions:
+        return None
+    parsed_sessions = [parse_monitor_session(sess) for sess in sessions]
+    orders: list[dict[str, Any]] = []
+    for parsed in parsed_sessions:
+        orders.extend(parsed.get("orders", []))
+    latest = parsed_sessions[-1]
+    return {
+        "datetime": latest.get("datetime"),
+        "mode": latest.get("mode"),
+        "no_holdings": latest.get("no_holdings"),
+        "holding_count": latest.get("holding_count"),
+        "orders": orders,
+        "session_count": len(parsed_sessions),
+    }
+
+
 def sell_report(date: str | None = None) -> str:
     date = date or today()
     sess = latest_session_for_date(SELL_LOG, date)
     buy = estimate_buy_from_log(date)
+    monitor = estimate_monitor_from_log(date)
     if not sess:
         return f"[Toss 자동매매] {date} 15:20 매도 로그 없음\n- 로그 파일: {SELL_LOG}"
     s = parse_sell_session(sess)
 
     buy_order_id = buy.get("order_id") if buy else None
+    monitor_orders = monitor.get("orders", []) if monitor else []
+    monitor_order_ids = [o.get("order_id") for o in monitor_orders if isinstance(o.get("order_id"), str) and o.get("order_id")]
     sell_order_ids = [o.get("order_id") for o in s.get("orders", []) if isinstance(o.get("order_id"), str) and o.get("order_id")]
     detail_ids = []
     if isinstance(buy_order_id, str) and buy_order_id:
         detail_ids.append(buy_order_id)
+    detail_ids.extend(str(oid) for oid in monitor_order_ids)
     detail_ids.extend(str(oid) for oid in sell_order_ids)
     order_details = fetch_order_details(detail_ids)
 
@@ -516,9 +603,40 @@ def sell_report(date: str | None = None) -> str:
         lines.append(f"- 오전 매수: 없음 / 이유: {buy.get('reason') or '조건 미충족'}")
     else:
         lines.append("- 오전 매수: 로그 없음")
+    if monitor_orders:
+        lines.append(f"- 장중 손절/익절 주문: {len(monitor_orders)}건")
+        for o in monitor_orders:
+            status = "성공" if o.get("success") else "실패/확인 필요"
+            order_id = o.get("order_id")
+            trigger = o.get("trigger") or "청산"
+            lines.append(
+                f"  - {o['name']} {o['qty']}주 / {trigger} / 진입 {money(o.get('entry_price'))} / 현재 {money(o.get('last_price'))} / "
+                f"트리거 {money(o.get('trigger_price'))} / 지정가 {money(o.get('expected_price'))} / 예상금액 {money(o.get('expected_amount'))} / "
+                f"{status} / 주문ID {order_id or '확인 필요'}"
+            )
+            lines.extend(execution_lines(f"장중 {trigger}", order_details.get(order_id) if isinstance(order_id, str) else None))
     if s.get("no_holdings"):
-        lines.append("- 매도: 보유 종목 없음 → 매도 없음")
-        lines.append("- 오늘 결과: 미거래 또는 오전 체결 없음")
+        if monitor_orders:
+            lines.append("- 15:20 매도: 보유 종목 없음 → 장중 손절/익절 후 15:20 보유 없음")
+            actual = None
+            if isinstance(buy_order_id, str):
+                first_monitor_id = monitor_orders[0].get("order_id")
+                actual = realized_pnl_from_details(order_details.get(buy_order_id), order_details.get(first_monitor_id) if isinstance(first_monitor_id, str) else None)
+            if actual:
+                pnl, ret = actual
+                lines.append(f"- 실제 당일 손익: {money_decimal(pnl)} ({pct_decimal(ret)}) — 체결금액/수수료/세금 반영")
+            elif buy and buy.get("order"):
+                bo = buy["order"]
+                first_monitor = monitor_orders[0]
+                if first_monitor.get("expected_price") and bo.get("expected_price"):
+                    pnl = (first_monitor["expected_price"] - bo["expected_price"]) * min(int(bo["qty"]), int(first_monitor["qty"]))
+                    ret = (first_monitor["expected_price"] - bo["expected_price"]) / bo["expected_price"] * 100
+                    lines.append(f"- 추정 당일 손익: {money(pnl)} ({pct(ret)}) — 실제 체결 상세조회 실패/미체결 시 fallback")
+                else:
+                    lines.append("- 당일 손익: 실제 체결가/예상가 확인 필요")
+        else:
+            lines.append("- 매도: 보유 종목 없음 → 매도 없음")
+            lines.append("- 오늘 결과: 미거래 또는 오전 체결 없음")
         return "\n".join(lines)
     if s.get("orders"):
         lines.append("- 매도 주문:")
@@ -645,13 +763,17 @@ def candle_update_report(*, dry_run: bool = False, limit: int = 0) -> str:
         f"- DB after: latest={after.get('latest_date')} rows={after.get('rows'):,} latest_rows={after.get('latest_date_rows'):,} toss_latest={after.get('latest_toss_rows'):,} bad_ts={after.get('bad_timestamp_rows'):,}" if after.get("exists") else "- DB after: 없음",
     ]
     if parsed:
+        known_unsupported = parsed.get("known_unsupported_skipped_symbols", 0)
+        newly_recorded = parsed.get("newly_recorded_unsupported_symbols") or []
         lines += [
-            f"- 종목 처리: ok={parsed.get('ok_symbols')} soft_skipped={parsed.get('soft_skipped_symbols', 0)} hard_failed={parsed.get('failed_symbols')}",
+            f"- 종목 처리: ok={parsed.get('ok_symbols')} known_unsupported={known_unsupported} soft_skipped={parsed.get('soft_skipped_symbols', 0)} hard_failed={parsed.get('failed_symbols')}",
             f"- candles fetched/replaced: {parsed.get('total_fetched')} / {parsed.get('total_inserted_or_replaced')}",
             f"- latest 분포: {parsed.get('latest_distribution_tail')}",
         ]
+        if newly_recorded:
+            lines.append(f"- 새 Toss 미지원 종목 기록: {newly_recorded}")
         if parsed.get("soft_errors_tail"):
-            lines.append(f"- stale/미지원 종목 스킵 샘플: {parsed.get('soft_errors_tail')}")
+            lines.append(f"- 이번 실행 미지원 응답 샘플: {parsed.get('soft_errors_tail')}")
         if parsed.get("errors_tail"):
             lines.append(f"- hard 오류 샘플: {parsed.get('errors_tail')}")
     else:
@@ -666,7 +788,7 @@ def status_report() -> str:
         [
             "[Toss 자동매매] Discord 보고 설정 테스트",
             f"- 시간: {now_text()}",
-            "- macOS crontab에서 주문/보고/종가/DB 업데이트를 직접 실행하도록 구성됨",
+            "- macOS crontab에서 매수/장중 monitor/15:20 매도/보고/종가/DB 업데이트를 직접 실행하도록 구성됨",
             "- 이 메시지가 보이면 hermes send → finance-chat 전송 경로 정상",
         ]
     )

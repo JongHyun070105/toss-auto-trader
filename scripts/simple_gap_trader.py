@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-TOSS API 연동 갭 하락 3% 반등 실전/모의 자동매매 봇
-- 오전 09:01 실행: 코스닥 지수 가드 체크 -> 갭하락 종목 스캔 -> 시가 매수 주문
-- 오후 15:15 실행: 보유 종목 전량 종가 매도
+TOSS API 연동 갭 하락 반등 실전/모의 자동매매 봇
+- 오전 09:01 실행: 코스닥 지수 가드 체크 -> robust 갭하락 종목 스캔 -> 시가 매수 주문
+- 장중 실행: 보유 종목 손절/익절 모니터링
+- 오후 15:20 실행: 보유 종목 전량 종가 매도
 """
 import argparse
 import json
@@ -20,12 +21,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 from toss_auto_trader.config import Settings
+from toss_auto_trader import paper_reentry_watch
+from toss_auto_trader.paper_exit_messages import format_paper_event
 from toss_auto_trader.toss_client import TossInvestClient, TossApiError
 
 DB_PATH = "data/edge_research_universe_15y.sqlite3"
+PAPER_REENTRY_LOG = Path("logs") / "simple_gap_reentry_watch.jsonl"
 MAX_BUY_AMOUNT_KRW = 0  # 0 또는 미설정이면 Toss cashBuyingPower 전체 사용. TOSS_MAX_BUY_AMOUNT_KRW로 선택 상한 가능.
-MIN_PRICE = 5000
-MAX_PRICE = 50000
+MIN_PRICE = 1000
+MAX_PRICE = 8000
+GAP_THRESHOLD = -0.05
+PREV_VOL_RATIO_MAX = 0.8
+STOP_LOSS_PCT = 0.0225
+TAKE_PROFIT_PCT = 0.12
+KOSDAQ_SMA5_BUY_RATIO = 0.99
+STRATEGY_NAME = "robust_gap5_stop0225_take12"
 BLOCKED_WARNING_TYPES = {
     "LIQUIDATION_TRADING",     # 정리매매
     "OVERHEATED",              # 단기과열
@@ -152,6 +162,91 @@ def best_limit_price(client: TossInvestClient, symbol: str, side: str, fallback_
     return int(float(fallback_price))
 
 
+def parse_positive_float(raw) -> float | None:
+    if raw is None:
+        return None
+    try:
+        value = float(str(raw).replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+def normalize_order_id(raw) -> str | None:
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    if not value or value.lower() in {"none", "null"} or value == "확인 필요":
+        return None
+    return value
+
+
+def extract_order_id(response: dict) -> str | None:
+    order_id = normalize_order_id(response.get("orderId") or response.get("id"))
+    if order_id is not None:
+        return order_id
+    result = response.get("result")
+    if isinstance(result, dict):
+        return normalize_order_id(result.get("orderId") or result.get("id"))
+    return None
+
+
+def first_positive_float(row: dict, keys: tuple[str, ...]) -> float | None:
+    for key in keys:
+        value = parse_positive_float(row.get(key))
+        if value is not None:
+            return value
+    return None
+
+
+def holding_quantity(row: dict) -> int:
+    value = parse_positive_float(row.get("quantity"))
+    return int(value or 0)
+
+
+def holding_average_price(row: dict) -> float | None:
+    return first_positive_float(
+        row,
+        (
+            "averagePrice",
+            "averagePurchasePrice",
+            "avgPrice",
+            "averageUnitPrice",
+            "purchasePrice",
+            "buyPrice",
+        ),
+    )
+
+
+def stop_price(entry_price: float) -> float:
+    return entry_price * (1.0 - STOP_LOSS_PCT)
+
+
+def take_price(entry_price: float) -> float:
+    return entry_price * (1.0 + TAKE_PROFIT_PCT)
+
+
+def has_open_sell_order(client: TossInvestClient, settings: Settings, symbol: str) -> bool | None:
+    try:
+        resp = client.get_orders(settings.account_seq, status="OPEN", symbol=symbol)
+    except Exception as e:
+        print(f"  ⚠️ [{symbol}] 열린 매도 주문 확인 실패: {e}")
+        return None
+    result = resp.get("result", {}) if isinstance(resp, dict) else {}
+    if isinstance(result, dict):
+        orders = result.get("orders", [])
+    elif isinstance(result, list):
+        orders = result
+    else:
+        orders = []
+    for order in orders or []:
+        if not isinstance(order, dict):
+            continue
+        if str(order.get("side") or "").upper() == "SELL":
+            return True
+    return False
+
+
 def configured_max_buy_amount_krw() -> float | None:
     """선택 상한. 기본값은 None=계좌 매수가능금액 전체 사용."""
     raw = os.getenv("TOSS_MAX_BUY_AMOUNT_KRW", str(MAX_BUY_AMOUNT_KRW)).strip().replace(",", "")
@@ -180,7 +275,6 @@ def fetch_kosdaq_index() -> list[float]:
 
 
 def check_market_gate() -> bool:
-    """5일 지수 이동평균선(SMA) 가드 체크"""
     closes = fetch_kosdaq_index()
     if len(closes) < 5:
         print("[주의] 지수 데이터 부족으로 지수 가드를 건너뜁니다.")
@@ -188,13 +282,14 @@ def check_market_gate() -> bool:
 
     current_index = closes[-1]
     sma5 = sum(closes[-5:]) / 5.0
+    buy_line = sma5 * KOSDAQ_SMA5_BUY_RATIO
 
-    print(f"현재 KOSDAQ 지수: {current_index:.2f} | 5일 이평선: {sma5:.2f}")
-    if current_index < sma5:
-        print("🚨 [시장 하락 가드 발동] 현재 지수가 5일 이평선 아래에 있으므로 오늘 매매는 정지합니다.")
+    print(f"현재 KOSDAQ 지수: {current_index:.2f} | 5일 이평선: {sma5:.2f} | 매수 허용선: {buy_line:.2f}")
+    if current_index > buy_line:
+        print("🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.")
         return False
 
-    print("✅ 지수 가드 통과: 현재 상승/횡보세 국면입니다.")
+    print("✅ 지수 가드 통과: KOSDAQ이 5일선보다 1% 이상 아래인 눌림 국면입니다.")
     return True
 
 
@@ -212,7 +307,6 @@ def get_base_stocks_from_db():
     latest_date = cur.fetchone()[0]
     print(f"최근 데이터 영업일: {latest_date}")
 
-    # 2. 최근 영업일 기준 5,000원 ~ 50,000원 사이 종목 + 전일 거래량 함께 로드
     cur.execute("""
         SELECT symbol, close_price, volume
         FROM candle_cache
@@ -243,7 +337,7 @@ def get_base_stocks_from_db():
             })
 
     conn.close()
-    print(f"로컬 스크리닝 필터 통과 종목 수: {len(candidates)}개")
+    print(f"로컬 스크리닝 필터 통과 종목 수: {len(candidates)}개 ({MIN_PRICE:,}원~{MAX_PRICE:,}원)")
     return candidates
 
 
@@ -300,7 +394,7 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
 
     base_stocks = get_base_stocks_from_db()
     if not base_stocks:
-        print("스크리닝 조건(5,000원~50,000원)을 통과한 종목이 없습니다.")
+        print(f"스크리닝 조건({MIN_PRICE:,}원~{MAX_PRICE:,}원)을 통과한 종목이 없습니다.")
         return
 
     # 실제 예수금 조회 (안전 상한 MAX_BUY_AMOUNT_KRW와 비교)
@@ -348,12 +442,12 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
                 if prev_vol_avg <= 0:
                     continue
                 prev_vol_ratio = base_map[sym]['prev_vol'] / prev_vol_avg
-                if prev_vol_ratio >= 1.0:
-                    continue  # 전일 거래량이 이미 평균 초과 → 투매 신호, 제외
+                if prev_vol_ratio >= PREV_VOL_RATIO_MAX:
+                    continue
 
                 # /prices는 openPrice를 주지 않을 수 있다. lastPrice는 API 부하 절감용 provisional gate로만 쓴다.
                 provisional_gap = (last_price - prev_close) / prev_close
-                if provisional_gap > -0.03:
+                if provisional_gap > GAP_THRESHOLD:
                     continue
                 perf['provisional_gap_hits'] += 1
 
@@ -367,8 +461,7 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
 
                 gap = (open_price - prev_close) / prev_close
 
-                # 갭 하락 3% 이하 종목 탐색
-                if gap <= -0.03:
+                if gap <= GAP_THRESHOLD:
                     perf['daily_open_confirmed_hits'] += 1
                     triggered.append({
                         'symbol': sym,
@@ -394,10 +487,9 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
         f"daily_open_confirmed_hits={perf['daily_open_confirmed_hits']} "
         f"scan_elapsed={scan_elapsed:.2f}s"
     )
-    print(f"갭 하락 3% 돌파 종목 수: {len(triggered)}개")
+    print(f"갭 하락 {abs(GAP_THRESHOLD) * 100:.1f}% 돌파 종목 수: {len(triggered)}개")
 
-    # 갭 하락률이 큰 순서로 정렬 (가장 크게 빠진 종목 우선)
-    triggered.sort(key=lambda x: x['gap_pct'])
+    triggered.sort(key=lambda x: (x['open_price'], x['symbol']))
 
     if not triggered:
         print("매수 진입 조건을 통과한 최종 종목이 없습니다.")
@@ -437,26 +529,186 @@ def run_buy(client: TossInvestClient, settings: Settings, force: bool = False):
         limit_price = int(target.get('limit_price') or target['last_price'])
         payload = build_limit_quantity_order(target['symbol'], "BUY", qty, limit_price)
         try:
-            print(f"  🚀 [{target['name']}] {qty}주 지정가 매수 주문 발송 (배정금액 {cost:,.0f}원, 지정가 {limit_price:,}원)...")
+            print(
+                f"  🚀 [{target['name']}] {qty}주 지정가 매수 주문 발송 "
+                f"(전략 {STRATEGY_NAME}, 배정금액 {cost:,.0f}원, 지정가 {limit_price:,}원, "
+                f"손절가 {stop_price(limit_price):,.0f}원, 익절가 {take_price(limit_price):,.0f}원)..."
+            )
             res = client.create_order(settings.account_seq, payload)
             if res.get('dryRun'):
                 print(f"  * [모의 실행] 주문 발송 가상 응답: {res['wouldSend']}")
             else:
-                print(f"  * [실전 주문] 주문 성공! 주문ID: {res.get('orderId')}")
+                print(f"  * [실전 주문] 주문 성공! 주문ID: {extract_order_id(res) or '확인 필요'}")
         except TossApiError as e:
             print(f"  ❌ [{target['name']}] 매수 주문 실패: {e}")
         except Exception as e:
             print(f"  ❌ [{target['name']}] 시스템 에러: {e}")
 
 
+def get_active_holdings(client: TossInvestClient, settings: Settings) -> list[dict]:
+    holdings_resp = client.get_holdings(settings.account_seq)
+    result = holdings_resp.get("result", {}) if isinstance(holdings_resp, dict) else {}
+    holdings = []
+    if isinstance(result, dict):
+        holdings = result.get("holdings") or result.get("items") or []
+    return [h for h in holdings if holding_quantity(h) > 0]
+
+
+def current_price_map(client: TossInvestClient, symbols: list[str]) -> dict[str, float]:
+    prices_resp = client.get_prices(symbols)
+    prices: dict[str, float] = {}
+    for row in prices_resp.get("result", []) or []:
+        symbol = str(row.get("symbol") or "")
+        price = parse_positive_float(row.get("lastPrice"))
+        if symbol and price is not None:
+            prices[symbol] = price
+    return prices
+
+
+def update_paper_reentry_watch(client: TossInvestClient, *, now: datetime | None = None) -> None:
+    checked_at = now or datetime.now()
+    symbols = paper_reentry_watch.active_symbols(PAPER_REENTRY_LOG, checked_at)
+    if not symbols:
+        return
+    try:
+        prices = current_price_map(client, symbols)
+        events = paper_reentry_watch.update_watch(PAPER_REENTRY_LOG, prices, checked_at)
+    except (TossApiError, OSError, TypeError, ValueError, KeyError, AttributeError) as e:
+        print(f"[경고] 매도 후 paper-only 관찰 현재가 조회 실패: {e}")
+        return
+    for event in events:
+        message = format_paper_event(event)
+        if message:
+            print(message)
+
+
+def run_monitor(client: TossInvestClient, settings: Settings):
+    print(
+        f"전략: {STRATEGY_NAME} | 손절 {STOP_LOSS_PCT * 100:.2f}% | 익절 {TAKE_PROFIT_PCT * 100:.2f}%"
+    )
+    update_paper_reentry_watch(client)
+    try:
+        holdings = get_active_holdings(client, settings)
+    except TossApiError as e:
+        print(f"[오류] 잔고 조회 실패: {e}")
+        return
+    except Exception as e:
+        print(f"[오류] 시스템 에러: {e}")
+        return
+
+    if not holdings:
+        print("현재 보유 중인 종목이 없습니다. 장중 모니터링을 종료합니다.")
+        return
+
+    print(f"현재 보유 종목 수: {len(holdings)}개. 손절/익절 모니터링을 실행합니다.")
+    symbols = [str(h["symbol"]) for h in holdings]
+    try:
+        prices = current_price_map(client, symbols)
+    except Exception as e:
+        print(f"[오류] 현재가 조회 실패, 모니터링 중단: {e}")
+        return
+
+    for h in holdings:
+        symbol = str(h["symbol"])
+        name = h.get("name", symbol)
+        qty = holding_quantity(h)
+        entry = holding_average_price(h)
+        last_price = prices.get(symbol)
+        if qty <= 0:
+            continue
+        if entry is None:
+            print(f"  ⚠️ [{symbol}] {name} 평균단가 확인 실패 → 손절/익절 판단 보류")
+            continue
+        if last_price is None:
+            print(f"  ⚠️ [{symbol}] {name} 현재가 확인 실패 → 손절/익절 판단 보류")
+            continue
+
+        stop = stop_price(entry)
+        take = take_price(entry)
+        ret_pct = (last_price - entry) / entry * 100.0
+        print(
+            f"  - [{symbol}] {name} {qty}주 | 진입가 {entry:,.0f}원 | 현재가 {last_price:,.0f}원 | "
+            f"손절가 {stop:,.0f}원 | 익절가 {take:,.0f}원 | 수익률 {ret_pct:+.2f}%"
+        )
+
+        trigger = None
+        trigger_price = None
+        if last_price <= stop:
+            trigger = "손절"
+            trigger_price = stop
+        elif last_price >= take:
+            trigger = "익절"
+            trigger_price = take
+        if trigger is None:
+            continue
+
+        open_sell = has_open_sell_order(client, settings, symbol)
+        if open_sell is True:
+            print(f"  ⏸️ [{symbol}] {name} 열린 SELL 주문 존재 → 중복 매도 보류")
+            continue
+        if open_sell is None:
+            print(f"  ⏸️ [{symbol}] {name} 열린 주문 확인 불가 → 중복 방지를 위해 매도 보류")
+            continue
+
+        limit_price = best_limit_price(client, symbol, "SELL", last_price)
+        if limit_price <= 0:
+            print(f"  ❌ [{symbol}] {name} 매도 지정가 산출 실패, 안전상 매도 주문 중단")
+            continue
+        expected_amount = limit_price * qty
+        payload = build_limit_quantity_order(symbol, "SELL", qty, limit_price)
+        try:
+            print(
+                f"  🚨 [{name}] {qty}주 {trigger} 매도 주문 발송 "
+                f"(진입가 {entry:,.0f}원, 현재가 {last_price:,.0f}원, 트리거 {trigger_price:,.0f}원, "
+                f"지정가 {limit_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)..."
+            )
+            res = client.create_order(settings.account_seq, payload)
+            if res.get('dryRun'):
+                print(f"  * [모의 실행] 모니터 매도 주문 가상 응답: {res['wouldSend']}")
+            else:
+                order_id = extract_order_id(res)
+                print(f"  * [실전 주문] 모니터 매도 주문 성공! 주문ID: {order_id or '확인 필요'}")
+                if trigger == "손절":
+                    paper_reentry_watch.record_stop_exit(
+                        PAPER_REENTRY_LOG,
+                        symbol=symbol,
+                        name=name,
+                        qty=qty,
+                        entry_price=entry,
+                        stop_price=stop,
+                        observed_price=last_price,
+                        exit_limit_price=float(limit_price),
+                        order_id=order_id,
+                        now=datetime.now(),
+                    )
+                    print(f"  📝 [paper-only] [{symbol}] {name} 손절 후 재진입 관찰 시작 | 실주문 없음")
+                elif trigger == "익절":
+                    paper_reentry_watch.record_take_profit_exit(
+                        PAPER_REENTRY_LOG,
+                        symbol=symbol,
+                        name=name,
+                        qty=qty,
+                        entry_price=entry,
+                        take_price=take,
+                        observed_price=last_price,
+                        exit_limit_price=float(limit_price),
+                        order_id=order_id,
+                        now=datetime.now(),
+                    )
+                    print(f"  📝 [paper-only] [{symbol}] {name} 익절 후 추가상승 관찰 시작 | 실주문 없음")
+        except TossApiError as e:
+            print(f"  ❌ [{name}] 모니터 매도 주문 실패: {e}")
+        except Exception as e:
+            print(f"  ❌ [{name}] 모니터 매도 에러: {e}")
+
+
 def run_sell(client: TossInvestClient, settings: Settings):
     """오후 3시 15분 보유 종목 일괄 종가 매도"""
+    update_paper_reentry_watch(client)
     print("계좌 잔고 조회 중...")
 
     try:
-        holdings_resp = client.get_holdings(settings.account_seq)
-        holdings = holdings_resp.get("result", {}).get("holdings", [])
-        active_holdings = [h for h in holdings if int(h.get("quantity", "0")) > 0]
+        active_holdings = get_active_holdings(client, settings)
     except TossApiError as e:
         print(f"[오류] 잔고 조회 실패: {e}")
         return
@@ -484,9 +736,15 @@ def run_sell(client: TossInvestClient, settings: Settings):
 
     for h in active_holdings:
         symbol = h["symbol"]
-        qty = h["quantity"]
         name = h.get("name", symbol)
-        qty_int = int(qty)
+        qty_int = holding_quantity(h)
+        open_sell = has_open_sell_order(client, settings, symbol)
+        if open_sell is True:
+            print(f"  ⏸️ [{symbol}] {name} 열린 SELL 주문 존재 → 15:20 중복 매도 보류")
+            continue
+        if open_sell is None:
+            print(f"  ⏸️ [{symbol}] {name} 열린 주문 확인 불가 → 중복 방지를 위해 15:20 매도 보류")
+            continue
         raw_expected_price = price_map.get(symbol)
         limit_price = best_limit_price(client, symbol, "SELL", raw_expected_price or 0)
         if limit_price <= 0:
@@ -495,17 +753,17 @@ def run_sell(client: TossInvestClient, settings: Settings):
         expected_price = float(limit_price)
         expected_amount = expected_price * qty_int if expected_price else None
 
-        payload = build_limit_quantity_order(symbol, "SELL", qty, limit_price)
+        payload = build_limit_quantity_order(symbol, "SELL", qty_int, limit_price)
         try:
             if expected_price:
-                print(f"  🚀 [{name}] {qty}주 지정가 매도 주문 발송 (지정가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
+                print(f"  🚀 [{name}] {qty_int}주 지정가 매도 주문 발송 (지정가 {expected_price:,.0f}원, 예상금액 {expected_amount:,.0f}원)...")
             else:
-                print(f"  🚀 [{name}] {qty}주 지정가 매도 주문 발송...")
+                print(f"  🚀 [{name}] {qty_int}주 지정가 매도 주문 발송...")
             res = client.create_order(settings.account_seq, payload)
             if res.get('dryRun'):
                 print(f"  * [모의 실행] 매도 주문 가상 응답: {res['wouldSend']}")
             else:
-                print(f"  * [실전 주문] 매도 주문 성공! 주문ID: {res.get('orderId')}")
+                print(f"  * [실전 주문] 매도 주문 성공! 주문ID: {extract_order_id(res) or '확인 필요'}")
         except TossApiError as e:
             print(f"  ❌ [{name}] 매도 주문 실패: {e}")
         except Exception as e:
@@ -513,8 +771,8 @@ def run_sell(client: TossInvestClient, settings: Settings):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="TOSS API Simple Gap-Down 3% Auto Trader")
-    ap.add_argument("--action", required=True, choices=["buy", "sell"], help="buy (09:01) or sell (15:15)")
+    ap = argparse.ArgumentParser(description="TOSS API Simple Gap-Down Auto Trader")
+    ap.add_argument("--action", required=True, choices=["buy", "monitor", "sell"], help="buy (09:01), monitor, or sell (15:20)")
     ap.add_argument("--force", action="store_true", help="Ignore market gate (debug only)")
     args = ap.parse_args()
 
@@ -529,6 +787,8 @@ def main():
 
     if args.action == "buy":
         run_buy(client, settings, force=args.force)
+    elif args.action == "monitor":
+        run_monitor(client, settings)
     elif args.action == "sell":
         run_sell(client, settings)
 

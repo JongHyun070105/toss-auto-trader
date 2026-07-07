@@ -1,31 +1,56 @@
 # Toss Auto Trader Lab
 
-Toss Invest Open API를 이용해 한국 주식 자동매매를 연구하는 개인 학습용 실험실입니다.
+Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하고 운용 보조 자동화를 관리하는 개인 연구용 프로젝트입니다.
 
-현재 목표는 실주문이 아니라, 전략 후보를 안전하게 검증하고 실주문 전 단계에서 차단/승격 조건을 명확히 만드는 것입니다.
+현재 메인 운용 코드는 `scripts/simple_gap_trader.py`입니다. 전략 탐색/백테스트 산출물을 바탕으로 보수적으로 고정한 갭하락 반등 전략을 소액 실전 계좌에서 돌리고, 손절/익절 이후 가격 흐름은 paper-only 로그로 계속 쌓습니다.
 
-## 핵심 기능
+## 현재 메인 전략
 
-- Toss API 기반 캔들/호가 read-only 수집
-- 페이퍼 트레이딩 및 백테스트
-- walk-forward 검증
-- 다중 전략 후보 평가 및 strategy discovery loop
-- 수수료, 세금, 슬리피지 반영
-- 5호가 depth / market impact 가드
-- stale data / 장중 시간창 가드
-- multi-capital 검증
-- stress test
-- 전략 edge audit
-- pre-live checklist와 별도 live-order approval gate
+전략명: `robust_gap5_stop0225_take12`
 
-## 안전 원칙
+매수 진입은 09:01에 한 번만 실행합니다.
 
-- 기본값은 항상 dry-run / paper-only입니다.
-- 전략 탐색 루프는 `order_sent=false`, `live_order_allowed=false`를 유지하며 live 주문을 보내지 않습니다.
-- `order-live-send` 명령은 별도 승인 경로로 분리되어 있고, 기본은 plan-only입니다.
-- 실제 주문 전송은 candidate file approval, spread/observation/stress/edge gate, exact fingerprint confirmation, `TOSS_DRY_RUN=false`, `TOSS_LIVE_TRADING=true`가 모두 필요합니다.
-- API 키, 계좌 정보, `.env`, DB/runtime 데이터는 커밋하지 않습니다.
-- 이 프로젝트는 투자 조언이 아니며, 손실 가능성이 있습니다.
+- 시장 가드: KOSDAQ 현재값이 5일선의 `0.99` 이하일 때만 매수
+- 종목 가격: 전일 종가 `1,000원~8,000원`
+- 전일 거래량: 직전 20일 평균의 `0.8배` 미만
+- 갭 조건: 당일 일봉 시가 기준 전일 종가 대비 `-5%` 이하
+- 후보 선택: 조건 통과 종목 중 시가가 가장 낮은 1종목
+- 제외 조건: Toss/Naver 경고, 단기과열, 투자경고/위험, VI, 정리매매 등
+- 장중 청산: monitor가 `-2.25%` 손절 또는 `+12%` 익절 조건을 만족하면 지정가 매도
+- 마감 정리: 15:20까지 장중 청산되지 않고 남아 있는 보유분만 지정가 매도
+
+장중 손절 후 같은 종목을 다시 사는 live 재진입은 하지 않습니다. 대신 손절/익절 이후 가격 흐름만 `paper-only`로 기록해 다음 백테스트와 조건 개선에 사용합니다.
+
+## 주요 파일
+
+- `scripts/simple_gap_trader.py`: 09:01 매수, 장중 손절/익절 monitor, 15:20 잔여 보유분 정리
+- `scripts/toss_discord_report.py`: buy/sell/KOSDAQ/candle-update Discord 보고
+- `src/toss_auto_trader/paper_reentry_watch.py`: 손절/익절 이후 관찰 로그 호환 진입점
+- `src/toss_auto_trader/paper_exit_models.py`: paper-only exit event 모델과 기록 함수
+- `src/toss_auto_trader/paper_exit_update.py`: 손절 후 추가하락, 익절 후 추가상승 감시
+- `src/toss_auto_trader/paper_exit_outcomes.py`: 10분/30분/종가 outcome 계산
+- `src/toss_auto_trader/paper_exit_messages.py`: monitor 로그 출력 문구 포맷
+- `data/edge_research_universe_15y.sqlite3`: 메인 스크리닝용 장기 일봉 DB
+
+## 로그
+
+운영 로그는 `logs/` 아래에 남습니다.
+
+- `logs/simple_gap_trader_buy.log`: 09:01 매수 실행 로그
+- `logs/simple_gap_trader_monitor.log`: 장중 손절/익절 monitor 로그
+- `logs/simple_gap_trader_sell.log`: 15:20 잔여 보유분 정리 로그
+- `logs/toss_discord_report.log`: Discord 보고 및 candle update 로그
+- `logs/simple_gap_reentry_watch.jsonl`: 손절/익절 이후 paper-only 관찰 로그
+
+`simple_gap_reentry_watch.jsonl`의 주요 이벤트:
+
+- `stop_exit`: 손절 매도 성공 시점
+- `paper_reentry_threshold`: 손절 후 추가 하락 `-3%/-5%/-7%`
+- `paper_reentry_outcome`: 손절 후 가상 재진입의 10분/30분/종가 결과
+- `take_profit_exit`: 익절 매도 성공 시점
+- `paper_exit_price_snapshot`: 매도 후 현재가, 매도가 대비, 진입가 대비 변화
+- `paper_missed_upside_threshold`: 익절 후 추가 상승 `+3%/+5%/+7%`
+- `paper_missed_upside_outcome`: 익절 후 계속 보유 가설의 10분/30분/종가 결과
 
 ## 설치
 
@@ -36,63 +61,113 @@ python -m pip install -e .
 cp .env.example .env
 ```
 
-`.env`에는 실제 Toss API 값을 넣고 Git에 커밋하지 마세요.
+`.env`에는 실제 Toss API 값을 넣고 Git에 커밋하지 않습니다.
 
-## 테스트
+필수 환경 변수:
 
-```bash
-PYTHONPATH=src TOSS_DRY_RUN=true TOSS_LIVE_TRADING=false python3 -m unittest discover -s tests -v
+```text
+TOSS_CLIENT_ID=...
+TOSS_CLIENT_SECRET=...
+TOSS_ACCOUNT_SEQ=...
+TOSS_DRY_RUN=true
+TOSS_LIVE_TRADING=false
 ```
 
-## 운영 보조 스크립트
+실전 주문을 보낼 때만 `TOSS_DRY_RUN=false`, `TOSS_LIVE_TRADING=true`로 둡니다.
 
-최신 일봉 캐시는 장마감 후 Toss API로 최근 봉만 `INSERT OR REPLACE` 하도록 갱신할 수 있습니다. 기존 장기 DB는 유지하고 최신 구간만 Toss 포맷으로 정규화합니다.
+## 수동 실행
 
 ```bash
-PYTHONPATH=src python3 scripts/cache_toss_candles_daily.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_trader.py --action buy
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_trader.py --action monitor
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_trader.py --action sell
 ```
 
-`simple_gap_trader.py`의 2차 검증은 daily candle 기반 no-send audit으로 실행합니다. 결과 JSON은 로컬 `data/` 아래에 저장되며 커밋하지 않습니다.
+Discord 보고 dry-run:
 
 ```bash
-python3 scripts/simple_gap_strategy_audit.py
-```
-
-macOS crontab 보고는 `scripts/toss_discord_report.py`가 담당합니다. 채널 ID는 코드에 넣지 말고 crontab에서 `--to discord:<channel_id>`로 넘깁니다. 매수/매도 보고는 Toss 공식 주문 상세 API(`GET /api/v1/orders/{orderId}`)로 실제 체결수량·평균체결가·체결금액·수수료·세금을 조회해 Discord에 표시하고, 조회 실패 시 로그의 예상가로 fallback합니다.
-
-```bash
-python3 scripts/toss_discord_report.py --action buy-report --print-only
-python3 scripts/toss_discord_report.py --action sell-report --print-only
-python3 scripts/toss_discord_report.py --action kosdaq-close --print-only
-python3 scripts/toss_discord_report.py --action candle-update --dry-run-update --update-limit 3 --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action buy-report --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action sell-report --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action candle-update --dry-run-update --update-limit 3 --print-only
 ```
 
 주의: `--action candle-update`는 기본적으로 실제 DB 업데이트를 실행합니다. 검증만 할 때는 `--dry-run-update`를 붙입니다.
 
-## 전략 탐색 루프
+## Cron 운영
 
-현재 전략 탐색 루프는 여러 전략 산출물을 평가하지만, 주문을 보내지 않습니다.
+현재 macOS crontab 운용 기준:
+
+```cron
+1 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action buy >> logs/simple_gap_trader_buy.log 2>&1
+5 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action buy-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+2-59 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
+*/2 10-14 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
+0-18/2 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
+20 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action sell >> logs/simple_gap_trader_sell.log 2>&1
+25 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action sell-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+32 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+40 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action candle-update --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+```
+
+등록 확인:
+
+```bash
+crontab -l | grep -E 'simple_gap_trader|toss_discord_report'
+```
+
+macOS 사용자 crontab은 재부팅 후에도 등록 자체는 유지됩니다. 다만 장 시작 전에는 컴퓨터 전원, 네트워크, 터미널 권한, `.env`, 가상환경 경로가 정상인지 확인해야 합니다.
+
+## 백테스트/분석 스크립트
+
+전략 후보 검증과 리스크 점검용 스크립트는 `scripts/` 아래에 있습니다. 결과 JSON/CSV는 보통 `data/` 아래에 남기고 커밋하지 않습니다.
+
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_strategy_audit.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_robustness_sweep.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_market_context.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/current_strategy_risk_audit.py
+```
+
+전략 탐색 루프는 주문을 보내지 않습니다.
 
 ```bash
 PYTHONPATH=src TOSS_DRY_RUN=true TOSS_LIVE_TRADING=false \
-python3 scripts/strategy_discovery_loop.py --audit-pack forward --max-cycles 1
+.venv/bin/python3 scripts/strategy_discovery_loop.py --audit-pack forward --max-cycles 1
 ```
 
-자세한 설명:
+## 테스트
 
-```text
-docs/STRATEGY_DISCOVERY_LOOP.md
+전체 테스트:
+
+```bash
+PYTHONPATH=src:scripts TOSS_DRY_RUN=true TOSS_LIVE_TRADING=false .venv/bin/python3 -m unittest discover -s tests -v
 ```
 
-## Live order approval
+메인 운영 경로 관련 빠른 테스트:
 
-문서:
-
-```text
-docs/LIVE_ORDER_APPROVAL_FLOW.md
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 -m unittest \
+  tests.test_simple_gap_trader \
+  tests.test_simple_gap_reentry_watch \
+  tests.test_paper_reentry_watch \
+  tests.test_toss_discord_report
 ```
 
-실주문은 자동 탐색 루프에서 직접 실행하지 않습니다. 좋은 전략이 forward/paper 기준을 통과해도 먼저 `pre_live_review_candidate_not_live_order` 상태로 멈춥니다.
+문법 확인:
+
+```bash
+.venv/bin/python3 -m py_compile scripts/simple_gap_trader.py scripts/toss_discord_report.py
+```
+
+## 안전 원칙
+
+- API 키, 계좌 정보, `.env`, DB/runtime 데이터는 커밋하지 않습니다.
+- 실전 주문은 `simple_gap_trader.py`의 buy/monitor/sell 경로에서만 제한적으로 실행합니다.
+- 손절 후 재진입, 익절 후 추격매수는 live 주문으로 실행하지 않습니다.
+- 손절/익절 이후 가격 흐름은 paper-only 로그로만 남깁니다.
+- 매매 판단은 백테스트와 실시간 API 제약이 다를 수 있으므로, 실전 로그를 별도 근거로 계속 검증합니다.
+- 이 프로젝트는 투자 조언이 아니며 손실 가능성이 있습니다.
 
 ## GitHub 공개/업로드 제외 대상
 
@@ -110,6 +185,6 @@ external/
 .venv/
 ```
 
-## 상태
+## 현재 상태
 
-아직 수익 edge는 확립되지 않았습니다. 현재 시스템은 “수익 시스템”이 아니라 “실주문 전 검증/차단 시스템”입니다.
+현재 시스템은 수익을 보장하는 시스템이 아니라, 소액 실전 로그를 쌓으며 전략 조건을 검증하는 자동매매 실험 환경입니다. 메인 전략은 고정되어 있지만, 손절/익절 이후 관찰 로그를 통해 청산 조건과 시장 가드 개선 여부를 계속 판단합니다.

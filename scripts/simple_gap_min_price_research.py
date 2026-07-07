@@ -326,7 +326,7 @@ def format_historical(report: dict[str, Any]) -> str:
         "[simple_gap MIN_PRICE historical sensitivity]",
         f"- generated: {report.get('generated_at')}",
         f"- capital: {money(report.get('capital_krw'))}",
-        f"- live MIN_PRICE unchanged: {money(report.get('live_min_price_unchanged'))}",
+        f"- live MIN_PRICE configured: {money(report.get('live_min_price_unchanged'))}",
         "",
         "| min_price | trades | avg cap net | median | win | PF | avg cash used | skipped |",
         "|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -345,7 +345,7 @@ def format_historical(report: dict[str, Any]) -> str:
 def format_snapshot(record: dict[str, Any]) -> str:
     lines = [
         f"[simple_gap MIN_PRICE no-send snapshot] {record.get('generated_at')}",
-        f"- capital: {money(record.get('capital_krw'))} / live MIN_PRICE unchanged: {money(record.get('live_min_price_unchanged'))}",
+        f"- capital: {money(record.get('capital_krw'))} / live MIN_PRICE configured: {money(record.get('live_min_price_unchanged'))}",
         f"- KOSDAQ gate: {record.get('kosdaq_gate')}",
         "| min_price | candidates | selected | price | warnings skipped | unaffordable skipped |",
         "|---:|---:|---|---:|---:|---:|",
@@ -464,7 +464,7 @@ def run_final(args) -> str:
     lines = [
         f"[simple_gap MIN_PRICE day review] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         f"- no-send snapshots: {len(snapshots)}",
-        f"- live MIN_PRICE changed?: {'NO' if snapshots and snapshots[-1].get('live_min_price_unchanged') == 5000 else 'CHECK'}",
+        f"- latest live MIN_PRICE snapshot: {money(snapshots[-1].get('live_min_price_unchanged')) if snapshots else '없음'}",
         "",
     ]
     if hist:

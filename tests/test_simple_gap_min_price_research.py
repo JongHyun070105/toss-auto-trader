@@ -36,14 +36,14 @@ class SimpleGapMinPriceResearchTests(unittest.TestCase):
         record = {
             "generated_at": "2026-07-01 10:00:00",
             "capital_krw": 10_000,
-            "live_min_price_unchanged": 5_000,
+            "live_min_price_unchanged": 1_000,
             "kosdaq_gate": {"ok": True},
             "rows": [
                 {"min_price": 1000, "candidate_count": 3, "selected": {"symbol": "C", "name": "clean", "limit_price": 4000}, "warning_exclusions": [], "skipped_unaffordable_before_warning": 1}
             ],
         }
         text = mod.format_snapshot(record)
-        self.assertIn("live MIN_PRICE unchanged: 5,000원", text)
+        self.assertIn("live MIN_PRICE configured: 1,000원", text)
         self.assertIn("clean(C)", text)
 
     def test_snapshot_outcomes_computes_capital_return(self):

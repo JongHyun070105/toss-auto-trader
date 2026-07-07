@@ -1,4 +1,5 @@
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -48,6 +49,35 @@ class CacheTossCandlesDailyTests(unittest.TestCase):
         mod = load_cache_toss_candles_daily()
         exc = TossApiError(500, "Server Error", '{"error":{"code":"internal"}}')
         self.assertFalse(mod.is_soft_skip_error(exc))
+
+    def test_load_unsupported_symbols_ignores_comments_and_blanks(self):
+        mod = load_cache_toss_candles_daily()
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "unsupported.txt"
+            path.write_text("# stale\n230360\n\n101390\n", encoding="utf-8")
+
+            self.assertEqual(mod.load_unsupported_symbols(str(path)), {"230360", "101390"})
+
+    def test_record_unsupported_symbols_deduplicates_existing_file(self):
+        mod = load_cache_toss_candles_daily()
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "unsupported.txt"
+            path.write_text("230360\n", encoding="utf-8")
+
+            recorded = mod.record_unsupported_symbols(str(path), {"101390", "230360"})
+
+            self.assertEqual(recorded, ["101390"])
+            self.assertEqual(path.read_text(encoding="utf-8").splitlines(), ["101390", "230360"])
+
+    def test_load_symbols_skips_known_unsupported_before_limit(self):
+        mod = load_cache_toss_candles_daily()
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "symbols.txt"
+            path.write_text("111111\n230360\n222222\n333333\n", encoding="utf-8")
+
+            symbols = mod.load_symbols(str(path), limit=2, skip_symbols={"230360"})
+
+            self.assertEqual(symbols, ["111111", "222222"])
 
 
 if __name__ == "__main__":
