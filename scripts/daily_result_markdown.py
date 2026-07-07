@@ -144,10 +144,10 @@ def load_daily_result(date: str, *, use_api: bool = True) -> DailyResult:
 def default_markdown() -> str:
     return "\n".join(
         [
-            "# Trading Results",
+            "# 매매 결과",
             "",
-            "Public daily trading summaries generated from local logs.",
-            "No order IDs, account identifiers, cash balance, raw logs, or DB/runtime data belong here.",
+            "로컬 로그에서 생성한 공개용 일일 매매 요약입니다.",
+            "주문ID, 계좌 식별정보, 예수금, 원본 로그, DB/runtime 데이터는 여기에 포함하지 않습니다.",
             "",
             TABLE_HEADER,
             TABLE_SEPARATOR,
