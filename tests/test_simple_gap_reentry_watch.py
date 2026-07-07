@@ -19,7 +19,10 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
                 dry_run=False,
             )
 
-            with patch.object(mod, "PAPER_REENTRY_LOG", log_path):
+            with (
+                patch.object(mod, "PAPER_REENTRY_LOG", log_path),
+                patch.object(mod, "send_discord_message", return_value=False),
+            ):
                 mod.run_monitor(client, FakeSettings())
 
             events = mod.paper_reentry_watch.read_events(log_path)
@@ -40,7 +43,10 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
                 dry_run=False,
             )
 
-            with patch.object(mod, "PAPER_REENTRY_LOG", log_path):
+            with (
+                patch.object(mod, "PAPER_REENTRY_LOG", log_path),
+                patch.object(mod, "send_discord_message", return_value=False),
+            ):
                 mod.run_monitor(client, FakeSettings())
 
             events = mod.paper_reentry_watch.read_events(log_path)

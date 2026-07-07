@@ -1,5 +1,6 @@
 import importlib.util
 import os
+import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
@@ -238,6 +239,47 @@ class SimpleGapTraderTests(unittest.TestCase):
         self.assertEqual(client.created_orders[0]["symbol"], "123456")
         self.assertEqual(client.created_orders[0]["quantity"], "1")
         self.assertEqual(client.created_orders[0]["price"], "976")
+
+    def test_monitor_sends_discord_alert_after_live_stop_loss_order(self):
+        mod = load_simple_gap_trader()
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "reentry.jsonl"
+            client = FakeMonitorClient(
+                holdings=[{"symbol": "123456", "name": "테스트", "quantity": "1", "averagePrice": "1000"}],
+                prices={"123456": "977"},
+                bid_price="976",
+                dry_run=False,
+            )
+            sent_messages = []
+
+            def fake_send(message):
+                sent_messages.append(message)
+                return True
+
+            with (
+                patch.object(mod, "PAPER_REENTRY_LOG", log_path),
+                patch.object(mod, "send_discord_message", side_effect=fake_send),
+            ):
+                mod.run_monitor(client, FakeSettings())
+
+        self.assertEqual(len(sent_messages), 1)
+        self.assertIn("장중 손절 알림", sent_messages[0])
+        self.assertIn("테스트(123456)", sent_messages[0])
+        self.assertIn("수익률: -2.30%", sent_messages[0])
+        self.assertIn("주문ID: ORD-STOP", sent_messages[0])
+        self.assertNotIn("acct", sent_messages[0])
+
+    def test_monitor_does_not_send_discord_alert_for_dry_run_order(self):
+        mod = load_simple_gap_trader()
+        client = FakeMonitorClient(
+            holdings=[{"symbol": "123456", "name": "테스트", "quantity": "1", "averagePrice": "1000"}],
+            prices={"123456": "977"},
+            bid_price="976",
+            dry_run=True,
+        )
+
+        with patch.object(mod, "send_discord_message", side_effect=AssertionError("dry-run must not notify")):
+            mod.run_monitor(client, FakeSettings())
 
     def test_monitor_skips_sell_when_open_sell_order_exists(self):
         mod = load_simple_gap_trader()

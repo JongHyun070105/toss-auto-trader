@@ -137,6 +137,9 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action
 현재 macOS crontab 운용 기준:
 
 ```cron
+PATH=/Users/macintosh/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+TOSS_MONITOR_DISCORD_TARGET=discord:<channel_id>
+
 1 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action buy >> logs/simple_gap_trader_buy.log 2>&1
 5 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action buy-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 2-59 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
@@ -147,6 +150,8 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action
 32 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 40 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action candle-update --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 ```
+
+장중 monitor 손절/익절 즉시 알림은 `TOSS_MONITOR_DISCORD_TARGET` 또는 `TOSS_DISCORD_TARGET`이 설정되어 있을 때만 전송합니다. monitor 전용 채널을 따로 쓰려면 `TOSS_MONITOR_DISCORD_TARGET=discord:<channel_id>`를 추가합니다.
 
 `RESULTS.md`를 장마감 후 자동 갱신만 하려면 다음 작업을 추가합니다. Git push는 수동으로 검토 후 실행합니다.
 

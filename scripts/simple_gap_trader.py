@@ -10,6 +10,7 @@ import json
 import os
 import sqlite3
 import re
+import subprocess
 import urllib.request
 import urllib.parse
 import sys
@@ -22,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 from toss_auto_trader.config import Settings
 from toss_auto_trader import paper_reentry_watch
+from toss_auto_trader.discord_notify import MonitorExitAlert, format_monitor_exit_alert, send_discord_message
 from toss_auto_trader.paper_exit_messages import format_paper_event
 from toss_auto_trader.toss_client import TossInvestClient, TossApiError
 
@@ -582,6 +584,18 @@ def update_paper_reentry_watch(client: TossInvestClient, *, now: datetime | None
             print(message)
 
 
+def notify_monitor_exit(alert: MonitorExitAlert) -> None:
+    try:
+        sent = send_discord_message(format_monitor_exit_alert(alert))
+    except (OSError, subprocess.SubprocessError) as e:
+        print(f"  ⚠️ Discord 장중 {alert.trigger} 알림 실패: {e}")
+        return
+    if sent:
+        print(f"  📣 Discord 장중 {alert.trigger} 알림 전송 완료")
+    else:
+        print(f"  ⚠️ Discord 장중 {alert.trigger} 알림 건너뜀: TOSS_MONITOR_DISCORD_TARGET 또는 TOSS_DISCORD_TARGET 미설정")
+
+
 def run_monitor(client: TossInvestClient, settings: Settings):
     print(
         f"전략: {STRATEGY_NAME} | 손절 {STOP_LOSS_PCT * 100:.2f}% | 익절 {TAKE_PROFIT_PCT * 100:.2f}%"
@@ -668,6 +682,24 @@ def run_monitor(client: TossInvestClient, settings: Settings):
             else:
                 order_id = extract_order_id(res)
                 print(f"  * [실전 주문] 모니터 매도 주문 성공! 주문ID: {order_id or '확인 필요'}")
+                occurred_at = datetime.now()
+                notify_monitor_exit(
+                    MonitorExitAlert(
+                        strategy_name=STRATEGY_NAME,
+                        trigger=trigger,
+                        symbol=symbol,
+                        name=name,
+                        qty=qty,
+                        entry_price=entry,
+                        last_price=last_price,
+                        trigger_price=trigger_price,
+                        limit_price=limit_price,
+                        expected_amount=expected_amount,
+                        return_pct=ret_pct,
+                        order_id=order_id,
+                        occurred_at=occurred_at,
+                    )
+                )
                 if trigger == "손절":
                     paper_reentry_watch.record_stop_exit(
                         PAPER_REENTRY_LOG,
@@ -679,7 +711,7 @@ def run_monitor(client: TossInvestClient, settings: Settings):
                         observed_price=last_price,
                         exit_limit_price=float(limit_price),
                         order_id=order_id,
-                        now=datetime.now(),
+                        now=occurred_at,
                     )
                     print(f"  📝 [paper-only] [{symbol}] {name} 손절 후 재진입 관찰 시작 | 실주문 없음")
                 elif trigger == "익절":
@@ -693,7 +725,7 @@ def run_monitor(client: TossInvestClient, settings: Settings):
                         observed_price=last_price,
                         exit_limit_price=float(limit_price),
                         order_id=order_id,
-                        now=datetime.now(),
+                        now=occurred_at,
                     )
                     print(f"  📝 [paper-only] [{symbol}] {name} 익절 후 추가상승 관찰 시작 | 실주문 없음")
         except TossApiError as e:
