@@ -52,6 +52,37 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - `paper_missed_upside_threshold`: 익절 후 추가 상승 `+3%/+5%/+7%`
 - `paper_missed_upside_outcome`: 익절 후 계속 보유 가설의 10분/30분/종가 결과
 
+## 공개 일일 결과
+
+GitHub에는 raw 로그 대신 [RESULTS.md](RESULTS.md)에 공개 가능한 일일 요약만 남깁니다.
+
+포함 항목:
+
+- 날짜
+- 매수 종목과 기준가
+- 장중 손절/익절 또는 15:20 정리 가격
+- 예상 수익률
+- 간단한 비고
+
+제외 항목:
+
+- 주문ID
+- 계좌번호, 예수금, 계좌 평가액
+- raw 로그 전문
+- `data/`, `logs/`, `.env`, DB 파일
+
+생성/갱신:
+
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/daily_result_markdown.py --date 2026-07-07
+```
+
+확인만 할 때:
+
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/daily_result_markdown.py --date 2026-07-07 --print-only
+```
+
 ## 설치
 
 ```bash
@@ -108,6 +139,12 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action
 25 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action sell-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 32 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 40 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action candle-update --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+```
+
+`RESULTS.md`를 장마감 후 자동 갱신만 하려면 다음 작업을 추가합니다. Git push는 수동으로 검토 후 실행합니다.
+
+```cron
+28 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && PYTHONPATH=src:scripts .venv/bin/python3 scripts/daily_result_markdown.py >> logs/daily_result_markdown.log 2>&1
 ```
 
 등록 확인:
