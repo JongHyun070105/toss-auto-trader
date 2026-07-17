@@ -8,16 +8,20 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 
 전략명: `robust_gap5_stop0225_take12`
 
-매수 진입은 09:01에 한 번만 실행합니다.
+매수 진입은 09:01에 한 번만 실행합니다. 실전 주문은 KST 09:00 이상 09:05 미만에만 허용하며, 스캔이 길어지면 주문 직전에 시각을 다시 확인해 09:05 이후 주문을 차단합니다.
 
-- 시장 가드: KOSDAQ 현재값이 5일선의 `0.99` 이하일 때만 매수
+- 시장 가드: Toss 시장지표 API의 KOSDAQ 현재값이 실시간 5일선의 `0.99` 이하일 때만 매수
 - 종목 가격: 전일 종가 `1,000원~8,000원`
 - 전일 거래량: 직전 20일 평균의 `0.8배` 미만
 - 갭 조건: 당일 일봉 시가 기준 전일 종가 대비 `-5%` 이하
 - 후보 선택: 조건 통과 종목 중 시가가 가장 낮은 1종목
 - 제외 조건: Toss/Naver 경고, 단기과열, 투자경고/위험, VI, 정리매매 등
-- 장중 청산: monitor가 `-2.25%` 손절 또는 `+12%` 익절 조건을 만족하면 지정가 매도
-- 마감 정리: 15:20까지 장중 청산되지 않고 남아 있는 보유분만 지정가 매도
+- 장중 청산: monitor가 `-2.25%` 손절 또는 `+12%` 익절 조건을 만족하면 시장가 매도
+- 마감 정리: 15:20까지 장중 청산되지 않고 남아 있는 전략 보유분만 시장가 매도
+
+시장지표 시각이 5분 이상 지연되거나, Toss 장 캘린더의 정규장 시작 후 5분 이내가 아니거나, 거래일/전 영업일/일봉 데이터가 서로 맞지 않거나, API 조회에 실패하면 매수하지 않습니다. 매수·매도 주문 접수만으로 체결로 간주하지 않으며 Toss 주문 상세의 실제 체결 수량을 확인한 뒤 상태와 결과를 확정합니다.
+
+주문 응답이 유실되면 종목·방향·수량이 같은 계좌 주문을 추정해 연결하지 않습니다. 저장해 둔 동일 `clientOrderId`와 동일 주문 본문만 Toss의 10분 멱등성 유효시간 안에서 다시 보내 주문ID를 복구합니다. 유효시간 안에 복구하지 못하면 수동 확인 전까지 해당 전략의 추가 주문을 차단합니다.
 
 장중 손절 후 같은 종목을 다시 사는 live 재진입은 하지 않습니다. 대신 손절/익절 이후 가격 흐름만 `paper-only`로 기록해 다음 백테스트와 조건 개선에 사용합니다.
 
@@ -25,6 +29,7 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 
 - `scripts/simple_gap_trader.py`: 09:01 매수, 장중 손절/익절 monitor, 15:20 잔여 보유분 정리
 - `scripts/toss_discord_report.py`: buy/sell/KOSDAQ/candle-update Discord 보고
+- `src/toss_auto_trader/simple_gap_state.py`: 전략 주문·체결·잔여 수량 상태를 원자적으로 저장하고 복구
 - `src/toss_auto_trader/paper_reentry_watch.py`: 손절/익절 이후 관찰 로그 호환 진입점
 - `src/toss_auto_trader/paper_exit_models.py`: paper-only exit event 모델과 기록 함수
 - `src/toss_auto_trader/paper_exit_update.py`: 손절 후 추가하락, 익절 후 추가상승 감시
@@ -39,6 +44,9 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - `logs/simple_gap_trader_buy.log`: 09:01 매수 실행 로그
 - `logs/simple_gap_trader_monitor.log`: 장중 손절/익절 monitor 로그
 - `logs/simple_gap_trader_sell.log`: 15:20 잔여 보유분 정리 로그
+- `logs/simple_gap_trader_state.json`: 이 전략이 실제로 보유한 수량과 주문 체결 상태
+- `logs/simple_gap_trader_events.jsonl`: 주문·체결 상태 전이 감사 로그
+- `logs/simple_gap_trader.lock`: buy/monitor/sell 프로세스 중복 실행 방지 잠금 파일
 - `logs/toss_discord_report.log`: Discord 보고 및 candle update 로그
 - `logs/simple_gap_reentry_watch.jsonl`: 손절/익절 이후 paper-only 관찰 로그
 
@@ -143,20 +151,22 @@ TOSS_MONITOR_DISCORD_TARGET=discord:<channel_id>
 1 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action buy >> logs/simple_gap_trader_buy.log 2>&1
 5 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action buy-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 2-59 9 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
-*/2 10-14 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
-0-18/2 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
-20 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action sell >> logs/simple_gap_trader_sell.log 2>&1
-25 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action sell-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
-32 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+* 10-14 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
+0-19 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action monitor >> logs/simple_gap_trader_monitor.log 2>&1
+20-31 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/simple_gap_trader.py --action sell >> logs/simple_gap_trader_sell.log 2>&1
+33 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action sell-report --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
+35 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action kosdaq-close --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 40 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && .venv/bin/python3 scripts/toss_discord_report.py --action candle-update --to discord:<channel_id> >> logs/toss_discord_report.log 2>&1
 ```
 
 장중 monitor 손절/익절 즉시 알림은 `TOSS_MONITOR_DISCORD_TARGET` 또는 `TOSS_DISCORD_TARGET`이 설정되어 있을 때만 전송합니다. monitor 전용 채널을 따로 쓰려면 `TOSS_MONITOR_DISCORD_TARGET=discord:<channel_id>`를 추가합니다.
 
+`simple_gap_trader.py`는 전체 buy/monitor/sell 처리 구간에 파일 잠금을 사용합니다. 앞선 실행이 끝나지 않은 상태에서 다음 cron이 겹치면 뒤 실행은 주문을 보내지 않고 종료하므로, 15:20~15:31 반복 실행이 중복 매도를 만들지 않습니다.
+
 `RESULTS.md`를 장마감 후 자동 갱신만 하려면 다음 작업을 추가합니다. Git push는 수동으로 검토 후 실행합니다.
 
 ```cron
-28 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && PYTHONPATH=src:scripts .venv/bin/python3 scripts/daily_result_markdown.py >> logs/daily_result_markdown.log 2>&1
+34 15 * * 1-5 cd /Users/macintosh/IdeaProjects/toss-auto-trader-lab && PYTHONPATH=src:scripts .venv/bin/python3 scripts/daily_result_markdown.py >> logs/daily_result_markdown.log 2>&1
 ```
 
 등록 확인:
@@ -213,6 +223,11 @@ PYTHONPATH=src:scripts .venv/bin/python3 -m unittest \
 
 - API 키, 계좌 정보, `.env`, DB/runtime 데이터는 커밋하지 않습니다.
 - 실전 주문은 `simple_gap_trader.py`의 buy/monitor/sell 경로에서만 제한적으로 실행합니다.
+- 계좌 전체 보유분이 아니라 `simple_gap_trader_state.json`에 기록된 전략 보유 수량만 청산합니다.
+- 주문 접수 응답은 체결이 아닙니다. 실제 체결 수량을 주문 상세로 확인한 뒤 알림과 수익률 로그를 확정합니다.
+- 주문ID 복구는 동일 멱등키·동일 본문 재전송만 사용하며, 계좌의 유사한 수동 주문을 전략 주문으로 간주하지 않습니다.
+- buy/monitor/sell은 프로세스 잠금으로 직렬화하며, 겹친 cron 실행은 주문 경로에 진입하지 않습니다.
+- 시장 가드 입력이 지연·누락·불일치하면 실패 차단하며, 실전에서 `--force`로 우회할 수 없습니다.
 - 손절 후 재진입, 익절 후 추격매수는 live 주문으로 실행하지 않습니다.
 - 손절/익절 이후 가격 흐름은 paper-only 로그로만 남깁니다.
 - 매매 판단은 백테스트와 실시간 API 제약이 다를 수 있으므로, 실전 로그를 별도 근거로 계속 검증합니다.

@@ -1,4 +1,5 @@
 import importlib.util
+import tempfile
 import unittest
 from decimal import Decimal
 from pathlib import Path
@@ -64,7 +65,9 @@ class TossDiscordReportTests(unittest.TestCase):
             "프로그램 종료: 2026-07-07 09:01:23 / 총 실행시간: 22.45초",
         ]
 
-        with patch.object(self.mod, "latest_session_for_date", return_value=lines):
+        parsed = self.mod.parse_buy_session(lines)
+        parsed["session_count"] = 1
+        with patch.object(self.mod, "aggregate_buy_sessions_for_date", return_value=parsed):
             with patch.object(self.mod, "fetch_order_details", side_effect=AssertionError("must not fetch None order id")):
                 report = self.mod.buy_report("2026-07-07")
 
@@ -76,7 +79,7 @@ class TossDiscordReportTests(unittest.TestCase):
         lines = [
             "실행 시간: 2026-07-06 09:01:01",
             "모드: 실전 매매",
-            "현재 KOSDAQ 지수: 895.00 | 5일 이평선: 900.00 | 매수 허용선: 891.00",
+            "현재 KOSDAQ 지수: 895.00 | 당일 시가: 896.50 | 5일 이평선: 900.00 | 매수 허용선: 891.00",
             "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
             "프로그램 종료: 2026-07-06 09:01:01 / 총 실행시간: 0.07초",
         ]
@@ -84,7 +87,58 @@ class TossDiscordReportTests(unittest.TestCase):
         parsed = self.mod.parse_buy_session(lines)
 
         self.assertEqual(parsed["guard"], "차단")
+        self.assertEqual(parsed["kosdaq_open"], 896.5)
+        self.assertEqual(parsed["buy_line"], 891.0)
         self.assertIn("1% 이상 아래가 아니라", parsed["reason"])
+
+    def test_buy_report_marks_guard_skipped_fields_without_malformed_counts(self):
+        lines = [
+            "실행 시간: 2026-07-14 09:01:00",
+            "모드: 실전 매매",
+            "현재 KOSDAQ 지수: 800.17 | 당일 시가: 799.34 | 5일 이평선: 803.19 | 매수 허용선: 795.16",
+            "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
+            "프로그램 종료: 2026-07-14 09:01:00 / 총 실행시간: 0.06초",
+        ]
+
+        parsed = self.mod.parse_buy_session(lines)
+        parsed["session_count"] = 1
+        with patch.object(self.mod, "aggregate_buy_sessions_for_date", return_value=parsed):
+            report = self.mod.buy_report("2026-07-14")
+
+        self.assertIn("KOSDAQ: 800.17 / 시가: 799.34 / SMA5: 803.19 / 매수 허용선: 795.16 / 가드: 차단", report)
+        self.assertIn("DB 기준일: 미조회(시장 가드 차단) / 스크리닝: 미실행 / 갭 후보: 미실행", report)
+        self.assertIn("예수금: 미조회 / 사용예산: 미산정", report)
+        self.assertNotIn("확인 필요개", report)
+
+    def test_buy_report_preserves_earlier_successful_order_across_same_day_rerun(self):
+        first = [
+            "실행 시간: 2026-07-17 09:01:00",
+            "모드: 실전 매매",
+            "현재 KOSDAQ 지수: 780.00 | 당일 시가: 781.00 | 5일 이평선: 800.00 | 매수 허용선: 792.00",
+            "✅ 지수 가드 통과: KOSDAQ이 5일선보다 1% 이상 아래인 눌림 국면입니다.",
+            "  🚀 [테스트] 5주 지정가 매수 주문 발송 (전략 robust_gap5_stop0225_take12, 배정금액 9,000원, 지정가 1,800원, 손절가 1,760원, 익절가 2,016원)...",
+            "  * [실전 주문] 매수 주문 접수! 주문ID: BUY-FIRST",
+            "프로그램 종료: 2026-07-17 09:01:15 / 총 실행시간: 15.00초",
+        ]
+        rerun = [
+            "실행 시간: 2026-07-17 09:03:00",
+            "모드: 실전 매매",
+            "[안전 중단] 오늘 이미 진입했거나 이전 전략 주문/포지션이 아직 종료되지 않았습니다.",
+            "프로그램 종료: 2026-07-17 09:03:00 / 총 실행시간: 0.01초",
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "buy.log"
+            log_path.write_text("\n".join(first + rerun) + "\n", encoding="utf-8")
+            with (
+                patch.object(self.mod, "BUY_LOG", log_path),
+                patch.object(self.mod, "fetch_order_details", return_value={"BUY-FIRST": None}),
+            ):
+                report = self.mod.buy_report("2026-07-17")
+                estimated = self.mod.estimate_buy_from_log("2026-07-17")
+
+        self.assertIn("주문ID: BUY-FIRST", report)
+        self.assertIn("당일 매수 실행 로그: 2회", report)
+        self.assertEqual(estimated["order_id"], "BUY-FIRST")
 
     def test_parse_sell_session_reads_expected_price(self):
         lines = [
@@ -114,6 +168,33 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["orders"][0]["expected_price"], 976)
         self.assertEqual(parsed["orders"][0]["order_id"], "ORD-MON")
         self.assertTrue(parsed["orders"][0]["success"])
+
+    def test_parse_new_market_order_and_fill_logs(self):
+        monitor_lines = [
+            "실행 시간: 2026-07-17 09:07:00",
+            "모드: 실전 매매",
+            "  - [123456] 테스트 전략소유 2주(계좌 10주) | 진입가 1,000원 | 현재가 970원 | 손절가 978원 | 익절가 1,120원 | 수익률 -3.00%",
+            "  🚨 [테스트] 2주 손절 시장가 매도 주문 발송...",
+            "  * [실전 주문] 손절 시장가 매도 주문 접수! 주문ID: ORD-MKT",
+            "  ✅ [123456] 손절 실제 체결 확인: 2주 @ 968원 / 수익률 -3.20%",
+        ]
+        sell_lines = [
+            "실행 시간: 2026-07-17 15:20:00",
+            "모드: 실전 매매",
+            "  🚨 [테스트] 2주 종가청산 시장가 매도 주문 발송...",
+            "  * [실전 주문] 종가청산 시장가 매도 주문 접수! 주문ID: ORD-CLOSE",
+            "  ✅ [123456] 종가청산 실제 체결 확인: 2주 @ 1,010원 / 수익률 +1.00%",
+        ]
+
+        monitor = self.mod.parse_monitor_session(monitor_lines)
+        sell = self.mod.parse_sell_session(sell_lines)
+
+        self.assertEqual(monitor["orders"][0]["order_id"], "ORD-MKT")
+        self.assertEqual(monitor["orders"][0]["filled_price"], 968)
+        self.assertEqual(monitor["orders"][0]["entry_price"], 1000)
+        self.assertEqual(sell["orders"][0]["trigger"], "종가청산")
+        self.assertEqual(sell["orders"][0]["order_id"], "ORD-CLOSE")
+        self.assertEqual(sell["orders"][0]["filled_price"], 1010)
 
     def test_order_execution_parses_official_detail_schema(self):
         detail = {
@@ -149,6 +230,7 @@ class TossDiscordReportTests(unittest.TestCase):
             "ok": True,
             "execution": {
                 "filled_amount": Decimal("96500"),
+                "filled_quantity": Decimal("10"),
                 "commission": Decimal("10"),
                 "tax": Decimal("0"),
             },
@@ -157,6 +239,7 @@ class TossDiscordReportTests(unittest.TestCase):
             "ok": True,
             "execution": {
                 "filled_amount": Decimal("102000"),
+                "filled_quantity": Decimal("10"),
                 "commission": Decimal("10"),
                 "tax": Decimal("200"),
             },
@@ -192,7 +275,7 @@ class TossDiscordReportTests(unittest.TestCase):
                 }
             ]
         }
-        with patch.object(self.mod, "latest_session_for_date", return_value=sell_lines):
+        with patch.object(self.mod, "split_sessions", return_value=[sell_lines]):
             with patch.object(self.mod, "estimate_buy_from_log", return_value=buy):
                 with patch.object(self.mod, "estimate_monitor_from_log", return_value=monitor):
                     with patch.object(self.mod, "fetch_order_details", return_value={}):
@@ -203,6 +286,43 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertIn("ORD-MON", report)
         self.assertIn("15:20 보유 없음", report)
         self.assertNotIn("미거래 또는 오전 체결 없음", report)
+
+    def test_sell_report_keeps_order_from_earlier_reconcile_session(self):
+        submitted = [
+            "실행 시간: 2026-07-01 15:20:00",
+            "모드: 실전 매매",
+            "  🚨 [테스트] 1주 종가청산 시장가 매도 주문 발송...",
+            "  * [실전 주문] 종가청산 시장가 매도 주문 접수! 주문ID: SELL-1",
+        ]
+        reconciled = [
+            "실행 시간: 2026-07-01 15:31:00",
+            "모드: 실전 매매",
+            "전략 포지션이 이미 종료됐습니다. (CLOSED)",
+        ]
+        details = {
+            "SELL-1": {
+                "ok": True,
+                "execution": {
+                    "status": "FILLED",
+                    "quantity": Decimal("1"),
+                    "filled_quantity": Decimal("1"),
+                    "average_filled_price": Decimal("990"),
+                    "filled_amount": Decimal("990"),
+                },
+            }
+        }
+
+        with (
+            patch.object(self.mod, "split_sessions", return_value=[submitted, reconciled]),
+            patch.object(self.mod, "estimate_buy_from_log", return_value=None),
+            patch.object(self.mod, "estimate_monitor_from_log", return_value=None),
+            patch.object(self.mod, "fetch_order_details", return_value=details),
+        ):
+            report = self.mod.sell_report("2026-07-01")
+
+        self.assertIn("SELL-1", report)
+        self.assertIn("체결 완료", report)
+        self.assertNotIn("매도 주문 로그 없음", report)
 
     def test_status_report_has_no_hardcoded_channel_id(self):
         text = Path(__file__).resolve().parents[1].joinpath("scripts", "toss_discord_report.py").read_text()
@@ -221,6 +341,8 @@ Toss 일봉 캐시 업데이트 완료
   "total_fetched": 9085,
   "total_inserted_or_replaced": 9085,
   "latest_distribution_tail": {"2026-07-03": 1817},
+  "stale_latest_symbols_count": 1,
+  "stale_latest_symbols_tail": [{"symbol": "203690", "latest_date": "2026-07-02", "run_latest_date": "2026-07-03"}],
   "soft_errors_tail": [],
   "errors_tail": []
 }
@@ -235,6 +357,8 @@ Toss 일봉 캐시 업데이트 완료
         self.assertIn("known_unsupported=5", report)
         self.assertIn("soft_skipped=0", report)
         self.assertIn("hard_failed=0", report)
+        self.assertIn("최신 캔들 지연/상폐 의심: count=1", report)
+        self.assertIn("203690", report)
 
 
 if __name__ == "__main__":

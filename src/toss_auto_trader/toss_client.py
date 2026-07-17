@@ -200,6 +200,27 @@ class TossInvestClient:
     def get_market_calendar(self, country: str = "KR", date: Optional[str] = None) -> Dict[str, Any]:
         return self.request_json("GET", f"/api/v1/market-calendar/{country.upper()}", params={"date": date})
 
+    def get_market_indicator_prices(self, symbols: Iterable[str]) -> Dict[str, Any]:
+        return self.request_json(
+            "GET",
+            "/api/v1/market-indicators/prices",
+            params={"symbols": ",".join(symbols)},
+        )
+
+    def get_market_indicator_candles(
+        self,
+        symbol: str,
+        interval: str = "1d",
+        count: int = 100,
+        before: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        safe_symbol = urllib.parse.quote(str(symbol), safe="")
+        return self.request_json(
+            "GET",
+            f"/api/v1/market-indicators/{safe_symbol}/candles",
+            params={"interval": interval, "count": count, "before": before},
+        )
+
     def get_commissions(self, account_seq: Optional[str] = None) -> Dict[str, Any]:
         return self.request_json("GET", "/api/v1/commissions", headers=self._account_headers(account_seq))
 
@@ -248,3 +269,34 @@ class TossInvestClient:
         if self.settings.dry_run or not self.settings.live_trading:
             return {"dryRun": True, "wouldSend": payload}
         return self.request_json("POST", "/api/v1/orders", headers=self._account_headers(account_seq), payload=payload)
+
+    def modify_order(self, account_seq: str, order_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        order_type = str(payload.get("orderType") or "")
+        if order_type not in {"LIMIT", "MARKET"}:
+            raise ValueError("Toss order modify payload orderType must be LIMIT or MARKET")
+        if payload.get("quantity") in {None, ""}:
+            raise ValueError("Toss KR order modify payload requires quantity")
+        if order_type == "LIMIT" and payload.get("price") in {None, ""}:
+            raise ValueError("Toss LIMIT modify requires price")
+        if order_type == "MARKET" and "price" in payload:
+            raise ValueError("Toss MARKET modify must not include price")
+        if self.settings.dry_run or not self.settings.live_trading:
+            return {"dryRun": True, "wouldSend": payload, "orderId": order_id}
+        safe_order_id = urllib.parse.quote(str(order_id), safe="")
+        return self.request_json(
+            "POST",
+            f"/api/v1/orders/{safe_order_id}/modify",
+            headers=self._account_headers(account_seq),
+            payload=payload,
+        )
+
+    def cancel_order(self, account_seq: str, order_id: str) -> Dict[str, Any]:
+        if self.settings.dry_run or not self.settings.live_trading:
+            return {"dryRun": True, "wouldCancel": str(order_id)}
+        safe_order_id = urllib.parse.quote(str(order_id), safe="")
+        return self.request_json(
+            "POST",
+            f"/api/v1/orders/{safe_order_id}/cancel",
+            headers=self._account_headers(account_seq),
+            payload={},
+        )

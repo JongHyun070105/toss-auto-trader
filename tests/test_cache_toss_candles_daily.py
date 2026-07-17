@@ -79,6 +79,13 @@ class CacheTossCandlesDailyTests(unittest.TestCase):
 
             self.assertEqual(symbols, ["111111", "222222"])
 
+    def test_stale_latest_symbols_reports_symbols_behind_run_latest(self):
+        mod = load_cache_toss_candles_daily()
+
+        rows = mod.stale_latest_symbols({"111111": "2026-07-08", "203690": "2026-07-07"})
+
+        self.assertEqual(rows, [{"symbol": "203690", "latest_date": "2026-07-07", "run_latest_date": "2026-07-08"}])
+
 
 if __name__ == "__main__":
     unittest.main()

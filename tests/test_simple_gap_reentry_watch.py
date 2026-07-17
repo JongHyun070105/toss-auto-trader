@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.test_simple_gap_trader import FakeMonitorClient, FakeSettings, load_simple_gap_trader
+from tests.test_simple_gap_trader import FakeMonitorClient, FakeSettings, load_simple_gap_trader, open_position_state, write_state
 
 
 class SimpleGapReentryWatchTests(unittest.TestCase):
@@ -12,6 +12,8 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
         mod = load_simple_gap_trader()
         with tempfile.TemporaryDirectory() as tmp:
             log_path = Path(tmp) / "reentry.jsonl"
+            state_path = Path(tmp) / "state.json"
+            write_state(state_path, open_position_state())
             client = FakeMonitorClient(
                 holdings=[{"symbol": "123456", "name": "테스트", "quantity": "1", "averagePrice": "1000"}],
                 prices={"123456": "977"},
@@ -21,6 +23,7 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
 
             with (
                 patch.object(mod, "PAPER_REENTRY_LOG", log_path),
+                patch.object(mod, "STRATEGY_STATE_PATH", state_path),
                 patch.object(mod, "send_discord_message", return_value=False),
             ):
                 mod.run_monitor(client, FakeSettings())
@@ -36,6 +39,8 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
         mod = load_simple_gap_trader()
         with tempfile.TemporaryDirectory() as tmp:
             log_path = Path(tmp) / "reentry.jsonl"
+            state_path = Path(tmp) / "state.json"
+            write_state(state_path, open_position_state())
             client = FakeMonitorClient(
                 holdings=[{"symbol": "123456", "name": "테스트", "quantity": "1", "averagePrice": "1000"}],
                 prices={"123456": "1120"},
@@ -45,6 +50,7 @@ class SimpleGapReentryWatchTests(unittest.TestCase):
 
             with (
                 patch.object(mod, "PAPER_REENTRY_LOG", log_path),
+                patch.object(mod, "STRATEGY_STATE_PATH", state_path),
                 patch.object(mod, "send_discord_message", return_value=False),
             ):
                 mod.run_monitor(client, FakeSettings())

@@ -159,6 +159,18 @@ def update_symbol(client: TossInvestClient, db_path: str, symbol: str, *, count:
     }
 
 
+def stale_latest_symbols(latest_by_symbol: dict[str, str]) -> list[dict[str, str]]:
+    if not latest_by_symbol:
+        return []
+    latest_date = max(latest_by_symbol.values())
+    stale = [
+        {"symbol": symbol, "latest_date": date, "run_latest_date": latest_date}
+        for symbol, date in latest_by_symbol.items()
+        if date < latest_date
+    ]
+    return sorted(stale, key=lambda row: (row["latest_date"], row["symbol"]), reverse=True)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Update KOSDAQ daily candles from Toss API")
     ap.add_argument("--symbols-file", default=DEFAULT_SYMBOLS_FILE)
@@ -199,6 +211,7 @@ def main() -> int:
     total_fetched = 0
     total_inserted = 0
     latest_dates: dict[str, int] = {}
+    latest_by_symbol: dict[str, str] = {}
     errors: list[dict[str, str]] = []
     soft_errors: list[dict[str, str]] = []
     newly_unsupported_symbols: set[str] = set()
@@ -210,6 +223,7 @@ def main() -> int:
             total_fetched += int(row["fetched"])
             total_inserted += int(row["inserted_or_replaced"])
             if row["latest_date"]:
+                latest_by_symbol[symbol] = str(row["latest_date"])
                 latest_dates[row["latest_date"]] = latest_dates.get(row["latest_date"], 0) + 1
         except TossApiError as exc:
             if is_soft_skip_error(exc):
@@ -232,6 +246,7 @@ def main() -> int:
 
     after = db_summary(args.db_path)
     latest_distribution = dict(sorted(latest_dates.items())[-10:])
+    stale_symbols = stale_latest_symbols(latest_by_symbol)
     recorded_unsupported = [] if args.dry_run else record_unsupported_symbols(args.unsupported_symbols_file, newly_unsupported_symbols)
     report = {
         "success": failed == 0,
@@ -243,6 +258,8 @@ def main() -> int:
         "total_fetched": total_fetched,
         "total_inserted_or_replaced": total_inserted,
         "latest_distribution_tail": latest_distribution,
+        "stale_latest_symbols_count": len(stale_symbols),
+        "stale_latest_symbols_tail": stale_symbols[:10],
         "db_after": after,
         "soft_errors_tail": soft_errors,
         "errors_tail": errors,

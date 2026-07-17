@@ -44,6 +44,21 @@ class KosdaqSma5GateDeepDiveTests(unittest.TestCase):
         self.assertEqual(dates_for_slice(gates, "live_open_above"), {"2026-01-06"})
         self.assertEqual(dates_for_slice(gates, "live_open_below"), {"2026-01-07"})
 
+    def test_dates_for_slice_uses_exact_one_percent_live_buy_gate(self) -> None:
+        rows = [
+            IndexCandle("2026-01-01", 100.0, 100.0),
+            IndexCandle("2026-01-02", 100.0, 100.0),
+            IndexCandle("2026-01-03", 100.0, 100.0),
+            IndexCandle("2026-01-04", 100.0, 100.0),
+            IndexCandle("2026-01-05", 100.0, 100.0),
+            IndexCandle("2026-01-06", 98.0, 98.0),
+            IndexCandle("2026-01-07", 100.0, 100.0),
+        ]
+        gates = gate_rows(rows)
+
+        self.assertEqual(dates_for_slice(gates, "live_buy_gate_1pct"), {"2026-01-06"})
+        self.assertEqual(dates_for_slice(gates, "live_blocked_gate_1pct"), {"2026-01-07"})
+
 
 if __name__ == "__main__":
     unittest.main()

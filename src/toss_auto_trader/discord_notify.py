@@ -55,15 +55,15 @@ def format_monitor_exit_alert(alert: MonitorExitAlert) -> str:
     order_id = alert.order_id or "확인 필요"
     return "\n".join(
         [
-            f"[Toss 자동매매] {alert.occurred_at:%Y-%m-%d %H:%M} 장중 {alert.trigger} 알림",
+            f"[Toss 자동매매] {alert.occurred_at:%Y-%m-%d %H:%M} 장중 {alert.trigger} 체결 알림",
             f"- 전략: {alert.strategy_name}",
             f"- 종목: {alert.name}({alert.symbol})",
             f"- 수량: {alert.qty:,}주",
             f"- 진입가: {money(alert.entry_price)} / 현재가: {money(alert.last_price)} / 수익률: {pct(alert.return_pct)}",
-            f"- {alert.trigger} 기준가: {money(alert.trigger_price)} / 매도 지정가: {money(alert.limit_price)}",
-            f"- 예상 매도금액: {money(alert.expected_amount)}",
+            f"- {alert.trigger} 기준가: {money(alert.trigger_price)} / 실제 체결가: {money(alert.limit_price)}",
+            f"- 실제 매도금액: {money(alert.expected_amount)}",
             f"- 주문ID: {order_id}",
-            "- 후속 처리: live 재진입 없음 / paper-only 관찰 기록",
+            "- 후속 처리: live 재진입 없음 / 손절·익절인 경우 paper-only 관찰 기록",
         ]
     )
 

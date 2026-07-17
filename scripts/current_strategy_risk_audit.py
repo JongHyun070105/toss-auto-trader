@@ -7,6 +7,8 @@ from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from pathlib import Path
 
+from kosdaq_sma5_gate_deep_dive import dates_for_slice, gate_rows, to_index_candles
+from simple_gap_strategy_audit import fetch_kosdaq_index
 from simple_gap_variant_core import Candidate, VariantConfig, TradeResult, rank_value, simulate_day, simulate_variant
 from simple_gap_variant_data import load_candidates
 
@@ -127,8 +129,19 @@ def scenario_payload(rows: list[Candidate], scenario: Scenario, *, start: str, e
     }
 
 
-def markdown(payload: dict[str, str | list[dict[str, object]]]) -> str:
-    lines = ["# current strategy risk audit", "", f"- generated_at: {payload['generated_at']}", f"- rows_loaded: {payload['rows_loaded']}", ""]
+def markdown(payload: dict[str, object]) -> str:
+    market_gate = payload["market_gate"]
+    assert isinstance(market_gate, dict)
+    lines = [
+        "# current strategy risk audit",
+        "",
+        f"- generated_at: {payload['generated_at']}",
+        f"- rows_loaded_before_market_gate: {payload['rows_loaded_before_market_gate']}",
+        f"- rows_loaded_after_market_gate: {payload['rows_loaded']}",
+        f"- market_gate: {market_gate['definition']}",
+        f"- eligible_market_days: {market_gate['eligible_days']} / index_rows: {market_gate['index_rows']}",
+        "",
+    ]
     for item in payload["scenarios"]:
         if not isinstance(item, dict):
             continue
@@ -152,13 +165,29 @@ def markdown(payload: dict[str, str | list[dict[str, object]]]) -> str:
 
 def scenarios() -> list[Scenario]:
     live = VariantConfig("robust_gap5_stop0225_take12", 10000.0, 1000.0, 8000.0, -0.05, 0.0, 0.8, 0, 1, "lowest_price", 0.0035, 0.0, 0.0225, 0.12)
+    close_exit = replace(live, name="close_exit", stop_loss=None, take_profit=None)
+    take_only = replace(live, name="take_only", stop_loss=None)
+    stop_only = replace(live, name="stop_only", take_profit=None)
+    tight_stop = replace(live, name="tight_stop", stop_loss=0.015)
+    wide_stop = replace(live, name="wide_stop", stop_loss=0.035)
+
+    def harsh(config: VariantConfig, name: str) -> VariantConfig:
+        return replace(config, name=name, roundtrip_cost=0.0055, slippage=0.008)
+
     return [
         Scenario("live_base_cost035", live),
         Scenario("live_mid_cost075", replace(live, name="mid", roundtrip_cost=0.0045, slippage=0.003)),
-        Scenario("live_harsh_cost135", replace(live, name="harsh", roundtrip_cost=0.0055, slippage=0.008)),
-        Scenario("no_stop_take_close_exit", replace(live, name="close_exit", stop_loss=None, take_profit=None)),
-        Scenario("tight_stop_take12", replace(live, name="tight_stop", stop_loss=0.015, take_profit=0.12)),
-        Scenario("wide_stop_take12", replace(live, name="wide_stop", stop_loss=0.035, take_profit=0.12)),
+        Scenario("live_harsh_cost135", harsh(live, "harsh")),
+        Scenario("take12_only_base", take_only),
+        Scenario("take12_only_harsh", harsh(take_only, "take_only_harsh")),
+        Scenario("stop0225_only_base", stop_only),
+        Scenario("stop0225_only_harsh", harsh(stop_only, "stop_only_harsh")),
+        Scenario("no_stop_take_close_exit", close_exit),
+        Scenario("no_stop_take_close_exit_harsh", harsh(close_exit, "close_exit_harsh")),
+        Scenario("tight_stop_take12", tight_stop),
+        Scenario("tight_stop_take12_harsh", harsh(tight_stop, "tight_stop_harsh")),
+        Scenario("wide_stop_take12", wide_stop),
+        Scenario("wide_stop_take12_harsh", harsh(wide_stop, "wide_stop_harsh")),
     ]
 
 
@@ -168,13 +197,30 @@ def run() -> int:
     parser.add_argument("--out-dir", default="data/strategy_research_20h/current_audit")
     parser.add_argument("--start", default="2011-01-01")
     parser.add_argument("--end", default="2026-07-03")
+    parser.add_argument("--window-starts", default="2011-01-01,2019-01-01,2021-01-01")
+    parser.add_argument("--no-market-gate", action="store_true", help="Research-only comparison without the live 1%% KOSDAQ gate")
     args = parser.parse_args()
-    rows = load_candidates(args.db_path, start=args.start, end=args.end, broad_gap=-0.05)
+    all_rows = load_candidates(args.db_path, start=args.start, end=args.end, broad_gap=-0.05)
+    index_rows = to_index_candles(fetch_kosdaq_index(args.start, args.end))
+    eligible_dates = dates_for_slice(gate_rows(index_rows), "live_buy_gate_1pct")
+    rows = all_rows if args.no_market_gate else [row for row in all_rows if row.date in eligible_dates]
+    window_starts = [value.strip() for value in args.window_starts.split(",") if value.strip()]
     blocks = []
     for scenario in scenarios():
-        for start in ("2011-01-01", "2019-01-01", "2021-01-01"):
+        for start in window_starts:
             blocks.append(scenario_payload(rows, scenario, start=start, end=args.end))
-    payload = {"generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "rows_loaded": len(rows), "scenarios": blocks}
+    payload = {
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "rows_loaded_before_market_gate": len(all_rows),
+        "rows_loaded": len(rows),
+        "market_gate": {
+            "enabled": not args.no_market_gate,
+            "definition": "KOSDAQ open <= live-style SMA5 * 0.99" if not args.no_market_gate else "disabled",
+            "eligible_days": len(eligible_dates),
+            "index_rows": len(index_rows),
+        },
+        "scenarios": blocks,
+    }
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "risk_audit.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding="utf-8")

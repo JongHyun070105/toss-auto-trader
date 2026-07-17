@@ -148,6 +148,10 @@ def dates_for_slice(gates: Mapping[str, GateRow], name: str) -> set[str]:
         return {date for date, row in gates.items() if row.open_vs_live_sma5 >= 0.0}
     if name == "live_open_below":
         return {date for date, row in gates.items() if row.open_vs_live_sma5 < 0.0}
+    if name == "live_buy_gate_1pct":
+        return {date for date, row in gates.items() if row.open_vs_live_sma5 <= -0.01}
+    if name == "live_blocked_gate_1pct":
+        return {date for date, row in gates.items() if row.open_vs_live_sma5 > -0.01}
     if name == "below_mild_0_to_1pct":
         return {date for date, row in gates.items() if -0.01 <= row.open_vs_live_sma5 < 0.0}
     if name == "below_mid_1_to_3pct":
@@ -171,7 +175,18 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     candidates = load_candidates(args.db_path, start=args.start, end=args.end, broad_gap=config.gap_threshold)
     index = to_index_candles(fetch_kosdaq_index(args.start, args.end))
     gates = gate_rows(index)
-    slices = ["all", "live_open_above", "live_open_below", "below_mild_0_to_1pct", "below_mid_1_to_3pct", "below_harsh_over_3pct", "prev_close_above", "prev_close_below"]
+    slices = [
+        "all",
+        "live_buy_gate_1pct",
+        "live_blocked_gate_1pct",
+        "live_open_above",
+        "live_open_below",
+        "below_mild_0_to_1pct",
+        "below_mid_1_to_3pct",
+        "below_harsh_over_3pct",
+        "prev_close_above",
+        "prev_close_below",
+    ]
     windows = {"full": (args.start, args.end), "train_2016_2023": (args.start, "2023-12-31"), "test_2024_2026": ("2024-01-01", args.end), "recent_2025_2026": ("2025-01-01", args.end)}
     results: dict[str, object] = {
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -181,6 +196,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "index_rows": len(index),
         "gate_definition": {
             "live_open_above": "KOSDAQ open >= live-style SMA5 at open, equivalent to open >= average(previous 4 closes)",
+            "live_buy_gate_1pct": "KOSDAQ open <= live-style SMA5 * 0.99, exact daily-open proxy for the live gate",
             "prev_close_above": "previous KOSDAQ close >= previous 5-close SMA; no-lookahead daily proxy",
         },
         "windows": {},
@@ -197,8 +213,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 "harsh": asdict(summarize(slice_rows, stress["harsh"])),
             }
         results["windows"][window] = window_payload
-    below_rows = filtered_by_dates(candidates, dates_for_slice(gates, "live_open_below"))
-    results["annual_live_open_below_base"] = {year: asdict(metrics) for year, metrics in yearly(below_rows, config).items()}
+    buy_gate_rows = filtered_by_dates(candidates, dates_for_slice(gates, "live_buy_gate_1pct"))
+    results["annual_live_buy_gate_1pct_base"] = {year: asdict(metrics) for year, metrics in yearly(buy_gate_rows, config).items()}
     return results
 
 
@@ -219,7 +235,7 @@ def report_markdown(results: Mapping[str, object]) -> str:
         f"- generated_at: `{results['generated_at']}`",
         f"- candidate_rows: `{results['candidate_rows']}`",
         f"- index_rows: `{results['index_rows']}`",
-        "- live-style gate: KOSDAQ open >= average(previous 4 closes). This mirrors the current intraday SMA5 check more closely than previous-close-only gating.",
+        "- live-style gate: KOSDAQ open <= live-style SMA5 * 0.99. The daily-open proxy uses the open plus the previous four closes.",
         "- config: current `robust_gap5_stop0225_take12`, 10,000 KRW, gap <= -5%, price 1,000-8,000, prev volume ratio < 0.8, top1 lowest_price, stop 2.25%, take 12%.",
         "",
     ]
@@ -243,10 +259,10 @@ def report_markdown(results: Mapping[str, object]) -> str:
                 f"{harsh['profit_factor'] if harsh['profit_factor'] is not None else 'n/a'} | {pct(harsh['max_drawdown'])} | {money(base['avg_trade_pnl'])} |"
             )
         lines.append("")
-    annual = results["annual_live_open_below_base"]
+    annual = results["annual_live_buy_gate_1pct_base"]
     assert isinstance(annual, Mapping)
     lines += [
-        "## annual live_open_below base",
+        "## annual live_buy_gate_1pct base",
         "",
         "| year | trades | PF | MDD | comp | total pnl |",
         "|---:|---:|---:|---:|---:|---:|",

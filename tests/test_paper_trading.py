@@ -135,6 +135,45 @@ class PaperTradingTests(unittest.TestCase):
         self.assertEqual(client.call[1], "/api/v1/orders/ORD%2F1")
         self.assertEqual(client.call[3], {"X-Tossinvest-Account": "1"})
 
+    def test_market_indicator_methods_use_official_endpoints(self):
+        class FakeClient(TossInvestClient):
+            def __init__(self):
+                super().__init__(Settings(account_seq="1", dry_run=False, live_trading=True))
+                self.calls = []
+
+            def request_json(self, method, path, *, params=None, headers=None, payload=None):
+                self.calls.append((method, path, params, headers, payload))
+                return {"result": []}
+
+        client = FakeClient()
+        client.get_market_indicator_prices(["KOSDAQ"])
+        client.get_market_indicator_candles("KOSDAQ", "1d", count=6)
+
+        self.assertEqual(client.calls[0][:3], ("GET", "/api/v1/market-indicators/prices", {"symbols": "KOSDAQ"}))
+        self.assertEqual(
+            client.calls[1][:3],
+            ("GET", "/api/v1/market-indicators/KOSDAQ/candles", {"interval": "1d", "count": 6, "before": None}),
+        )
+
+    def test_cancel_and_modify_order_use_official_endpoints(self):
+        class FakeClient(TossInvestClient):
+            def __init__(self):
+                super().__init__(Settings(account_seq="1", dry_run=False, live_trading=True))
+                self.calls = []
+
+            def request_json(self, method, path, *, params=None, headers=None, payload=None):
+                self.calls.append((method, path, params, headers, payload))
+                return {"result": {"orderId": "NEW"}}
+
+        client = FakeClient()
+        client.cancel_order("1", "ORD/1")
+        client.modify_order("1", "ORD/1", {"orderType": "MARKET", "quantity": "2"})
+
+        self.assertEqual(client.calls[0][0:2], ("POST", "/api/v1/orders/ORD%2F1/cancel"))
+        self.assertEqual(client.calls[0][3], {"X-Tossinvest-Account": "1"})
+        self.assertEqual(client.calls[1][0:2], ("POST", "/api/v1/orders/ORD%2F1/modify"))
+        self.assertEqual(client.calls[1][4], {"orderType": "MARKET", "quantity": "2"})
+
 
 if __name__ == "__main__":
     unittest.main()
