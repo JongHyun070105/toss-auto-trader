@@ -99,23 +99,23 @@ class KrNovelFeatureResearchTests(unittest.TestCase):
         self.assertAlmostEqual(price, 96.0)
         self.assertEqual(reason, "stop")
 
-    def test_monitor_stress_does_not_credit_high_only_target_touch(self):
+    def test_daily_adverse_proxy_does_not_credit_high_only_target_touch(self):
         price, reason = novel.exit_for(
             event(open=100.0, prev_close=110.0, low=99.0, high=112.0, close=104.0),
             "gap_fill50",
-            execution_model="monitor_stress",
+            execution_model="daily_adverse_proxy",
         )
         self.assertAlmostEqual(price, 104.0 * 0.995)
-        self.assertEqual(reason, "close_1520_proxy_stress")
+        self.assertEqual(reason, "close_daily_proxy_stress")
 
-    def test_monitor_stress_applies_adverse_stop_fill(self):
+    def test_daily_adverse_proxy_applies_adverse_stop_fill(self):
         price, reason = novel.exit_for(
             event(open=100.0, low=97.0, high=101.0),
             "fixed_stop0225_take12",
-            execution_model="monitor_stress",
+            execution_model="daily_adverse_proxy",
         )
         self.assertAlmostEqual(price, 97.75 * 0.99)
-        self.assertEqual(reason, "stop_monitor_stress")
+        self.assertEqual(reason, "stop_daily_adverse_proxy")
 
     def test_loader_rolling_features_exclude_current_bar(self):
         with tempfile.TemporaryDirectory() as tmp:

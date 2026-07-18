@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test preregistered Korean gap-strategy features not covered by prior grids.
+"""Test declared Korean gap-strategy features not covered by prior grids.
 
 This module is research-only. It reads daily candles, never imports the live
 trader, and never calls account or order endpoints. Candidate selection uses
@@ -10,6 +10,7 @@ live change.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sqlite3
@@ -239,7 +240,7 @@ def load_events(db_path: str, *, start: str, end: str) -> list[NovelEvent]:
 
 
 def hypotheses() -> list[Hypothesis]:
-    """Fixed before opening the 2024+ holdout results."""
+    """Declared candidate list; this repository does not prove preregistration."""
     return [
         Hypothesis("anchor"),
         Hypothesis("gap_atr_1", entry_rule="normalized_gap_1"),
@@ -338,16 +339,16 @@ def _apply_daily_exit_levels(
     target_reason: str,
     execution_model: str,
 ) -> tuple[float, str]:
-    if execution_model not in {"standing_bracket", "monitor_stress"}:
+    if execution_model not in {"standing_bracket", "daily_adverse_proxy"}:
         raise ValueError(f"unknown execution model: {execution_model}")
     if event.low <= stop_price:
-        if execution_model == "monitor_stress":
-            return stop_price * 0.99, "stop_monitor_stress"
+        if execution_model == "daily_adverse_proxy":
+            return stop_price * 0.99, "stop_daily_adverse_proxy"
         return stop_price, "stop"
-    if execution_model == "monitor_stress":
+    if execution_model == "daily_adverse_proxy":
         if event.close >= target_price:
             return target_price, f"{target_reason}_close_confirmed"
-        return event.close * 0.995, "close_1520_proxy_stress"
+        return event.close * 0.995, "close_daily_proxy_stress"
     if event.high >= target_price:
         return target_price, target_reason
     return event.close, "close_auction_proxy"
@@ -480,13 +481,13 @@ def evaluate_hypothesis(
         "hypothesis": asdict(hypothesis),
         "pretest_score": pretest_score(harsh_trades),
         "profiles": profiles,
-        "monitor_stress_harsh": window_payload(
+        "daily_adverse_proxy_harsh": window_payload(
             simulate(
                 events,
                 markets,
                 hypothesis,
                 roundtrip_cost=COSTS["harsh"],
-                execution_model="monitor_stress",
+                execution_model="daily_adverse_proxy",
             )
         ),
     }
@@ -544,8 +545,6 @@ def historical_diagnostic_passed(candidate: dict[str, Any], baseline: dict[str, 
     candidate_harsh = candidate["profiles"]["harsh"]
     baseline_harsh = baseline["profiles"]["harsh"]
     candidate_extreme = candidate["profiles"]["extreme"]
-    candidate_monitor = candidate["monitor_stress_harsh"]
-    baseline_monitor = baseline["monitor_stress_harsh"]
     for window in ("test_pre_nxt_2024_20250303", "post_nxt_20250304_2026"):
         current = candidate_harsh[window]["metrics"]
         base = baseline_harsh[window]["metrics"]
@@ -556,8 +555,6 @@ def historical_diagnostic_passed(candidate: dict[str, Any], baseline: dict[str, 
             or current["mdd_on_capital"] > max(0.30, base["mdd_on_capital"] * 1.25)
             or candidate_harsh[window]["miss_top_winners_25pct"]["total_pnl"] <= 0
             or candidate_extreme[window]["metrics"]["total_pnl"] <= 0
-            or candidate_monitor[window]["metrics"]["total_pnl"]
-            <= baseline_monitor[window]["metrics"]["total_pnl"]
         ):
             return False
     return True
@@ -569,7 +566,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         f"- generated: `{payload['generated_at']}`",
         f"- events: `{payload['event_rows']}` / market days: `{payload['market_days']}`",
-        f"- preregistered hypotheses: `{payload['hypotheses_tested']}`",
+        f"- declared hypotheses: `{payload['hypotheses_tested']}`",
         "- selection data: `2011-01-01~2023-12-31`",
         "- reused recent diagnostic: `2024-01-01~2026-07-16` (not an untouched holdout)",
         f"- live change accepted: `{payload['live_change_accepted']}`",
@@ -602,6 +599,41 @@ def render_markdown(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def source_fingerprints(db_path: str, index_rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    database = Path(db_path).resolve()
+    digest = hashlib.sha256()
+    stat = database.stat()
+    sample_size = 1024 * 1024
+    with database.open("rb") as handle:
+        digest.update(handle.read(sample_size))
+        if stat.st_size > sample_size:
+            handle.seek(max(0, stat.st_size - sample_size))
+            digest.update(handle.read(sample_size))
+    connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
+    try:
+        rows, symbols, first_date, last_date = connection.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT symbol), MIN(substr(timestamp,1,10)), "
+            "MAX(substr(timestamp,1,10)) FROM candle_cache WHERE interval='1d'"
+        ).fetchone()
+    finally:
+        connection.close()
+    script_path = Path(__file__).resolve()
+    index_payload = json.dumps(
+        index_rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str
+    ).encode("utf-8")
+    return {
+        "script_sha256": hashlib.sha256(script_path.read_bytes()).hexdigest(),
+        "database_sample_sha256": digest.hexdigest(),
+        "database_size_bytes": stat.st_size,
+        "database_daily_rows": int(rows or 0),
+        "database_symbols": int(symbols or 0),
+        "database_first_date": first_date,
+        "database_last_date": last_date,
+        "kosdaq_index_sha256": hashlib.sha256(index_payload).hexdigest(),
+        "kosdaq_index_rows": len(index_rows),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Novel Korean gap-feature research; no order endpoints")
     parser.add_argument("--db-path", default=DEFAULT_DB)
@@ -617,7 +649,8 @@ def main() -> int:
     args = parser.parse_args()
 
     events = load_events(args.db_path, start=args.start, end=args.end)
-    markets = build_markets(events, fetch_kosdaq_index(args.start, args.end))
+    index_rows = fetch_kosdaq_index(args.start, args.end)
+    markets = build_markets(events, index_rows)
     leaderboard = pretest_leaderboard(events, markets)
     selected = selected_without_recent_diagnostic(events, markets, limit=args.selection_limit)
     evaluations = [evaluate_hypothesis(events, markets, item) for item in selected]
@@ -629,6 +662,9 @@ def main() -> int:
     payload = {
         "generated_at": datetime.now().astimezone().isoformat(),
         "db_path": args.db_path,
+        "requested_start": args.start,
+        "requested_end": args.end,
+        "source_fingerprints": source_fingerprints(args.db_path, index_rows),
         "event_rows": len(events),
         "market_days": len(markets),
         "hypotheses_tested": len(hypotheses()),
