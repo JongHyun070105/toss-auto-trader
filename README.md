@@ -49,6 +49,7 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - `logs/simple_gap_trader.lock`: buy/monitor/sell 프로세스 중복 실행 방지 잠금 파일
 - `logs/toss_discord_report.log`: Discord 보고 및 candle update 로그
 - `logs/simple_gap_reentry_watch.jsonl`: 손절/익절 이후 paper-only 관찰 로그
+- `logs/simple_gap_breadth_shadow.jsonl`: breadth4의 09:01 현재가 대리값과 15:40 공식 시가 사후확정
 
 `simple_gap_reentry_watch.jsonl`의 주요 이벤트:
 
@@ -181,11 +182,41 @@ macOS 사용자 crontab은 재부팅 후에도 등록 자체는 유지됩니다.
 
 전략 후보 검증과 리스크 점검용 스크립트는 `scripts/` 아래에 있습니다. 결과 JSON/CSV는 보통 `data/` 아래에 남기고 커밋하지 않습니다.
 
+국내 전략의 2026-07-18 폭넓은 조건 재검증 결과는
+`docs/KR_STRATEGY_BROAD_RESEARCH_2026-07-18.md`에 정리되어 있습니다. 현재 실전
+전략은 변경하지 않았고, `-5% 이하 갭 종목 4개 이상` 조건만 섀도 관찰 후보로
+분류했습니다. 09:01에는 20일 유효 이력을 갖춘 500~30,000원 모집단을 대상으로
+주문 처리 후 현재가 기준 개수를 기록하고, 15:40 실제 캔들 업데이트가 완료되면
+공식 일봉 시가와 OHLC 유효성 기준 개수를 같은 로컬 JSONL에 사후 확정합니다.
+두 값 모두 실매매 주문 조건에는 사용하지 않습니다.
+
+ATR 정규화 갭, 종목별 갭 z-score, KOSDAQ 잔차 갭, 252일 가격 위치,
+갭 메우기·ATR 적응형 청산처럼 기존 그리드에 없던 기법의 후속 결과는
+`docs/KR_NOVEL_FEATURE_RESEARCH_2026-07-18.md`에 있습니다. 32개 가설을
+추가로 검사했지만 실전 교체 조건을 통과한 후보는 없어 live trader는 유지했습니다.
+
 ```bash
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_strategy_audit.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_robustness_sweep.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_market_context.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/current_strategy_risk_audit.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_broad_strategy_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_condition_sensitivity.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_guard_fallback_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_breadth_gate_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_novel_feature_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/breadth_shadow_summary.py
+```
+
+미국주식 연구 경로도 주문 API를 호출하지 않습니다. 현재 결론과 검증 한계는
+`docs/US_MARKET_RESEARCH_2026-07-18.md`에 정리되어 있으며, 미국 전략은 아직
+실전 코드나 cron에 연결하지 않습니다.
+
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/cache_toss_us_research_data.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/us_gap_strategy_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/us_strategy_family_research.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/us_etf_strategy_research.py
 ```
 
 전략 탐색 루프는 주문을 보내지 않습니다.

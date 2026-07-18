@@ -31,6 +31,7 @@ class TossDiscordReportTests(unittest.TestCase):
             "실제 예수금: 100,000원 | 이번 매수 사용 예산: 100,000원 (계좌 매수가능금액 전체)",
             "성능 측정: price_chunks=7 price_rows=665 provisional_gap_hits=12 daily_open_calls=12 daily_open_missing=1 daily_open_confirmed_hits=2 scan_elapsed=18.50s",
             "갭 하락 5.0% 돌파 종목 수: 2개",
+            "[섀도 breadth4] 09:01 현재가 기준 -5% 갭: 5개 / 기준: 4개 / 모집단: 1800개 / 시세수신: 1790개 / 상태: pass / 실매매 미적용",
             "  [123456] 테스트 | 갭률: -3.20% | 시가: 9,600원 | 현재가: 9,650원 | 전일종가: 10,000원",
             "  ⛔ [091590] 091590 매수 유의사항 필터 제외: OVERHEATED, INVESTMENT_WARNING",
             "  🚀 [테스트] 10주 지정가 매수 주문 발송 (배정금액 96,500원, 지정가 9,650원)...",
@@ -46,6 +47,8 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["total_elapsed_sec"], 19.25)
         self.assertEqual(parsed["perf"]["daily_open_calls"], 12)
         self.assertEqual(parsed["perf"]["scan_elapsed_sec"], 18.5)
+        self.assertEqual(parsed["breadth_shadow"]["provisional_gap5_count"], 5)
+        self.assertFalse(parsed["breadth_shadow"]["applied_to_live_order"])
         self.assertEqual(parsed["warning_exclusions"][0]["symbol"], "091590")
         self.assertIn("INVESTMENT_WARNING", parsed["warning_exclusions"][0]["warnings"])
         self.assertIn("갭하락", parsed["reason"])
@@ -74,6 +77,24 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertIn("주문ID: 확인 필요", report)
         self.assertIn("매수 실제 체결: 상세조회 없음", report)
         self.assertNotIn("상세조회 실패", report)
+
+    def test_buy_report_labels_breadth_as_shadow_only(self):
+        parsed = self.mod.parse_buy_session([
+            "실행 시간: 2026-07-17 09:01:00",
+            "모드: 실전 매매",
+            "현재 KOSDAQ 지수: 780.00 | 당일 시가: 781.00 | 5일 이평선: 800.00 | 매수 허용선: 792.00",
+            "✅ 지수 가드 통과: KOSDAQ이 5일선보다 1% 이상 아래인 눌림 국면입니다.",
+            "[섀도 breadth4] 09:01 현재가 기준 -5% 갭: 5개 / 기준: 4개 / 모집단: 1800개 / 시세수신: 1790개 / 상태: pass / 실매매 미적용",
+            "프로그램 종료: 2026-07-17 09:01:10 / 총 실행시간: 10.00초",
+        ])
+        parsed["session_count"] = 1
+
+        with patch.object(self.mod, "aggregate_buy_sessions_for_date", return_value=parsed):
+            report = self.mod.buy_report("2026-07-17")
+
+        self.assertIn("breadth4 섀도: 09:01 현재가 기준 5개", report)
+        self.assertIn("상태 pass", report)
+        self.assertIn("실매매 미적용", report)
 
     def test_parse_buy_session_reports_new_market_gate_block_reason(self):
         lines = [
@@ -359,6 +380,32 @@ Toss 일봉 캐시 업데이트 완료
         self.assertIn("hard_failed=0", report)
         self.assertIn("최신 캔들 지연/상폐 의심: count=1", report)
         self.assertIn("203690", report)
+
+    def test_candle_update_report_reconciles_official_breadth_after_full_update(self):
+        current_date = "2026-07-17"
+        before = {"exists": True, "latest_date": "2026-07-16", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+        after = {"exists": True, "latest_date": current_date, "rows": 12, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+        reconciliation = {
+            "official_gap5_count": 6,
+            "threshold": 4,
+            "shadow_pass": True,
+        }
+
+        with (
+            patch.object(self.mod, "today", return_value=current_date),
+            patch.object(self.mod, "db_summary", side_effect=[before, after]),
+            patch.object(self.mod, "run_candle_update", return_value=(0, "{}", "")),
+            patch.object(
+                self.mod.breadth_shadow,
+                "record_official_reconciliation",
+                return_value=reconciliation,
+            ) as record,
+        ):
+            report = self.mod.candle_update_report()
+
+        record.assert_called_once_with(self.mod.DB_PATH, self.mod.BREADTH_SHADOW_LOG, current_date)
+        self.assertIn("breadth4 사후확정: 공식 시가 -5% 갭 6개 / 기준 4개 / 통과", report)
+        self.assertIn("실매매 미적용", report)
 
 
 if __name__ == "__main__":

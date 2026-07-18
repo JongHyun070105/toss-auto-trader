@@ -26,6 +26,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 from toss_auto_trader.config import Settings
+from toss_auto_trader import breadth_shadow
 from toss_auto_trader import paper_reentry_watch
 from toss_auto_trader import simple_gap_state
 from toss_auto_trader.discord_notify import MonitorExitAlert, format_monitor_exit_alert, send_discord_message
@@ -37,6 +38,7 @@ PAPER_REENTRY_LOG = Path("logs") / "simple_gap_reentry_watch.jsonl"
 STRATEGY_STATE_PATH = Path("logs") / "simple_gap_trader_state.json"
 STRATEGY_EVENT_LOG = Path("logs") / "simple_gap_trader_events.jsonl"
 STRATEGY_LOCK_PATH = Path("logs") / "simple_gap_trader.lock"
+BREADTH_SHADOW_LOG = Path("logs") / "simple_gap_breadth_shadow.jsonl"
 MAX_BUY_AMOUNT_KRW = 10000
 MIN_PRICE = 1000
 MAX_PRICE = 8000
@@ -627,6 +629,139 @@ def get_base_stocks_from_db(*, expected_date: str | None = None):
     return candidates
 
 
+def get_breadth_reference_prices_from_db(*, expected_date: str) -> dict[str, float]:
+    """Load the broad 500-30,000 won reference universe for paper-only logging."""
+    connection = sqlite3.connect(DB_PATH)
+    try:
+        rows = connection.execute(
+            """
+            WITH ordered AS (
+              SELECT
+                symbol,
+                substring(timestamp,1,10) AS date,
+                CAST(close_price AS REAL) AS close_price,
+                AVG(CAST(volume AS REAL)) OVER (
+                  PARTITION BY symbol ORDER BY timestamp
+                  ROWS BETWEEN 20 PRECEDING AND 1 PRECEDING
+                ) AS avg_prior20_volume,
+                AVG(
+                  (CAST(high_price AS REAL)-CAST(low_price AS REAL)) /
+                  NULLIF(CAST(close_price AS REAL),0)
+                ) OVER (
+                  PARTITION BY symbol ORDER BY timestamp
+                  ROWS BETWEEN 19 PRECEDING AND CURRENT ROW
+                ) AS avg_range20,
+                COUNT(*) OVER (
+                  PARTITION BY symbol ORDER BY timestamp
+                  ROWS BETWEEN 20 PRECEDING AND 1 PRECEDING
+                ) AS prior_count
+              FROM candle_cache
+              WHERE interval='1d'
+            )
+            SELECT symbol, close_price
+            FROM ordered
+            WHERE date=? AND prior_count=20
+              AND close_price BETWEEN ? AND ?
+              AND avg_prior20_volume > 0
+              AND avg_range20 > 0
+            """,
+            (
+                expected_date,
+                breadth_shadow.MIN_REFERENCE_PRICE,
+                breadth_shadow.MAX_REFERENCE_PRICE,
+            ),
+        ).fetchall()
+    finally:
+        connection.close()
+    return {
+        str(symbol): float(close_price)
+        for symbol, close_price in rows
+        if symbol and float(close_price or 0) > 0
+    }
+
+
+def record_breadth_shadow_skipped(trade_date: str, reason: str) -> None:
+    """Best-effort paper log. A logging failure must never alter live trading."""
+    try:
+        breadth_shadow.append_event(
+            BREADTH_SHADOW_LOG,
+            {
+                "event": "breadth_shadow_open_snapshot",
+                "phase": "09:01",
+                "date": trade_date,
+                "rule": breadth_shadow.SHADOW_RULE,
+                "threshold": breadth_shadow.SHADOW_THRESHOLD,
+                "status": "not_evaluated",
+                "reason": reason,
+                "applied_to_live_order": False,
+            },
+        )
+        print(f"[섀도 breadth4] 미실행: {reason} / 실매매 미적용")
+    except Exception as error:
+        print(f"[섀도 breadth4 경고] 미실행 기록 실패: {type(error).__name__}: {error}")
+
+
+def collect_breadth_shadow_snapshot(
+    client: TossInvestClient,
+    *,
+    trade_date: str,
+    previous_business_day: str,
+    base_symbols: set[str],
+    base_quote_rows: list[dict],
+) -> dict | None:
+    """Collect a current-price proxy without changing any buy decision."""
+    try:
+        reference_prices = get_breadth_reference_prices_from_db(
+            expected_date=previous_business_day
+        )
+        quote_rows = list(base_quote_rows)
+        extra_symbols = sorted(set(reference_prices) - base_symbols)
+        failed_chunks = 0
+        for offset in range(0, len(extra_symbols), 100):
+            chunk = extra_symbols[offset : offset + 100]
+            try:
+                response = client.get_prices(chunk)
+                quote_rows.extend(response.get("result", []) or [])
+            except Exception as error:
+                failed_chunks += 1
+                print(
+                    f"[섀도 breadth4 경고] 추가 시세 청크 실패 "
+                    f"(첫종목 {chunk[0]}): {type(error).__name__}: {error}"
+                )
+            time.sleep(0.1)
+        gap_count, quoted = breadth_shadow.provisional_gap_count(
+            reference_prices, quote_rows
+        )
+        coverage = quoted / len(reference_prices) if reference_prices else 0.0
+        status = "pass" if gap_count >= breadth_shadow.SHADOW_THRESHOLD else "below_threshold"
+        event = {
+            "event": "breadth_shadow_open_snapshot",
+            "phase": "09:01",
+            "date": trade_date,
+            "reference_date": previous_business_day,
+            "rule": breadth_shadow.SHADOW_RULE,
+            "threshold": breadth_shadow.SHADOW_THRESHOLD,
+            "status": status,
+            "provisional_gap5_count": gap_count,
+            "reference_symbols": len(reference_prices),
+            "quoted_symbols": quoted,
+            "quote_coverage": coverage,
+            "failed_chunks": failed_chunks,
+            "definition": "09:01 current-price proxy; official open reconciled after close",
+            "applied_to_live_order": False,
+        }
+        breadth_shadow.append_event(BREADTH_SHADOW_LOG, event)
+        print(
+            f"[섀도 breadth4] 09:01 현재가 기준 -5% 갭: {gap_count}개 / "
+            f"기준: {breadth_shadow.SHADOW_THRESHOLD}개 / 모집단: {len(reference_prices)}개 / "
+            f"시세수신: {quoted}개 / 상태: {status} / 실매매 미적용"
+        )
+        return event
+    except Exception as error:
+        print(f"[섀도 breadth4 경고] 수집 실패, 실매매는 계속: {type(error).__name__}: {error}")
+        return None
+
+
 def get_actual_budget(client: TossInvestClient, settings: Settings) -> float:
     """실제 예수금을 API로 조회하여 실제 사용 가능 금액 반환.
 
@@ -1081,16 +1216,19 @@ def run_buy(
         print("⚠️ [모의 디버그 옵션] 시장 비율 조건만 무시합니다. 날짜·최신성 검증은 유지합니다.")
         evaluate_market_gate(market_snapshot)
     elif not evaluate_market_gate(market_snapshot):
+        record_breadth_shadow_skipped(trade_date, "시장 가드 차단")
         return
 
     base_stocks = get_base_stocks_from_db(expected_date=market_snapshot.previous_business_day)
     if not base_stocks:
+        record_breadth_shadow_skipped(trade_date, "기준 종목 스크리닝 미실행")
         print(f"스크리닝 조건({MIN_PRICE:,}원~{MAX_PRICE:,}원)을 통과한 종목이 없습니다.")
         return
 
     # 실제 예수금 조회 (안전 상한 MAX_BUY_AMOUNT_KRW와 비교)
     remaining_budget = get_actual_budget(client, settings)
     if remaining_budget < MIN_PRICE:
+        record_breadth_shadow_skipped(trade_date, "예수금 부족")
         print(f"[중단] 예수금({remaining_budget:,.0f}원)이 최소 주가({MIN_PRICE:,}원)보다 적어 매수 불가합니다.")
         return
 
@@ -1101,6 +1239,7 @@ def run_buy(
     chunks = [symbols[i:i + chunk_size] for i in range(0, len(symbols), chunk_size)]
 
     triggered = []
+    base_quote_rows = []
     perf = {
         'price_chunks': 0,
         'price_rows': 0,
@@ -1117,6 +1256,7 @@ def run_buy(
             perf['price_chunks'] += 1
             prices_resp = client.get_prices(chunk)
             prices = prices_resp.get("result", [])
+            base_quote_rows.extend(prices or [])
             perf['price_rows'] += len(prices or [])
             for p in prices:
                 sym = p["symbol"]
@@ -1183,6 +1323,13 @@ def run_buy(
     triggered.sort(key=lambda x: (x['open_price'], x['symbol']))
 
     if not triggered:
+        collect_breadth_shadow_snapshot(
+            client,
+            trade_date=trade_date,
+            previous_business_day=market_snapshot.previous_business_day,
+            base_symbols=set(base_map),
+            base_quote_rows=base_quote_rows,
+        )
         print("매수 진입 조건을 통과한 최종 종목이 없습니다.")
         return
 
@@ -1226,6 +1373,7 @@ def run_buy(
                 f"[안전 중단] 스캔 중 09:05가 지나 실전 매수 주문을 보내지 않습니다. "
                 f"현재 {submitted_at.strftime('%H:%M:%S')}"
             )
+            record_breadth_shadow_skipped(trade_date, "09:05 주문 마감 우선")
             return
         payload = build_limit_quantity_order(target['symbol'], "BUY", qty, limit_price, now=submitted_at)
         state = None
@@ -1287,6 +1435,15 @@ def run_buy(
                     print(f"  ❌ [{target['name']}] 매수 주문 확정 거절: {e}")
             else:
                 print(f"  ❌ [{target['name']}] 주문 전 시스템 에러: {e}")
+
+    # Research-only API calls always run after the live order path.
+    collect_breadth_shadow_snapshot(
+        client,
+        trade_date=trade_date,
+        previous_business_day=market_snapshot.previous_business_day,
+        base_symbols=set(base_map),
+        base_quote_rows=base_quote_rows,
+    )
 
 
 def get_active_holdings(client: TossInvestClient, settings: Settings) -> list[dict]:

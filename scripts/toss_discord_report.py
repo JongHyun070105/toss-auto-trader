@@ -32,12 +32,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from toss_auto_trader.config import Settings
+from toss_auto_trader import breadth_shadow
 from toss_auto_trader.toss_client import TossApiError, TossInvestClient
 
 BUY_LOG = ROOT / "logs" / "simple_gap_trader_buy.log"
 MONITOR_LOG = ROOT / "logs" / "simple_gap_trader_monitor.log"
 SELL_LOG = ROOT / "logs" / "simple_gap_trader_sell.log"
 REPORT_LOG = ROOT / "logs" / "toss_discord_report.log"
+BREADTH_SHADOW_LOG = ROOT / "logs" / "simple_gap_breadth_shadow.jsonl"
 DB_PATH = ROOT / "data" / "edge_research_universe_15y.sqlite3"
 DEFAULT_TARGET_ENV = "TOSS_DISCORD_TARGET"
 
@@ -307,6 +309,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         "actual_cash": None,
         "budget": None,
         "gap_count": None,
+        "breadth_shadow": None,
         "perf": {},
         "candidates": [],
         "warning_exclusions": [],
@@ -366,6 +369,27 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"갭 하락 [\d.]+% 돌파 종목 수: (\d+)개", line)
         if m:
             info["gap_count"] = int(m.group(1))
+        m = re.search(
+            r"\[섀도 breadth4\] 09:01 현재가 기준 -5% 갭: (\d+)개 / 기준: (\d+)개 / "
+            r"모집단: (\d+)개 / 시세수신: (\d+)개 / 상태: (\w+) / 실매매 미적용",
+            line,
+        )
+        if m:
+            info["breadth_shadow"] = {
+                "provisional_gap5_count": int(m.group(1)),
+                "threshold": int(m.group(2)),
+                "reference_symbols": int(m.group(3)),
+                "quoted_symbols": int(m.group(4)),
+                "status": m.group(5),
+                "applied_to_live_order": False,
+            }
+        m = re.search(r"\[섀도 breadth4\] 미실행: (.+?) / 실매매 미적용", line)
+        if m:
+            info["breadth_shadow"] = {
+                "status": "not_evaluated",
+                "reason": m.group(1).strip(),
+                "applied_to_live_order": False,
+            }
         m = re.search(
             r"성능 측정: .*?price_chunks=(\d+) .*?price_rows=(\d+) .*?provisional_gap_hits=(\d+) .*?daily_open_calls=(\d+) .*?daily_open_missing=(\d+) .*?daily_open_confirmed_hits=(\d+) .*?scan_elapsed=([\d.]+)s",
             line,
@@ -456,6 +480,7 @@ def aggregate_buy_sessions_for_date(path: Path, date: str) -> dict[str, Any] | N
         "actual_cash",
         "budget",
         "gap_count",
+        "breadth_shadow",
         "perf",
         "candidates",
         "warning_exclusions",
@@ -686,6 +711,17 @@ def buy_report(date: str | None = None) -> str:
             f"daily open candle {perf.get('daily_open_calls')}회, "
             f"open 누락 {perf.get('daily_open_missing')}개, "
             f"scan {perf.get('scan_elapsed_sec')}초"
+        )
+    shadow = b.get("breadth_shadow") or {}
+    if shadow.get("status") == "not_evaluated":
+        lines.append(
+            f"- breadth4 섀도: 미실행({shadow.get('reason') or '사유 미기록'}) / 실매매 미적용"
+        )
+    elif shadow:
+        lines.append(
+            f"- breadth4 섀도: 09:01 현재가 기준 {shadow.get('provisional_gap5_count')}개 / "
+            f"기준 {shadow.get('threshold')}개 / 상태 {shadow.get('status')} / "
+            f"시세 {shadow.get('quoted_symbols')}/{shadow.get('reference_symbols')} / 실매매 미적용"
         )
     if b.get("candidates"):
         lines.append("- 상위 후보:")
@@ -952,6 +988,22 @@ def candle_update_report(*, dry_run: bool = False, limit: int = 0) -> str:
         lines.append("- updater JSON 파싱 실패: stdout tail 확인 필요")
     if stderr.strip():
         lines.append("- stderr tail:\n```\n" + "\n".join(stderr.splitlines()[-8:])[:1500] + "\n```")
+    latest_date = after.get("latest_date") if after.get("exists") else None
+    if code == 0 and not dry_run and limit == 0 and latest_date == today():
+        try:
+            reconciliation = breadth_shadow.record_official_reconciliation(
+                DB_PATH, BREADTH_SHADOW_LOG, str(latest_date)
+            )
+            status = "통과" if reconciliation["shadow_pass"] else "기준 미달"
+            lines.append(
+                f"- breadth4 사후확정: 공식 시가 -5% 갭 "
+                f"{reconciliation['official_gap5_count']}개 / 기준 "
+                f"{reconciliation['threshold']}개 / {status} / 실매매 미적용"
+            )
+        except Exception as error:
+            lines.append(
+                f"- breadth4 사후확정 실패: {type(error).__name__}: {error} / 실매매 영향 없음"
+            )
     return "\n".join(lines)
 
 

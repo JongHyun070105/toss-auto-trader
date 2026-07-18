@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -351,6 +352,64 @@ class SimpleGapTraderTests(unittest.TestCase):
         mod = load_simple_gap_trader()
 
         self.assertAlmostEqual(mod.provisional_gap_threshold(), -0.04525)
+
+    def test_breadth_shadow_collects_extra_symbols_without_changing_live_rule(self):
+        mod = load_simple_gap_trader()
+
+        class QuoteOnlyClient:
+            def get_prices(self, symbols):
+                self.requested = list(symbols)
+                return {"result": [{"symbol": "B", "lastPrice": "1,880"}]}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "candles.sqlite3"
+            log_path = Path(tmp) / "breadth.jsonl"
+            connection = sqlite3.connect(db_path)
+            connection.execute(
+                "CREATE TABLE candle_cache (symbol TEXT, timestamp TEXT, interval TEXT, "
+                "open_price REAL, high_price REAL, low_price REAL, close_price REAL, volume REAL)"
+            )
+            target_day = datetime(2026, 7, 16)
+            connection.executemany(
+                "INSERT INTO candle_cache VALUES (?,?,?,?,?,?,?,?)",
+                [
+                    (
+                        symbol,
+                        (target_day - timedelta(days=20 - offset)).date().isoformat(),
+                        "1d",
+                        close_price,
+                        close_price * 1.01,
+                        close_price * 0.99,
+                        close_price,
+                        100.0,
+                    )
+                    for offset in range(21)
+                    for symbol, close_price in (("A", 1000.0), ("B", 2000.0))
+                ],
+            )
+            connection.commit()
+            connection.close()
+            client = QuoteOnlyClient()
+
+            with (
+                patch.object(mod, "DB_PATH", str(db_path)),
+                patch.object(mod, "BREADTH_SHADOW_LOG", log_path),
+                patch.object(mod.time, "sleep"),
+            ):
+                result = mod.collect_breadth_shadow_snapshot(
+                    client,
+                    trade_date="2026-07-17",
+                    previous_business_day="2026-07-16",
+                    base_symbols={"A"},
+                    base_quote_rows=[{"symbol": "A", "lastPrice": "940"}],
+                )
+
+            event = json.loads(log_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result["provisional_gap5_count"], 2)
+        self.assertEqual(event["reference_symbols"], 2)
+        self.assertFalse(event["applied_to_live_order"])
+        self.assertEqual(client.requested, ["B"])
 
     def test_warning_filter_blocks_investment_warning_and_overheated(self):
         mod = load_simple_gap_trader()
