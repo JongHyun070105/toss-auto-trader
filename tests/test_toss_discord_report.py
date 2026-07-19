@@ -373,7 +373,9 @@ Toss 일봉 캐시 업데이트 완료
 
         with patch.object(self.mod, "db_summary", side_effect=[before, after]):
             with patch.object(self.mod, "run_candle_update", return_value=(0, updater_stdout, "")):
-                report = self.mod.candle_update_report()
+                report = self.mod.candle_update_report(
+                    expected_latest_date="2026-07-03"
+                )
 
         self.assertIn("known_unsupported=5", report)
         self.assertIn("soft_skipped=0", report)
@@ -401,11 +403,73 @@ Toss 일봉 캐시 업데이트 완료
                 return_value=reconciliation,
             ) as record,
         ):
-            report = self.mod.candle_update_report()
+            report = self.mod.candle_update_report(
+                expected_latest_date=current_date
+            )
 
         record.assert_called_once_with(self.mod.DB_PATH, self.mod.BREADTH_SHADOW_LOG, current_date)
         self.assertIn("breadth4 사후확정: 공식 시가 -5% 갭 6개 / 기준 4개 / 통과", report)
         self.assertIn("실매매 미적용", report)
+
+    def test_candle_update_report_marks_latest_session_lag(self):
+        before = {"exists": True, "latest_date": "2026-07-16", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+        after = {"exists": True, "latest_date": "2026-07-16", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+
+        with (
+            patch.object(self.mod, "db_summary", side_effect=[before, after]),
+            patch.object(self.mod, "run_candle_update", return_value=(0, "{}", "")),
+        ):
+            report = self.mod.candle_update_report(
+                expected_latest_date="2026-07-17"
+            )
+
+        self.assertIn("실행 결과: 지연", report)
+        self.assertIn("KOSDAQ 기대 최신 거래일: 2026-07-17", report)
+        self.assertIn("09:01 매수는 기준일 불일치로 자동 차단", report)
+
+    def test_candle_update_report_does_not_claim_success_when_session_lookup_fails(self):
+        summary = {"exists": True, "latest_date": "2026-07-16", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+
+        with (
+            patch.object(self.mod, "db_summary", side_effect=[summary, summary]),
+            patch.object(
+                self.mod,
+                "latest_kosdaq_session_date",
+                side_effect=RuntimeError("index unavailable"),
+            ),
+            patch.object(self.mod, "run_candle_update", return_value=(0, "{}", "")),
+        ):
+            report = self.mod.candle_update_report()
+
+        self.assertIn("실행 결과: 최신성 확인 실패", report)
+        self.assertIn("KOSDAQ 기대 거래일 조회 실패", report)
+        self.assertNotIn("실행 결과: 성공", report)
+
+    def test_latest_kosdaq_session_date_accepts_compact_holiday_previous_date(self):
+        with patch.object(
+            self.mod,
+            "fetch_kosdaq_close",
+            return_value={"date": "20260716"},
+        ):
+            self.assertEqual(self.mod.latest_kosdaq_session_date(), "2026-07-16")
+
+    def test_candle_update_report_skips_api_when_already_fresh(self):
+        before = {"exists": True, "latest_date": "2026-07-17", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+
+        with (
+            patch.object(self.mod, "db_summary", return_value=before),
+            patch.object(
+                self.mod,
+                "run_candle_update",
+                side_effect=AssertionError("fresh DB must not call updater"),
+            ),
+        ):
+            report = self.mod.candle_update_report(
+                only_if_stale=True,
+                expected_latest_date="2026-07-17",
+            )
+
+        self.assertIn("이미 최신이라 API 업데이트 생략", report)
 
 
 if __name__ == "__main__":

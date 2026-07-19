@@ -955,18 +955,92 @@ def extract_last_json(text: str) -> dict[str, Any] | None:
     return None
 
 
-def candle_update_report(*, dry_run: bool = False, limit: int = 0) -> str:
+def _normalized_session_date(value: object) -> str | None:
+    raw = str(value or "").strip()
+    if len(raw) >= 10 and raw[4] == "-" and raw[7] == "-":
+        return raw[:10]
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    if len(digits) >= 8:
+        return f"{digits[:4]}-{digits[4:6]}-{digits[6:8]}"
+    return None
+
+
+def latest_kosdaq_session_date() -> str:
+    latest = _normalized_session_date(fetch_kosdaq_close().get("date"))
+    if not latest:
+        raise ValueError("KOSDAQ 최신 거래일 형식을 해석할 수 없습니다")
+    return latest
+
+
+def candle_update_report(
+    *,
+    dry_run: bool = False,
+    limit: int = 0,
+    only_if_stale: bool = False,
+    expected_latest_date: str | None = None,
+) -> str:
     before = db_summary()
+    expected_error: str | None = None
+    if expected_latest_date is None and not dry_run and limit == 0:
+        try:
+            expected_latest_date = latest_kosdaq_session_date()
+        except Exception as error:
+            expected_error = f"{type(error).__name__}: {error}"
+    before_latest = before.get("latest_date") if before.get("exists") else None
+    if (
+        only_if_stale
+        and expected_latest_date
+        and before_latest
+        and str(before_latest) >= expected_latest_date
+    ):
+        return "\n".join(
+            [
+                "[Toss 자동매매] 캔들 DB 개장 전 최신성 점검",
+                "- 실행 결과: 이미 최신이라 API 업데이트 생략",
+                f"- 기대 최신 거래일: {expected_latest_date}",
+                f"- DB 최신일: {before_latest}",
+            ]
+        )
     code, stdout, stderr = run_candle_update(dry_run=dry_run, limit=limit)
     after = db_summary()
     parsed = extract_last_json(stdout)
     mode = "DRY-RUN 검증" if dry_run else "실제 업데이트"
+    after_latest = after.get("latest_date") if after.get("exists") else None
+    if expected_error:
+        latest_is_fresh: bool | None = None
+    elif expected_latest_date is None:
+        latest_is_fresh = True
+    else:
+        latest_is_fresh = after_latest is not None and str(after_latest) >= expected_latest_date
+
+    if code != 0:
+        result_label = "실패"
+    elif latest_is_fresh is None:
+        result_label = "최신성 확인 실패"
+    elif latest_is_fresh:
+        result_label = "성공"
+    else:
+        result_label = "지연"
+    heading = (
+        f"[Toss 자동매매] 개장 전 캔들 DB 복구 보고 ({mode})"
+        if only_if_stale
+        else f"[Toss 자동매매] 15:40 캔들 DB 업데이트 보고 ({mode})"
+    )
     lines = [
-        f"[Toss 자동매매] 15:40 캔들 DB 업데이트 보고 ({mode})",
-        f"- 실행 결과: {'성공' if code == 0 else '실패'} (exit={code})",
+        heading,
+        f"- 실행 결과: {result_label} (exit={code})",
         f"- DB before: latest={before.get('latest_date')} rows={before.get('rows'):,} latest_rows={before.get('latest_date_rows'):,}" if before.get("exists") else "- DB before: 없음",
         f"- DB after: latest={after.get('latest_date')} rows={after.get('rows'):,} latest_rows={after.get('latest_date_rows'):,} toss_latest={after.get('latest_toss_rows'):,} bad_ts={after.get('bad_timestamp_rows'):,}" if after.get("exists") else "- DB after: 없음",
     ]
+    if expected_latest_date:
+        lines.append(f"- KOSDAQ 기대 최신 거래일: {expected_latest_date}")
+        if latest_is_fresh is False:
+            lines.append(
+                "- ⚠️ 최신 거래일 캔들이 아직 DB에 반영되지 않았습니다. "
+                "09:01 매수는 기준일 불일치로 자동 차단되며 개장 전 재시도가 필요합니다."
+            )
+    elif expected_error:
+        lines.append(f"- KOSDAQ 기대 거래일 조회 실패: {expected_error}")
     if parsed:
         known_unsupported = parsed.get("known_unsupported_skipped_symbols", 0)
         newly_recorded = parsed.get("newly_recorded_unsupported_symbols") or []
@@ -1035,7 +1109,14 @@ def send_message(message: str, target: str, *, print_only: bool = False) -> None
             pass
 
 
-def build_message(action: str, date: str | None = None, *, dry_run_update: bool = False, update_limit: int = 0) -> str:
+def build_message(
+    action: str,
+    date: str | None = None,
+    *,
+    dry_run_update: bool = False,
+    update_limit: int = 0,
+    only_if_stale: bool = False,
+) -> str:
     if action == "buy-report":
         return buy_report(date)
     if action == "sell-report":
@@ -1043,7 +1124,11 @@ def build_message(action: str, date: str | None = None, *, dry_run_update: bool 
     if action == "kosdaq-close":
         return kosdaq_close_report()
     if action == "candle-update":
-        return candle_update_report(dry_run=dry_run_update, limit=update_limit)
+        return candle_update_report(
+            dry_run=dry_run_update,
+            limit=update_limit,
+            only_if_stale=only_if_stale,
+        )
     if action == "status-test":
         return status_report()
     raise ValueError(f"unknown action: {action}")
@@ -1057,13 +1142,20 @@ def main() -> int:
     ap.add_argument("--print-only", action="store_true", help="Do not send; print report")
     ap.add_argument("--dry-run-update", action="store_true", help="For --action candle-update, fetch/report without writing DB")
     ap.add_argument("--update-limit", type=int, default=0, help="For --action candle-update smoke tests; 0 means all symbols")
+    ap.add_argument("--only-if-stale", action="store_true", help="For --action candle-update, skip API calls when DB already has the latest KOSDAQ session")
     args = ap.parse_args()
     if not args.to and not args.print_only:
         print(f"Missing --to or {DEFAULT_TARGET_ENV}", file=sys.stderr)
         return 2
     REPORT_LOG.parent.mkdir(exist_ok=True)
     try:
-        msg = build_message(args.action, args.date or None, dry_run_update=args.dry_run_update, update_limit=args.update_limit)
+        msg = build_message(
+            args.action,
+            args.date or None,
+            dry_run_update=args.dry_run_update,
+            update_limit=args.update_limit,
+            only_if_stale=args.only_if_stale,
+        )
         send_message(msg, args.to, print_only=args.print_only)
         with REPORT_LOG.open("a", encoding="utf-8") as f:
             f.write(f"{now_text()} action={args.action} status=ok\n")
