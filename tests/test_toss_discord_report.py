@@ -100,7 +100,7 @@ class TossDiscordReportTests(unittest.TestCase):
         lines = [
             "실행 시간: 2026-07-06 09:01:01",
             "모드: 실전 매매",
-            "현재 KOSDAQ 지수: 895.00 | 당일 시가: 896.50 | 5일 이평선: 900.00 | 매수 허용선: 891.00",
+            "현재 KOSDAQ 지수: 895.00 | 당일 시가: 896.50 | 5일 이평선: 900.00 | 매수 허용선: 891.00 | 지수 시각: 2026-07-20T00:00:00.000+09:00 | 최신성 검증: today_candle_close_crosscheck",
             "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
             "프로그램 종료: 2026-07-06 09:01:01 / 총 실행시간: 0.07초",
         ]
@@ -110,6 +110,7 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["guard"], "차단")
         self.assertEqual(parsed["kosdaq_open"], 896.5)
         self.assertEqual(parsed["buy_line"], 891.0)
+        self.assertEqual(parsed["market_timestamp"], "2026-07-20T00:00:00.000+09:00")
         self.assertIn("1% 이상 아래가 아니라", parsed["reason"])
 
     def test_buy_report_marks_guard_skipped_fields_without_malformed_counts(self):

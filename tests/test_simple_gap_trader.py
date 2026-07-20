@@ -160,12 +160,14 @@ class FakeMarketClient:
         include_today=True,
         trading_day=True,
         regular_start="2026-07-17T09:00:00+09:00",
+        candle_current=None,
     ):
         self.current = current
         self.timestamp = timestamp
         self.include_today = include_today
         self.trading_day = trading_day
         self.regular_start = regular_start
+        self.candle_current = candle_current
 
     def get_market_calendar(self, country="KR", date=None):
         return {
@@ -195,7 +197,8 @@ class FakeMarketClient:
             {"timestamp": "2026-07-10T09:00:00+09:00", "openPrice": "100", "closePrice": "100"},
         ]
         if self.include_today:
-            candles.insert(0, {"timestamp": "2026-07-17T09:00:00+09:00", "openPrice": "98", "closePrice": self.current})
+            close_price = self.current if self.candle_current is None else self.candle_current
+            candles.insert(0, {"timestamp": "2026-07-17T09:00:00+09:00", "openPrice": "98", "closePrice": close_price})
         return {"result": {"candles": candles}}
 
 
@@ -302,6 +305,30 @@ class SimpleGapTraderTests(unittest.TestCase):
 
         self.assertFalse(mod.check_market_gate(FakeMarketClient(timestamp="2026-07-16T15:30:00+09:00"), now=now))
         self.assertFalse(mod.check_market_gate(FakeMarketClient(include_today=False), now=now))
+
+    def test_market_gate_accepts_missing_indicator_timestamp_after_candle_crosscheck(self):
+        mod = load_simple_gap_trader()
+        now = datetime(2026, 7, 17, 9, 1, tzinfo=KST)
+
+        snapshot = mod.fetch_kosdaq_market_data(
+            FakeMarketClient(current="98", timestamp=None),
+            now=now,
+        )
+
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(snapshot.current_index, 98.0)
+        self.assertEqual(snapshot.freshness_source, "today_candle_close_crosscheck")
+
+    def test_market_gate_blocks_missing_timestamp_when_candle_price_disagrees(self):
+        mod = load_simple_gap_trader()
+        now = datetime(2026, 7, 17, 9, 1, tzinfo=KST)
+
+        self.assertIsNone(
+            mod.fetch_kosdaq_market_data(
+                FakeMarketClient(current="98", timestamp=None, candle_current="97"),
+                now=now,
+            )
+        )
 
     def test_market_gate_blocks_on_holiday_or_api_error(self):
         mod = load_simple_gap_trader()

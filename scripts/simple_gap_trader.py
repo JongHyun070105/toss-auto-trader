@@ -49,6 +49,7 @@ TAKE_PROFIT_PCT = 0.12
 KOSDAQ_SMA5_BUY_RATIO = 0.99
 MAX_BUY_CHASE_PCT = 0.005
 MARKET_DATA_MAX_AGE_SECONDS = 300
+MARKET_PRICE_CROSSCHECK_MAX_PCT = 0.001
 BUY_ORDER_MAX_WAIT_SECONDS = 30
 ORDER_IDEMPOTENCY_WINDOW_SECONDS = 600
 LIVE_BUY_WINDOW_START = clock_time(9, 0)
@@ -83,6 +84,7 @@ class MarketGateSnapshot:
     buy_line: float
     timestamp: str
     previous_business_day: str
+    freshness_source: str = "indicator_timestamp"
 
 
 class AmbiguousOrderSubmission(RuntimeError):
@@ -496,21 +498,23 @@ def fetch_kosdaq_market_data(
             return None
         price_row = matches[0]
         current_index = parse_positive_float(price_row.get("lastPrice"))
-        timestamp = str(price_row.get("timestamp") or "")
-        if current_index is None or not timestamp:
-            print("[시장 가드 차단] Toss KOSDAQ 현재가 또는 시각이 비어 있습니다.")
+        indicator_timestamp = str(price_row.get("timestamp") or "").strip()
+        if current_index is None:
+            print("[시장 가드 차단] Toss KOSDAQ 현재가가 비어 있습니다.")
             return None
-        market_at = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-        if market_at.tzinfo is None:
-            print("[시장 가드 차단] Toss KOSDAQ 현재가 시각에 타임존이 없습니다.")
-            return None
-        age_seconds = (checked_at.astimezone(market_at.tzinfo) - market_at).total_seconds()
-        if market_at.date().isoformat() != today or age_seconds < -60 or age_seconds > MARKET_DATA_MAX_AGE_SECONDS:
-            print(
-                f"[시장 가드 차단] Toss KOSDAQ 현재가가 당일 최신값이 아닙니다. "
-                f"(지수시각 {timestamp}, age={age_seconds:.0f}s)"
-            )
-            return None
+        freshness_source = "indicator_timestamp"
+        if indicator_timestamp:
+            market_at = datetime.fromisoformat(indicator_timestamp.replace("Z", "+00:00"))
+            if market_at.tzinfo is None:
+                print("[시장 가드 차단] Toss KOSDAQ 현재가 시각에 타임존이 없습니다.")
+                return None
+            age_seconds = (checked_at.astimezone(market_at.tzinfo) - market_at).total_seconds()
+            if market_at.date().isoformat() != today or age_seconds < -60 or age_seconds > MARKET_DATA_MAX_AGE_SECONDS:
+                print(
+                    f"[시장 가드 차단] Toss KOSDAQ 현재가가 당일 최신값이 아닙니다. "
+                    f"(지수시각 {indicator_timestamp}, age={age_seconds:.0f}s)"
+                )
+                return None
 
         candles_resp = client.get_market_indicator_candles("KOSDAQ", "1d", count=10)
         result = candles_resp.get("result", {}) if isinstance(candles_resp, dict) else {}
@@ -527,6 +531,29 @@ def fetch_kosdaq_market_data(
             print("[시장 가드 차단] Toss KOSDAQ 당일 일봉이 아직 생성되지 않았습니다.")
             return None
         open_price = parse_positive_float(today_candle.get("openPrice"))
+        candle_close = parse_positive_float(today_candle.get("closePrice"))
+        candle_timestamp = str(today_candle.get("timestamp") or "").strip()
+        if not indicator_timestamp:
+            if candle_close is None or not candle_timestamp:
+                print(
+                    "[시장 가드 차단] Toss KOSDAQ 현재가 시각이 없고 "
+                    "당일 일봉 종가로도 최신성을 교차검증할 수 없습니다."
+                )
+                return None
+            price_gap = abs(current_index - candle_close) / max(current_index, candle_close)
+            if price_gap > MARKET_PRICE_CROSSCHECK_MAX_PCT:
+                print(
+                    "[시장 가드 차단] Toss KOSDAQ 현재가 시각이 없고 당일 일봉 종가와 값이 다릅니다. "
+                    f"(현재가 {current_index:.2f}, 일봉종가 {candle_close:.2f}, 차이 {price_gap * 100:.3f}%)"
+                )
+                return None
+            current_index = max(current_index, candle_close)
+            indicator_timestamp = candle_timestamp
+            freshness_source = "today_candle_close_crosscheck"
+            print(
+                "[시장 가드 최신성 대체] 현재가 timestamp 누락을 "
+                "당일 일봉 존재와 종가 일치로 교차검증했습니다."
+            )
         previous_dates = sorted(date for date in by_date if date < today)
         if open_price is None or len(previous_dates) < 4 or previous_dates[-1] != previous_business_day:
             print("[시장 가드 차단] KOSDAQ 당일 시가 또는 직전 4영업일 종가를 검증할 수 없습니다.")
@@ -541,8 +568,9 @@ def fetch_kosdaq_market_data(
             open_price=open_price,
             sma5=sma5,
             buy_line=sma5 * KOSDAQ_SMA5_BUY_RATIO,
-            timestamp=timestamp,
+            timestamp=indicator_timestamp,
             previous_business_day=previous_business_day,
+            freshness_source=freshness_source,
         )
     except Exception as e:
         print(f"[시장 가드 차단] Toss KOSDAQ/장운영 데이터 조회 실패: {type(e).__name__}: {e}")
@@ -556,7 +584,7 @@ def evaluate_market_gate(snapshot: MarketGateSnapshot | None) -> bool:
     print(
         f"현재 KOSDAQ 지수: {snapshot.current_index:.2f} | 당일 시가: {snapshot.open_price:.2f} | "
         f"5일 이평선: {snapshot.sma5:.2f} | 매수 허용선: {snapshot.buy_line:.2f} | "
-        f"지수 시각: {snapshot.timestamp}"
+        f"지수 시각: {snapshot.timestamp} | 최신성 검증: {snapshot.freshness_source}"
     )
     if snapshot.current_index > snapshot.buy_line:
         print("🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.")
