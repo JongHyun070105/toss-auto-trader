@@ -111,13 +111,14 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["kosdaq_open"], 896.5)
         self.assertEqual(parsed["buy_line"], 891.0)
         self.assertEqual(parsed["market_timestamp"], "2026-07-20T00:00:00.000+09:00")
+        self.assertEqual(parsed["market_freshness"], "today_candle_close_crosscheck")
         self.assertIn("1% 이상 아래가 아니라", parsed["reason"])
 
     def test_buy_report_marks_guard_skipped_fields_without_malformed_counts(self):
         lines = [
             "실행 시간: 2026-07-14 09:01:00",
             "모드: 실전 매매",
-            "현재 KOSDAQ 지수: 800.17 | 당일 시가: 799.34 | 5일 이평선: 803.19 | 매수 허용선: 795.16",
+            "현재 KOSDAQ 지수: 800.17 | 당일 시가: 799.34 | 5일 이평선: 803.19 | 매수 허용선: 795.16 | 지수 시각: 2026-07-14T00:00:00.000+09:00 | 최신성 검증: today_candle_close_crosscheck",
             "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
             "프로그램 종료: 2026-07-14 09:01:00 / 총 실행시간: 0.06초",
         ]
@@ -130,6 +131,8 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertIn("KOSDAQ: 800.17 / 시가: 799.34 / SMA5: 803.19 / 매수 허용선: 795.16 / 가드: 차단", report)
         self.assertIn("DB 기준일: 미조회(시장 가드 차단) / 스크리닝: 미실행 / 갭 후보: 미실행", report)
         self.assertIn("예수금: 미조회 / 사용예산: 미산정", report)
+        self.assertIn("지수 최신성: Toss 당일 일봉 종가 교차검증 / 일봉 기준일: 2026-07-14", report)
+        self.assertNotIn("지수 데이터 시각: 2026-07-14T00:00:00.000+09:00", report)
         self.assertNotIn("확인 필요개", report)
 
     def test_buy_report_preserves_earlier_successful_order_across_same_day_rerun(self):

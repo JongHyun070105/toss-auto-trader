@@ -303,6 +303,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         "sma5": None,
         "buy_line": None,
         "market_timestamp": None,
+        "market_freshness": None,
         "guard": None,
         "latest_db_date": None,
         "scan_total": None,
@@ -345,6 +346,9 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"지수 시각: (\S+)", line)
         if m:
             info["market_timestamp"] = m.group(1)
+        m = re.search(r"최신성 검증: (\S+)", line)
+        if m:
+            info["market_freshness"] = m.group(1)
         if "시장 가드 발동" in line or "시장 하락 가드 발동" in line:
             info["guard"] = "차단"
             info["reason"] = "KOSDAQ이 5일선보다 1% 이상 아래가 아니라 시장 가드 차단"
@@ -474,6 +478,7 @@ def aggregate_buy_sessions_for_date(path: Path, date: str) -> dict[str, Any] | N
         "sma5",
         "buy_line",
         "market_timestamp",
+        "market_freshness",
         "guard",
         "latest_db_date",
         "scan_total",
@@ -688,7 +693,12 @@ def buy_report(date: str | None = None) -> str:
             f"- 당일 매수 실행 로그: {b['session_count']}회 / "
             f"실제 주문 세션: {b.get('order_session_datetime') or '없음'}"
         )
-    if b.get("market_timestamp"):
+    if b.get("market_freshness") == "today_candle_close_crosscheck":
+        candle_date = str(b.get("market_timestamp") or "미기록").split("T", 1)[0]
+        lines.append(
+            f"- 지수 최신성: Toss 당일 일봉 종가 교차검증 / 일봉 기준일: {candle_date}"
+        )
+    elif b.get("market_timestamp"):
         lines.append(f"- 지수 데이터 시각: {b['market_timestamp']}")
     # Timing gate for the 09:01 open-price strategy: finish before 09:05, preferably well under 240s.
     if b.get("datetime") and b.get("end_datetime"):
