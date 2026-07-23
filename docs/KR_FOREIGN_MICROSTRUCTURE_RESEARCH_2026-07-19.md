@@ -4,6 +4,12 @@
 기준 전략: `robust_gap5_stop0225_take12`  
 연구 코드: `scripts/kr_foreign_microstructure_research.py`
 
+> 2026-07-23 운영 보강: 아래 수치는 raw 갭 하한을 추가하기 전 핵심 전략
+> 재검증 결과다. 이후 `-31%` 미만 특수 기준가 후보를 제외하는 데이터 무결성
+> 안전장치를 추가했으며, 별도 결과는
+> [KR_GAP_INTEGRITY_RESEARCH_2026-07-23.md](KR_GAP_INTEGRITY_RESEARCH_2026-07-23.md)에
+> 정리했다.
+
 ## 최종 결론
 
 **실전 전략 유지**가 최종 판단이다. 95개 고정 방법을 2011~2023 선택구간과

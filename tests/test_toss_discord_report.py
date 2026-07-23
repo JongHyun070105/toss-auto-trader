@@ -29,7 +29,7 @@ class TossDiscordReportTests(unittest.TestCase):
             "최근 데이터 영업일: 2026-06-30",
             "로컬 스크리닝 필터 통과 종목 수: 671개",
             "실제 예수금: 100,000원 | 이번 매수 사용 예산: 100,000원 (계좌 매수가능금액 전체)",
-            "성능 측정: price_chunks=7 price_rows=665 provisional_gap_hits=12 daily_open_calls=12 daily_open_missing=1 daily_open_confirmed_hits=2 scan_elapsed=18.50s",
+            "성능 측정: price_chunks=7 price_rows=665 provisional_gap_hits=12 daily_open_calls=12 daily_open_missing=1 daily_open_confirmed_hits=2 gap_integrity_exclusions=1 scan_elapsed=18.50s",
             "갭 하락 5.0% 돌파 종목 수: 2개",
             "[섀도 breadth4] 09:01 현재가 기준 -5% 갭: 5개 / 기준: 4개 / 모집단: 1800개 / 시세수신: 1790개 / 상태: pass / 실매매 미적용",
             "  [123456] 테스트 | 갭률: -3.20% | 시가: 9,600원 | 현재가: 9,650원 | 전일종가: 10,000원",
@@ -47,11 +47,45 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["total_elapsed_sec"], 19.25)
         self.assertEqual(parsed["perf"]["daily_open_calls"], 12)
         self.assertEqual(parsed["perf"]["scan_elapsed_sec"], 18.5)
+        self.assertEqual(parsed["perf"]["gap_integrity_exclusions"], 1)
         self.assertEqual(parsed["breadth_shadow"]["provisional_gap5_count"], 5)
         self.assertFalse(parsed["breadth_shadow"]["applied_to_live_order"])
         self.assertEqual(parsed["warning_exclusions"][0]["symbol"], "091590")
         self.assertIn("INVESTMENT_WARNING", parsed["warning_exclusions"][0]["warnings"])
         self.assertIn("갭하락", parsed["reason"])
+
+    def test_parse_buy_session_keeps_old_performance_log_compatible(self):
+        parsed = self.mod.parse_buy_session(
+            [
+                "성능 측정: price_chunks=7 price_rows=665 provisional_gap_hits=12 "
+                "daily_open_calls=12 daily_open_missing=1 "
+                "daily_open_confirmed_hits=2 scan_elapsed=18.50s"
+            ]
+        )
+
+        self.assertEqual(parsed["perf"]["gap_integrity_exclusions"], 0)
+        self.assertEqual(parsed["perf"]["scan_elapsed_sec"], 18.5)
+
+    def test_buy_report_includes_gap_integrity_exclusion_count(self):
+        parsed = self.mod.parse_buy_session(
+            [
+                "실행 시간: 2026-07-23 09:01:00",
+                "모드: 실전 매매",
+                "성능 측정: price_chunks=12 price_rows=1160 "
+                "provisional_gap_hits=3 daily_open_calls=3 "
+                "daily_open_missing=0 daily_open_confirmed_hits=2 "
+                "gap_integrity_exclusions=1 scan_elapsed=9.11s",
+                "프로그램 종료: 2026-07-23 09:01:10 / 총 실행시간: 10.00초",
+            ]
+        )
+        parsed["session_count"] = 1
+
+        with patch.object(
+            self.mod, "aggregate_buy_sessions_for_date", return_value=parsed
+        ):
+            report = self.mod.buy_report("2026-07-23")
+
+        self.assertIn("기준가 비비교 갭 제외 1개", report)
 
     def test_buy_report_does_not_fetch_detail_for_none_order_id(self):
         lines = [

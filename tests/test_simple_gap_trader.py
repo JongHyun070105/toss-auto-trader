@@ -274,6 +274,7 @@ class SimpleGapTraderTests(unittest.TestCase):
         self.assertEqual(mod.MIN_PRICE, 1000)
         self.assertEqual(mod.MAX_PRICE, 8000)
         self.assertEqual(mod.GAP_THRESHOLD, -0.05)
+        self.assertEqual(mod.MIN_RAW_ENTRY_GAP, -0.31)
         self.assertEqual(mod.PREV_VOL_RATIO_MAX, 0.8)
         self.assertEqual(mod.STOP_LOSS_PCT, 0.0225)
         self.assertEqual(mod.TAKE_PROFIT_PCT, 0.12)

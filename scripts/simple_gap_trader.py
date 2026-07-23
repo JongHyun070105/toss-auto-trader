@@ -30,6 +30,7 @@ from toss_auto_trader import breadth_shadow
 from toss_auto_trader import paper_reentry_watch
 from toss_auto_trader import simple_gap_state
 from toss_auto_trader.discord_notify import MonitorExitAlert, format_monitor_exit_alert, send_discord_message
+from toss_auto_trader.gap_integrity import MIN_RAW_ENTRY_GAP, is_noncomparable_base_gap
 from toss_auto_trader.paper_exit_messages import format_paper_event
 from toss_auto_trader.toss_client import TossInvestClient, TossApiError
 
@@ -1275,6 +1276,7 @@ def run_buy(
         'daily_open_calls': 0,
         'daily_open_missing': 0,
         'daily_open_confirmed_hits': 0,
+        'gap_integrity_exclusions': 0,
     }
     scan_started = time.perf_counter()
     print("실시간 현재가 수집 및 갭 하락 검사 시작...")
@@ -1321,6 +1323,14 @@ def run_buy(
                 gap = (open_price - prev_close) / prev_close
 
                 if gap <= GAP_THRESHOLD:
+                    if is_noncomparable_base_gap(gap):
+                        perf['gap_integrity_exclusions'] += 1
+                        print(
+                            f"  ⏭️ [{sym}] raw 시가 갭 {gap * 100:.2f}%가 "
+                            f"데이터 무결성 안전선 {MIN_RAW_ENTRY_GAP * 100:.0f}% 미만이라 제외 "
+                            "(기준가 비비교/기업행위/특수거래 가능성)"
+                        )
+                        continue
                     perf['daily_open_confirmed_hits'] += 1
                     triggered.append({
                         'symbol': sym,
@@ -1344,6 +1354,7 @@ def run_buy(
         f"daily_open_calls={perf['daily_open_calls']} "
         f"daily_open_missing={perf['daily_open_missing']} "
         f"daily_open_confirmed_hits={perf['daily_open_confirmed_hits']} "
+        f"gap_integrity_exclusions={perf['gap_integrity_exclusions']} "
         f"scan_elapsed={scan_elapsed:.2f}s"
     )
     print(f"갭 하락 {abs(GAP_THRESHOLD) * 100:.1f}% 돌파 종목 수: {len(triggered)}개")

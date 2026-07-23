@@ -395,7 +395,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
                 "applied_to_live_order": False,
             }
         m = re.search(
-            r"성능 측정: .*?price_chunks=(\d+) .*?price_rows=(\d+) .*?provisional_gap_hits=(\d+) .*?daily_open_calls=(\d+) .*?daily_open_missing=(\d+) .*?daily_open_confirmed_hits=(\d+) .*?scan_elapsed=([\d.]+)s",
+            r"성능 측정: .*?price_chunks=(\d+) .*?price_rows=(\d+) .*?provisional_gap_hits=(\d+) .*?daily_open_calls=(\d+) .*?daily_open_missing=(\d+) .*?daily_open_confirmed_hits=(\d+)(?: .*?gap_integrity_exclusions=(\d+))? .*?scan_elapsed=([\d.]+)s",
             line,
         )
         if m:
@@ -406,7 +406,8 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
                 "daily_open_calls": int(m.group(4)),
                 "daily_open_missing": int(m.group(5)),
                 "daily_open_confirmed_hits": int(m.group(6)),
-                "scan_elapsed_sec": clean_float(m.group(7)),
+                "gap_integrity_exclusions": int(m.group(7) or 0),
+                "scan_elapsed_sec": clean_float(m.group(8)),
             }
         if "매수 진입 조건을 통과한 최종 종목이 없습니다" in line:
             info["reason"] = "robust 갭하락 + 전일 거래량 필터 통과 종목 없음"
@@ -720,6 +721,7 @@ def buy_report(date: str | None = None) -> str:
             f"provisional 후보 {perf.get('provisional_gap_hits')}개, "
             f"daily open candle {perf.get('daily_open_calls')}회, "
             f"open 누락 {perf.get('daily_open_missing')}개, "
+            f"기준가 비비교 갭 제외 {perf.get('gap_integrity_exclusions', 0)}개, "
             f"scan {perf.get('scan_elapsed_sec')}초"
         )
     shadow = b.get("breadth_shadow") or {}
