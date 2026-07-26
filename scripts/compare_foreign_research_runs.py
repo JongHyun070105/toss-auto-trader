@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from toss_auto_trader.research_fingerprint import candle_database_fingerprint
+
 
 SELECTION_WINDOWS = ("train_2011_2018", "validation_2019_2023")
 RECENT_WINDOWS = ("test_pre_nxt_2024_20250303", "post_nxt_20250304_2026")
@@ -114,6 +116,8 @@ def summarize_run(label: str, payload: dict[str, Any]) -> dict[str, Any]:
 def validate_comparability(
     payloads: dict[str, dict[str, Any]],
     merge_audits: dict[str, dict[str, Any]],
+    *,
+    current_database_fingerprints: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     fingerprint_keys = (
         "script_sha256",
@@ -151,13 +155,49 @@ def validate_comparability(
         if not audit.get("integrity_passed")
         or int(audit.get("duplicate_symbol_dates", -1)) != 0
     }
-    passed = not mismatches and not invalid_merge_audits
+    database_snapshot_mismatches: dict[str, dict[str, Any]] = {}
+    if current_database_fingerprints is not None:
+        for label, payload in payloads.items():
+            expected = payload.get("source_fingerprints", {}).get(
+                "database_full", {}
+            )
+            expected_latest = payload.get("database_universe_audit", {}).get(
+                "latest_date"
+            )
+            current = current_database_fingerprints.get(label, {})
+            expected_snapshot = {
+                "full_sha256": expected.get("full_sha256"),
+                "size_bytes": expected.get("size_bytes"),
+                "latest_date": expected_latest,
+            }
+            current_snapshot = {
+                "full_sha256": current.get("full_sha256"),
+                "size_bytes": current.get("size_bytes"),
+                "latest_date": current.get("latest_date"),
+            }
+            if (
+                None in expected_snapshot.values()
+                or None in current_snapshot.values()
+                or expected_snapshot != current_snapshot
+            ):
+                database_snapshot_mismatches[label] = {
+                    "report": expected_snapshot,
+                    "current_file": current_snapshot,
+                    "db_path": payload.get("db_path"),
+                }
+    passed = (
+        not mismatches
+        and not invalid_merge_audits
+        and not database_snapshot_mismatches
+    )
     return {
         "passed": passed,
         "fingerprint_and_manifest_mismatches": mismatches,
         "invalid_merge_audits": invalid_merge_audits,
+        "database_snapshot_mismatches": database_snapshot_mismatches,
+        "current_database_fingerprints": current_database_fingerprints or {},
         "merge_audits": merge_audits,
-        "interpretation": "All runs must share one script, dependency, method manifest, KOSDAQ snapshot, date range, and zero-duplicate merged databases.",
+        "interpretation": "All runs must share one script, dependency, method manifest, KOSDAQ snapshot, date range, zero-duplicate merged databases, and unchanged report-time database files.",
     }
 
 
@@ -456,7 +496,15 @@ def main() -> int:
         "merged_all": read_json(args.merged_all_audit),
         "merged_pre60": read_json(args.merged_pre60_audit),
     }
-    comparability = validate_comparability(raw_runs, merge_audits)
+    current_database_fingerprints = {
+        label: candle_database_fingerprint(payload["db_path"])
+        for label, payload in raw_runs.items()
+    }
+    comparability = validate_comparability(
+        raw_runs,
+        merge_audits,
+        current_database_fingerprints=current_database_fingerprints,
+    )
     if not comparability["passed"]:
         raise RuntimeError(
             "research runs are not comparable: "

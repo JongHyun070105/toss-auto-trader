@@ -30,7 +30,12 @@ from toss_auto_trader import breadth_shadow
 from toss_auto_trader import paper_reentry_watch
 from toss_auto_trader import simple_gap_state
 from toss_auto_trader.discord_notify import MonitorExitAlert, format_monitor_exit_alert, send_discord_message
-from toss_auto_trader.gap_integrity import MIN_RAW_ENTRY_GAP, is_noncomparable_base_gap
+from toss_auto_trader.gap_integrity import (
+    MAX_RAW_ENTRY_GAP,
+    MIN_RAW_ENTRY_GAP,
+    is_entry_gap_candidate,
+    is_noncomparable_base_gap,
+)
 from toss_auto_trader.paper_exit_messages import format_paper_event
 from toss_auto_trader.toss_client import TossInvestClient, TossApiError
 
@@ -43,7 +48,7 @@ BREADTH_SHADOW_LOG = Path("logs") / "simple_gap_breadth_shadow.jsonl"
 MAX_BUY_AMOUNT_KRW = 10000
 MIN_PRICE = 1000
 MAX_PRICE = 8000
-GAP_THRESHOLD = -0.05
+GAP_THRESHOLD = MAX_RAW_ENTRY_GAP
 PREV_VOL_RATIO_MAX = 0.8
 STOP_LOSS_PCT = 0.0225
 TAKE_PROFIT_PCT = 0.12
@@ -1322,15 +1327,15 @@ def run_buy(
 
                 gap = (open_price - prev_close) / prev_close
 
-                if gap <= GAP_THRESHOLD:
-                    if is_noncomparable_base_gap(gap):
-                        perf['gap_integrity_exclusions'] += 1
-                        print(
-                            f"  ⏭️ [{sym}] raw 시가 갭 {gap * 100:.2f}%가 "
-                            f"데이터 무결성 안전선 {MIN_RAW_ENTRY_GAP * 100:.0f}% 미만이라 제외 "
-                            "(기준가 비비교/기업행위/특수거래 가능성)"
-                        )
-                        continue
+                if is_noncomparable_base_gap(gap):
+                    perf['gap_integrity_exclusions'] += 1
+                    print(
+                        f"  ⏭️ [{sym}] raw 시가 갭 {gap * 100:.2f}%가 "
+                        f"데이터 무결성 안전선 {MIN_RAW_ENTRY_GAP * 100:.0f}% 미만이라 제외 "
+                        "(기준가 비비교/기업행위/특수거래 가능성)"
+                    )
+                    continue
+                if is_entry_gap_candidate(gap):
                     perf['daily_open_confirmed_hits'] += 1
                     triggered.append({
                         'symbol': sym,

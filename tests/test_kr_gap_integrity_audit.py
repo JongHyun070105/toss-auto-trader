@@ -3,7 +3,9 @@ import unittest
 import kr_gap_integrity_audit as audit
 from kr_broad_strategy_research import Event, Market, Trade
 from toss_auto_trader.gap_integrity import (
+    MAX_RAW_ENTRY_GAP,
     MIN_RAW_ENTRY_GAP,
+    is_entry_gap_candidate,
     is_noncomparable_base_gap,
 )
 
@@ -53,8 +55,17 @@ def event(symbol: str, open_price: float, gap: float) -> Event:
 class KrGapIntegrityAuditTests(unittest.TestCase):
     def test_gap_floor_keeps_limit_down_buffer_and_rejects_extreme_raw_gap(self):
         self.assertEqual(MIN_RAW_ENTRY_GAP, -0.31)
+        self.assertEqual(MAX_RAW_ENTRY_GAP, -0.05)
+        self.assertFalse(is_noncomparable_base_gap(-0.31))
         self.assertFalse(is_noncomparable_base_gap(-0.305))
         self.assertTrue(is_noncomparable_base_gap(-0.311))
+
+    def test_live_entry_gap_interval_has_exact_inclusive_boundaries(self):
+        self.assertFalse(is_entry_gap_candidate(-0.0499))
+        self.assertTrue(is_entry_gap_candidate(-0.05))
+        self.assertTrue(is_entry_gap_candidate(-0.30999))
+        self.assertTrue(is_entry_gap_candidate(-0.31))
+        self.assertFalse(is_entry_gap_candidate(-0.31001))
 
     def test_changed_trade_days_reports_replacement_and_pnl_delta(self):
         baseline = [trade("2026-01-02", "EXTREME", 1000.0, -0.50)]

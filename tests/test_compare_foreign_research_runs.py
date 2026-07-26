@@ -187,6 +187,64 @@ class CompareForeignResearchRunsTests(unittest.TestCase):
         )
         self.assertIn("merged_all", result["invalid_merge_audits"])
 
+    def test_comparability_rejects_database_changed_after_report(self):
+        def payload(label):
+            return {
+                "db_path": f"{label}.sqlite3",
+                "requested_start": "2011-01-01",
+                "requested_end": "2026-07-16",
+                "methods_tested": 1,
+                "source_fingerprints": {
+                    "script_sha256": "script",
+                    "external_script_sha256": "external",
+                    "method_manifest_sha256": "manifest",
+                    "kosdaq_index_sha256": "index",
+                    "database_full": {
+                        "full_sha256": f"report-{label}",
+                        "size_bytes": 100,
+                    },
+                },
+                "database_universe_audit": {"latest_date": "2026-07-16"},
+                "evaluations": [{"method": {"name": "anchor"}}],
+            }
+
+        payloads = {
+            label: payload(label)
+            for label in ("base", "merged_all", "merged_pre60")
+        }
+        current = {
+            label: {
+                "full_sha256": f"report-{label}",
+                "size_bytes": 100,
+                "latest_date": "2026-07-16",
+            }
+            for label in payloads
+        }
+        current["merged_all"] = {
+            "full_sha256": "changed",
+            "size_bytes": 120,
+            "latest_date": "2026-07-23",
+        }
+
+        result = compare.validate_comparability(
+            payloads,
+            {
+                "merged_all": {
+                    "integrity_passed": True,
+                    "duplicate_symbol_dates": 0,
+                },
+                "merged_pre60": {
+                    "integrity_passed": True,
+                    "duplicate_symbol_dates": 0,
+                },
+            },
+            current_database_fingerprints=current,
+        )
+
+        self.assertFalse(result["passed"])
+        self.assertIn("merged_all", result["database_snapshot_mismatches"])
+        self.assertNotIn("base", result["database_snapshot_mismatches"])
+
 
 if __name__ == "__main__":
     unittest.main()

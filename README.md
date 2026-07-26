@@ -14,6 +14,7 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - 종목 가격: 전일 종가 `1,000원~8,000원`
 - 전일 거래량: 직전 20일 평균의 `0.8배` 미만
 - 갭 조건: 당일 일봉 시가 기준 전일 종가 대비 `-31% 이상, -5% 이하`
+  (과거 `-5% 이하` 하단 무제한 규칙보다 좁아진 범위)
 - 후보 선택: 조건 통과 종목 중 시가가 가장 낮은 1종목
 - 제외 조건: Toss/Naver 경고, 단기과열, 투자경고/위험, VI, 정리매매 등
 - 장중 청산: monitor가 `-2.25%` 손절 또는 `+12%` 익절 조건을 만족하면 시장가 매도
@@ -218,6 +219,12 @@ Amihud, 50일 표준화 거래량, 갭·모멘텀 횡단면 z-score 및 익일 �
 발견하지 못했고, raw 갭 `-31%` 미만 제외만 실전 데이터 무결성 안전장치로
 반영했습니다.
 
+갭 하한이 과거보다 넓어진 것처럼 보이는 문제를 현재 2026-07-23 DB 스냅샷으로
+다시 검증한 결과는 `docs/KR_GAP_FLOOR_RECHECK_2026-07-26.md`에 있습니다.
+과거 규칙은 하단 제한이 없어 실제로 더 넓었고, `-15%` 이상으로 하한을 좁히면
+누적손익이 감소해 실전 범위는 `-31%~-5%`로 유지했습니다. 연구 비교기는 이제
+보고서 생성 당시 DB 해시·크기·최신일과 현재 파일이 다르면 비교를 중단합니다.
+
 ```bash
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_strategy_audit.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_robustness_sweep.py
@@ -233,6 +240,7 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_foreign_microstructure_resea
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/compare_foreign_research_runs.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/validate_foreign_research_mission.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_integrity_audit.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_floor_sensitivity.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/breadth_shadow_summary.py
 ```
 
