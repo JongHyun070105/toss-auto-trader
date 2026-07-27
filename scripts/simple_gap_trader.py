@@ -8,6 +8,7 @@ TOSS API 연동 갭 하락 반등 실전/모의 자동매매 봇
 import argparse
 import fcntl
 import json
+import math
 import os
 import sqlite3
 import re
@@ -224,6 +225,14 @@ def best_limit_price(client: TossInvestClient, symbol: str, side: str, fallback_
 def acceptable_buy_limit_price(client: TossInvestClient, target: dict) -> int | None:
     open_price = float(target['open_price'])
     quote_price = best_limit_price(client, target['symbol'], "BUY", target['last_price'])
+    observed_price = parse_positive_float(target.get("last_price"))
+    if observed_price is not None and quote_price < observed_price:
+        corrected_price = math.ceil(observed_price)
+        print(
+            f"  ⚠️ [{target['symbol']}] 매수호가 {quote_price:,}원이 최근 현재가 "
+            f"{observed_price:,.0f}원보다 낮아 현재가 기준으로 보정합니다."
+        )
+        quote_price = max(quote_price, corrected_price)
     max_allowed = open_price * (1.0 + MAX_BUY_CHASE_PCT)
     if quote_price > max_allowed:
         drift_pct = (quote_price - open_price) / open_price * 100.0
@@ -614,7 +623,10 @@ def get_base_stocks_from_db(*, expected_date: str | None = None):
     cur = conn.cursor()
 
     # 1. 가장 최근 영업일 날짜 구하기
-    cur.execute("SELECT max(substring(timestamp, 1, 10)) FROM candle_cache")
+    cur.execute(
+        "SELECT max(substring(timestamp, 1, 10)) "
+        "FROM candle_cache WHERE interval = '1d'"
+    )
     latest_date = cur.fetchone()[0]
     print(f"최근 데이터 영업일: {latest_date}")
     if not latest_date:
@@ -632,7 +644,8 @@ def get_base_stocks_from_db(*, expected_date: str | None = None):
     cur.execute("""
         SELECT symbol, close_price, volume
         FROM candle_cache
-        WHERE substring(timestamp, 1, 10) = ?
+        WHERE interval = '1d'
+        AND substring(timestamp, 1, 10) = ?
         AND cast(close_price as integer) >= ?
         AND cast(close_price as integer) <= ?
     """, (latest_date, MIN_PRICE, MAX_PRICE))
@@ -645,7 +658,8 @@ def get_base_stocks_from_db(*, expected_date: str | None = None):
         #    (날짜 상한선으로 DB에 당일 데이터가 들어와도 항상 정확한 직전 20일만 조회)
         cur.execute("""
             SELECT volume FROM candle_cache
-            WHERE symbol = ? AND substring(timestamp, 1, 10) < ?
+            WHERE symbol = ? AND interval = '1d'
+              AND substring(timestamp, 1, 10) < ?
             ORDER BY timestamp DESC LIMIT 20
         """, (symbol, latest_date))
         vols = [int(v[0]) for v in cur.fetchall()]

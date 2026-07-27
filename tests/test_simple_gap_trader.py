@@ -536,6 +536,55 @@ class SimpleGapTraderTests(unittest.TestCase):
 
         self.assertEqual(mod.acceptable_buy_limit_price(OrderbookClient(), target), 1374)
 
+    def test_acceptable_buy_limit_price_rejects_stale_ask_below_recent_price(self):
+        mod = load_simple_gap_trader()
+
+        class OrderbookClient:
+            def get_orderbook(self, symbol):
+                return {"result": {"asks": [{"price": "1372"}]}}
+
+        target = {"symbol": "054220", "name": "테스트", "open_price": 1372, "last_price": 1498}
+
+        self.assertIsNone(mod.acceptable_buy_limit_price(OrderbookClient(), target))
+
+    def test_base_screen_ignores_non_daily_candles(self):
+        mod = load_simple_gap_trader()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "candles.sqlite3"
+            connection = sqlite3.connect(db_path)
+            connection.execute(
+                "CREATE TABLE candle_cache (symbol TEXT, timestamp TEXT, interval TEXT, "
+                "open_price REAL, high_price REAL, low_price REAL, close_price REAL, volume REAL)"
+            )
+            connection.executemany(
+                "INSERT INTO candle_cache VALUES (?,?,?,?,?,?,?,?)",
+                [
+                    (
+                        "054220",
+                        (datetime(2026, 7, 16) - timedelta(days=20 - offset)).date().isoformat(),
+                        "1d",
+                        2000.0,
+                        2010.0,
+                        1990.0,
+                        2000.0,
+                        100.0,
+                    )
+                    for offset in range(21)
+                ]
+                + [
+                    ("054220", "2026-07-17T09:01:00+09:00", "1m", 1.0, 1.0, 1.0, 1.0, 999999.0)
+                ],
+            )
+            connection.commit()
+            connection.close()
+
+            with patch.object(mod, "DB_PATH", str(db_path)):
+                candidates = mod.get_base_stocks_from_db(expected_date="2026-07-16")
+
+        self.assertEqual([row["symbol"] for row in candidates], ["054220"])
+        self.assertEqual(candidates[0]["prev_vol"], 100)
+
     def test_monitor_sends_stop_loss_sell_when_price_crosses_stop(self):
         mod = load_simple_gap_trader()
         client = FakeMonitorClient(
