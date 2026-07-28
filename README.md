@@ -243,6 +243,7 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/compare_foreign_research_runs.p
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/validate_foreign_research_mission.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_integrity_audit.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_floor_sensitivity.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_rank_sensitivity.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/breadth_shadow_summary.py
 ```
 
