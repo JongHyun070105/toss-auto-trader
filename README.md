@@ -10,19 +10,21 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 
 매수 진입은 09:01에 한 번만 실행합니다. 실전 주문은 KST 09:00 이상 09:05 미만에만 허용하며, 스캔이 길어지면 주문 직전에 시각을 다시 확인해 09:05 이후 주문을 차단합니다.
 
-- 시장 가드: Toss 시장지표 API의 KOSDAQ 현재값이 실시간 5일선의 `0.99` 이하일 때만 매수
+- 시장 가드: Toss KOSDAQ 첫 1분봉 시가가 해당 시가와 직전 4영업일 종가로 계산한 5일선의 `0.99` 이하일 때만 매수
 - 종목 가격: 전일 종가 `1,000원~8,000원`
 - 전일 거래량: 직전 20일 평균의 `0.8배` 미만
-- 갭 조건: 당일 일봉 시가 기준 전일 종가 대비 `-31% 이상, -5% 이하`
+- 갭 조건: 09:01에 거래량이 양수인 첫 1분봉 시가 기준 전일 종가 대비 `-31% 이상, -5% 이하`
   (과거 `-5% 이하` 하단 무제한 규칙보다 좁아진 범위)
 - 후보 선택: 조건 통과 종목 중 시가가 가장 낮은 1종목
 - 제외 조건: Toss/Naver 경고, 단기과열, 투자경고/위험, VI, 정리매매 등
 - 장중 청산: monitor가 `-2.25%` 손절 또는 `+12%` 익절 조건을 만족하면 시장가 매도
 - 마감 정리: 15:20까지 장중 청산되지 않고 남아 있는 전략 보유분만 시장가 매도
 
-시장지표 시각이 5분 이상 지연되거나, Toss 장 캘린더의 정규장 시작 후 5분 이내가 아니거나, 거래일/전 영업일/일봉 데이터가 서로 맞지 않거나, API 조회에 실패하면 매수하지 않습니다. 매수·매도 주문 접수만으로 체결로 간주하지 않으며 Toss 주문 상세의 실제 체결 수량을 확인한 뒤 상태와 결과를 확정합니다.
+시장지표 시각이 5분 이상 지연되거나, Toss 장 캘린더의 정규장 시작 후 5분 이내가 아니거나, 거래일/전 영업일/첫 1분봉/일봉 데이터가 서로 맞지 않거나, API 조회에 실패하면 매수하지 않습니다. 시장 가드의 실전 판정값은 백테스트와 같은 첫 1분봉 시가이며, 09:01 현재값으로 다시 계산한 판정은 섀도로만 기록합니다. 매수·매도 주문 접수만으로 체결로 간주하지 않으며 Toss 주문 상세의 실제 체결 수량을 확인한 뒤 상태와 결과를 확정합니다.
 
-실시간 주문가는 당일 일봉 시가 대비 추격 한도뿐 아니라 스캔 당시 마지막 현재가보다도 낮아지지 않도록 확인합니다. 호가가 이전 현재가보다 낮게 반환되면 그 호가를 그대로 주문하지 않고 현재가 기준으로 다시 판정하며, 추격 한도를 넘으면 매수를 건너뜁니다. 로컬 스크리닝 DB도 `interval='1d'` 캔들만 사용합니다.
+09:01의 Toss 당일 일봉 `openPrice`는 잠정 현재가로 시작했다가 확정 시가로 바뀔 수 있으므로 진입 시가로 사용하지 않습니다. 거래량이 양수인 첫 1분봉 시가를 진입 기준으로 사용하고, 같은 수정주가 일봉 API 응답의 직전 영업일 종가와 로컬 DB 종가를 비교합니다. 09:01 분봉이 있어도 거래량이 0이면 실제 정규장 체결가로 인정하지 않습니다. 두 전일 종가가 `0.1%` 넘게 다르거나 유효한 첫 1분봉을 확인할 수 없으면 해당 종목은 매수하지 않습니다. 종목 캔들 조회는 `MARKET_DATA_CHART`의 초당 5회 한도보다 낮게 간격을 두며, 검증 도중 09:05가 지나면 일부 후보만 비교해 주문하지 않고 전체 실행을 차단합니다.
+
+실시간 주문가는 첫 1분봉 시가 대비 추격 한도뿐 아니라 스캔 당시 마지막 현재가보다도 낮아지지 않도록 확인합니다. 호가가 이전 현재가보다 낮게 반환되면 그 호가를 그대로 주문하지 않고 현재가 기준으로 다시 판정하며, 추격 한도를 넘으면 매수를 건너뜁니다. 로컬 스크리닝 DB도 `interval='1d'` 캔들만 사용합니다.
 
 전일 종가 대비 당일 시가의 raw 갭이 `-31%` 미만이면 일반 갭하락 후보로
 취급하지 않습니다. KRX 일반 가격제한폭은 당일 기준가 대비 `±30%`이고,
@@ -34,6 +36,16 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 
 장중 손절 후 같은 종목을 다시 사는 live 재진입은 하지 않습니다. 대신 손절/익절 이후 가격 흐름만 `paper-only`로 기록해 다음 백테스트와 조건 개선에 사용합니다.
 
+VI 제외 종목과 뉴스/공시는 실전 주문과 분리된 섀도 연구로만 관찰합니다. VI 종목은
+경고 기록 다음 정분 이후 첫 양수 거래량 1분봉을 재개장 가격으로 사용하며, 거래량
+0 봉이나 원래 개장가를 가상 체결로 인정하지 않습니다. 뉴스는 OpenDART/KIND 같은
+공식 공시의 악재를 우선하고 Naver 일반 기사는 검토 태그로만 남깁니다. 긍정 기사나
+뉴스 부재는 매수 승인 신호가 아니며, 두 섀도 경로 모두 주문 API를 호출하지 않습니다.
+2026-07-30 실험 결과와 승격 기준은
+`docs/VI_NEWS_SHADOW_RESEARCH_2026-07-30.md`에 정리했습니다.
+
+실전 예산 상한은 `10,000원`으로 유지합니다. 가격 무결성 검증을 통과한 종료 거래 30건에서는 중간 점검만 하고 자동 증액하지 않습니다. 최소 50건에서 비용 차감 후 누적 수익이 양수이고 실전 MDD가 `15%` 이하이며 미해결 가격 감사 오류가 없을 때만 상한 증액을 별도로 검토합니다. 시장 가드·가격 무결성·주문 추적 가드를 우회해 거래 횟수를 늘리지 않습니다.
+
 ## 주요 파일
 
 - `scripts/simple_gap_trader.py`: 09:01 매수, 장중 손절/익절 monitor, 15:20 잔여 보유분 정리
@@ -44,6 +56,12 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - `src/toss_auto_trader/paper_exit_update.py`: 손절 후 추가하락, 익절 후 추가상승 감시
 - `src/toss_auto_trader/paper_exit_outcomes.py`: 10분/30분/종가 outcome 계산
 - `src/toss_auto_trader/paper_exit_messages.py`: monitor 로그 출력 문구 포맷
+- `src/toss_auto_trader/vi_reopen_shadow.py`: VI 경고 이후 실제 거래 재개 가격과 청산을 paper-only로 재현
+- `src/toss_auto_trader/news_risk.py`: 뉴스 시점·종목 관련성·공식 공시 위험을 보수적으로 판정
+- `src/toss_auto_trader/news_prefetch.py`: 결정 전 OpenDART 스냅샷을 안전한 메타데이터만 저장·선택
+- `scripts/vi_reopen_shadow.py`: Toss 1분봉 기반 별도 VI 재개장 전략 연구
+- `scripts/simple_gap_news_prefetch.py`: 장 시작 전 KOSDAQ OpenDART 공시 일괄 스냅샷
+- `scripts/simple_gap_news_shadow.py`: 후보별 Naver/OpenDART 뉴스 위험 스냅샷 연구
 - `data/edge_research_universe_15y.sqlite3`: 메인 스크리닝용 장기 일봉 DB
 
 ## 로그
@@ -59,6 +77,12 @@ Toss Invest Open API를 이용해 한국 주식 자동매매 전략을 검증하
 - `logs/toss_discord_report.log`: Discord 보고 및 candle update 로그
 - `logs/simple_gap_reentry_watch.jsonl`: 손절/익절 이후 paper-only 관찰 로그
 - `logs/simple_gap_breadth_shadow.jsonl`: breadth4의 09:01 현재가 대리값과 15:40 공식 시가 사후확정
+- `logs/simple_gap_entry_price_audit.jsonl`: 첫 1분봉 OHLCV, 실제 매수호가 이탈률, 잠정 일봉시가, API/DB 전일 종가, 후보 순위와 제외 이유
+- `logs/simple_gap_vi_reopen_shadow.jsonl`: VI 이후 첫 실제 거래 기준 비용별 paper-only 결과
+- `logs/simple_gap_news_shadow.jsonl`: 기사 발행·관측 시점과 공급자 오류를 포함한 paper-only 위험 판정
+- `logs/simple_gap_news_prefetch.jsonl`: 09:01 전에 관측된 OpenDART 공시 메타데이터
+
+15:40 캔들 업데이트 보고는 `simple_gap_entry_price_audit.jsonl`의 첫 1분봉 시가를 확정 일봉 시가와 다시 비교합니다. 불일치·누락 수와 최대 차이가 Discord DB 업데이트 보고에 포함됩니다. 감사 로그가 없거나 손상됐거나 해당일 검증 대상이 없는 상태는 각각 `검증 실패`와 `검증 대상 없음`으로 구분하며, 실제 일치 표본이 있을 때만 `정상`으로 표시합니다.
 
 `simple_gap_reentry_watch.jsonl`의 주요 이벤트:
 
@@ -149,6 +173,23 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/toss_discord_report.py --action
 ```
 
 주의: `--action candle-update`는 기본적으로 실제 DB 업데이트를 실행합니다. 검증만 할 때는 `--dry-run-update`를 붙입니다.
+
+VI/뉴스 섀도 확인(주문 없음, 로그 미기록):
+
+```bash
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/vi_reopen_shadow.py --date 2026-07-30 --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_news_prefetch.py --date 2026-07-30 --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_news_shadow.py --date 2026-07-30 --print-only
+```
+
+`simple_gap_news_shadow.py`는 `OPENDART_API_KEY`가 없으면 공시 공급자 오류를
+명시하고 Naver 결과만 평가합니다. 일부 공급자 실패나 기사 0건을 안전 판정으로
+바꾸지 않습니다. 현재 뉴스/VI 섀도 스크립트는 cron에 자동 등록되지 않습니다.
+
+전진 표본을 쌓을 때의 권장 순서는 08:55 `simple_gap_news_prefetch.py`, 09:05 이후
+`simple_gap_news_shadow.py`, 장 마감 후 `vi_reopen_shadow.py`입니다. prefetch가
+09:01 이전에 완료된 경우에만 해당 공시가 시점 유효 표본으로 집계됩니다. 이 작업들은
+모두 주문 기능이 없지만, 실제 crontab에는 검토 없이 자동 추가하지 않습니다.
 
 ## Cron 운영
 
@@ -245,6 +286,9 @@ PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_integrity_audit.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_gap_floor_sensitivity.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/kr_rank_sensitivity.py
 PYTHONPATH=src:scripts .venv/bin/python3 scripts/breadth_shadow_summary.py
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/vi_reopen_shadow.py --date 2026-07-30 --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_news_prefetch.py --date 2026-07-30 --print-only
+PYTHONPATH=src:scripts .venv/bin/python3 scripts/simple_gap_news_shadow.py --date 2026-07-30 --print-only
 ```
 
 미국주식 연구 경로도 주문 API를 호출하지 않습니다. 현재 결론과 검증 한계는
@@ -300,6 +344,8 @@ PYTHONPATH=src:scripts .venv/bin/python3 -m unittest \
 - 시장 가드 입력이 지연·누락·불일치하면 실패 차단하며, 실전에서 `--force`로 우회할 수 없습니다.
 - 손절 후 재진입, 익절 후 추격매수는 live 주문으로 실행하지 않습니다.
 - 손절/익절 이후 가격 흐름은 paper-only 로그로만 남깁니다.
+- VI 재개장과 뉴스 위험 신호는 충분한 전진 표본 전까지 paper-only이며 실전 매수 조건을 바꾸지 않습니다.
+- 긍정 뉴스와 뉴스 부재는 매수 승인으로 사용하지 않고, 일반 뉴스 키워드는 공식 공시를 대신하지 않습니다.
 - 매매 판단은 백테스트와 실시간 API 제약이 다를 수 있으므로, 실전 로그를 별도 근거로 계속 검증합니다.
 - 이 프로젝트는 투자 조언이 아니며 손실 가능성이 있습니다.
 

@@ -43,6 +43,7 @@ class NewsHub:
     def __init__(self) -> None:
         self.limiters = {
             "naver": RateLimiter(RateLimitPolicy(min_interval_seconds=0.0, max_calls_per_minute=60, cooldown_seconds=120)),
+            "opendart": RateLimiter(RateLimitPolicy(min_interval_seconds=0.5, max_calls_per_minute=30, cooldown_seconds=120)),
             "marketaux": RateLimiter(RateLimitPolicy(min_interval_seconds=5, max_calls_per_minute=10, cooldown_seconds=300)),
             "finnhub": RateLimiter(RateLimitPolicy(min_interval_seconds=2, max_calls_per_minute=20, cooldown_seconds=300)),
             "alphavantage": RateLimiter(RateLimitPolicy(min_interval_seconds=60, max_calls_per_minute=1, cooldown_seconds=3600)),
@@ -88,6 +89,74 @@ class NewsHub:
                     summary=_strip_html(item.get("description", "")),
                     raw=item,
                 )
+            )
+        return items
+
+    def opendart_disclosures(
+        self,
+        *,
+        begin_date: str,
+        end_date: str,
+        corp_class: str = "K",
+        page_count: int = 100,
+        max_pages: int = 10,
+    ) -> list[NewsItem]:
+        api_key = os.getenv("OPENDART_API_KEY") or os.getenv("DART_API_KEY")
+        if not api_key:
+            raise NewsClientError("OPENDART_API_KEY missing")
+        items = []
+        total_pages = 1
+        for page_no in range(1, max(1, max_pages) + 1):
+            wait_seconds = self.limiters["opendart"].seconds_until_next_call()
+            if wait_seconds > 0:
+                time.sleep(wait_seconds)
+            params = urllib.parse.urlencode(
+                {
+                    "crtfc_key": api_key,
+                    "bgn_de": begin_date.replace("-", ""),
+                    "end_de": end_date.replace("-", ""),
+                    "corp_cls": corp_class,
+                    "sort": "date",
+                    "sort_mth": "desc",
+                    "page_no": page_no,
+                    "page_count": min(max(page_count, 1), 100),
+                }
+            )
+            data = self._request_json("opendart", f"https://opendart.fss.or.kr/api/list.json?{params}")
+            status = str(data.get("status") or "")
+            if status == "013":
+                return []
+            if status != "000":
+                raise NewsClientError(f"OpenDART error {status}: {data.get('message') or 'unknown error'}")
+            total_pages = int(data.get("total_page") or 1)
+            for item in data.get("list", []):
+                receipt_no = str(item.get("rcept_no") or "")
+                receipt_date = str(item.get("rcept_dt") or "")
+                published = (
+                    f"{receipt_date[:4]}-{receipt_date[4:6]}-{receipt_date[6:8]}"
+                    if len(receipt_date) == 8
+                    else None
+                )
+                items.append(
+                    NewsItem(
+                        provider="opendart",
+                        title=str(item.get("report_nm") or ""),
+                        url=(
+                            f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={urllib.parse.quote(receipt_no)}"
+                            if receipt_no
+                            else ""
+                        ),
+                        source="FSS OpenDART",
+                        published_at=published,
+                        summary=str(item.get("corp_name") or ""),
+                        raw=item,
+                    )
+                )
+            if page_no >= total_pages:
+                break
+        if total_pages > max_pages:
+            raise NewsClientError(
+                f"OpenDART result requires {total_pages} pages; max_pages={max_pages} would be incomplete"
             )
         return items
 

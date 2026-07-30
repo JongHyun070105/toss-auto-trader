@@ -87,6 +87,73 @@ class TossDiscordReportTests(unittest.TestCase):
 
         self.assertIn("기준가 비비교 갭 제외 1개", report)
 
+    def test_buy_report_includes_entry_price_reconciliation_counts(self):
+        parsed = self.mod.parse_buy_session(
+            [
+                "실행 시간: 2026-07-28 09:01:00",
+                "모드: 실전 매매",
+                "성능 측정: price_chunks=12 price_rows=1183 provisional_gap_hits=25 "
+                "daily_open_calls=25 daily_open_missing=1 daily_open_confirmed_hits=4 "
+                "gap_integrity_exclusions=0 price_basis_exclusions=2 "
+                "daily_open_reconciliations=3 entry_reference_errors=1 "
+                "entry_reference_missing=0 zero_volume_open_exclusions=2 "
+                "verification_deadline_reached=0 scan_elapsed=16.21s",
+                "갭 하락 5.0% 돌파 종목 수: 4개",
+                "매수 진입 조건을 통과한 최종 종목이 없습니다.",
+                "프로그램 종료: 2026-07-28 09:01:20 / 총 실행시간: 20.00초",
+            ]
+        )
+        parsed["session_count"] = 1
+
+        with patch.object(self.mod, "aggregate_buy_sessions_for_date", return_value=parsed):
+            report = self.mod.buy_report("2026-07-28")
+
+        self.assertEqual(parsed["perf"]["price_basis_exclusions"], 2)
+        self.assertEqual(parsed["perf"]["daily_open_reconciliations"], 3)
+        self.assertEqual(parsed["perf"]["entry_reference_errors"], 1)
+        self.assertEqual(parsed["perf"]["entry_reference_missing"], 0)
+        self.assertEqual(parsed["perf"]["zero_volume_open_exclusions"], 2)
+        self.assertIn("전일종가 기준 불일치 제외 2개", report)
+        self.assertIn("잠정 일봉시가 교정 3개", report)
+        self.assertIn("API 오류 1개", report)
+        self.assertIn("09:01 미체결 봉 제외 2개", report)
+
+    def test_buy_report_distinguishes_entry_reference_outage_from_no_candidate(self):
+        parsed = self.mod.parse_buy_session(
+            [
+                "실행 시간: 2026-07-28 09:01:00",
+                "모드: 실전 매매",
+                "성능 측정: price_chunks=12 price_rows=1183 provisional_gap_hits=3 "
+                "daily_open_calls=3 daily_open_missing=3 entry_reference_errors=3 "
+                "entry_reference_missing=0 daily_open_confirmed_hits=0 "
+                "gap_integrity_exclusions=0 price_basis_exclusions=0 "
+                "daily_open_reconciliations=0 verification_deadline_reached=0 scan_elapsed=16.21s",
+                "[진입가격 검증 실패] 모든 잠정 후보의 첫 1분봉 또는 동일 기준 전일 종가를 확인하지 못해 주문을 차단합니다.",
+                "프로그램 종료: 2026-07-28 09:01:20 / 총 실행시간: 20.00초",
+            ]
+        )
+        parsed["session_count"] = 1
+
+        with patch.object(self.mod, "aggregate_buy_sessions_for_date", return_value=parsed):
+            report = self.mod.buy_report("2026-07-28")
+
+        self.assertIn("모든 잠정 후보", parsed["reason"])
+        self.assertIn("API 오류 3개", report)
+        self.assertNotIn("robust 갭하락 + 전일 거래량 필터 통과 종목 없음", report)
+
+    def test_buy_report_surfaces_entry_audit_write_failure(self):
+        parsed = self.mod.parse_buy_session(
+            [
+                "실행 시간: 2026-07-28 09:01:00",
+                "모드: 실전 매매",
+                "[진입가격 감사로그 실패] OSError: disk full / 신규 주문 차단",
+            ]
+        )
+
+        self.assertEqual(parsed["order_success"], None)
+        self.assertIn("disk full", parsed["reason"])
+        self.assertIn("신규 주문 차단", parsed["reason"])
+
     def test_buy_report_does_not_fetch_detail_for_none_order_id(self):
         lines = [
             "실행 시간: 2026-07-07 09:01:01",
@@ -134,8 +201,9 @@ class TossDiscordReportTests(unittest.TestCase):
         lines = [
             "실행 시간: 2026-07-06 09:01:01",
             "모드: 실전 매매",
-            "현재 KOSDAQ 지수: 895.00 | 당일 시가: 896.50 | 5일 이평선: 900.00 | 매수 허용선: 891.00 | 지수 시각: 2026-07-20T00:00:00.000+09:00 | 최신성 검증: today_candle_close_crosscheck",
-            "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
+            "현재 KOSDAQ 지수: 895.00 | 당일 시가: 896.50 | 5일 이평선: 900.00 | 매수 허용선: 891.00 | 지수 시각: 2026-07-20T00:00:00.000+09:00 | 시가 시각: 2026-07-20T09:01:00+09:00 | 최신성 검증: today_candle_close_crosscheck | 가드 기준: 첫 1분봉 시가",
+            "[시장 가드 현재값 섀도] SMA5: 899.70 | 허용선: 890.70 | 판정: 차단 | 실매매 미적용",
+            "🚨 [시장 가드 발동] KOSDAQ 첫 1분봉 시가가 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
             "프로그램 종료: 2026-07-06 09:01:01 / 총 실행시간: 0.07초",
         ]
 
@@ -146,14 +214,19 @@ class TossDiscordReportTests(unittest.TestCase):
         self.assertEqual(parsed["buy_line"], 891.0)
         self.assertEqual(parsed["market_timestamp"], "2026-07-20T00:00:00.000+09:00")
         self.assertEqual(parsed["market_freshness"], "today_candle_close_crosscheck")
+        self.assertEqual(parsed["gate_basis"], "첫 1분봉 시가")
+        self.assertEqual(parsed["current_sma5"], 899.7)
+        self.assertEqual(parsed["current_buy_line"], 890.7)
+        self.assertEqual(parsed["current_guard_shadow"], "차단")
         self.assertIn("1% 이상 아래가 아니라", parsed["reason"])
 
     def test_buy_report_marks_guard_skipped_fields_without_malformed_counts(self):
         lines = [
             "실행 시간: 2026-07-14 09:01:00",
             "모드: 실전 매매",
-            "현재 KOSDAQ 지수: 800.17 | 당일 시가: 799.34 | 5일 이평선: 803.19 | 매수 허용선: 795.16 | 지수 시각: 2026-07-14T00:00:00.000+09:00 | 최신성 검증: today_candle_close_crosscheck",
-            "🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
+            "현재 KOSDAQ 지수: 800.17 | 당일 시가: 799.34 | 5일 이평선: 803.19 | 매수 허용선: 795.16 | 지수 시각: 2026-07-14T00:00:00.000+09:00 | 최신성 검증: today_candle_close_crosscheck | 가드 기준: 첫 1분봉 시가",
+            "[시장 가드 현재값 섀도] SMA5: 803.36 | 허용선: 795.33 | 판정: 차단 | 실매매 미적용",
+            "🚨 [시장 가드 발동] KOSDAQ 첫 1분봉 시가가 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.",
             "프로그램 종료: 2026-07-14 09:01:00 / 총 실행시간: 0.06초",
         ]
 
@@ -163,6 +236,7 @@ class TossDiscordReportTests(unittest.TestCase):
             report = self.mod.buy_report("2026-07-14")
 
         self.assertIn("KOSDAQ: 800.17 / 시가: 799.34 / SMA5: 803.19 / 매수 허용선: 795.16 / 가드: 차단", report)
+        self.assertIn("가드 판정 기준: 첫 1분봉 시가 / 09:01 현재값 섀도: 차단", report)
         self.assertIn("DB 기준일: 미조회(시장 가드 차단) / 스크리닝: 미실행 / 갭 후보: 미실행", report)
         self.assertIn("예수금: 미조회 / 사용예산: 미산정", report)
         self.assertIn("지수 최신성: Toss 당일 일봉 종가 교차검증 / 일봉 기준일: 2026-07-14", report)
@@ -448,6 +522,47 @@ Toss 일봉 캐시 업데이트 완료
         record.assert_called_once_with(self.mod.DB_PATH, self.mod.BREADTH_SHADOW_LOG, current_date)
         self.assertIn("breadth4 사후확정: 공식 시가 -5% 갭 6개 / 기준 4개 / 통과", report)
         self.assertIn("실매매 미적용", report)
+
+    def test_candle_update_report_never_labels_missing_or_corrupt_audit_as_normal(self):
+        current_date = "2026-07-28"
+        before = {"exists": True, "latest_date": "2026-07-27", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+        after = {"exists": True, "latest_date": current_date, "rows": 12, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}
+        base = {
+            "reference_symbols": 0,
+            "matched_symbols": 0,
+            "mismatch_symbols": [],
+            "missing_symbols": [],
+            "max_diff_pct": None,
+            "audit_parse_errors": 0,
+        }
+        cases = [
+            ({**base, "status": "missing_audit_file"}, "검증 실패(감사 로그 없음)"),
+            ({**base, "status": "audit_parse_error", "audit_parse_errors": 1}, "검증 실패(감사 로그 손상)"),
+            ({**base, "status": "no_reference"}, "검증 대상 없음"),
+        ]
+
+        for reconciliation, expected in cases:
+            with self.subTest(status=reconciliation["status"]):
+                with (
+                    patch.object(self.mod, "today", return_value=current_date),
+                    patch.object(self.mod, "db_summary", side_effect=[before, after]),
+                    patch.object(self.mod, "run_candle_update", return_value=(0, "{}", "")),
+                    patch.object(
+                        self.mod.entry_price_audit,
+                        "reconcile_entry_prices",
+                        return_value=reconciliation,
+                    ),
+                    patch.object(
+                        self.mod.breadth_shadow,
+                        "record_official_reconciliation",
+                        return_value={"official_gap5_count": 0, "threshold": 4, "shadow_pass": False},
+                    ),
+                ):
+                    report = self.mod.candle_update_report(expected_latest_date=current_date)
+
+                self.assertIn(f"진입가격 사후검증: {expected}", report)
+                if reconciliation["status"] != "no_reference":
+                    self.assertNotIn("진입가격 사후검증: 정상", report)
 
     def test_candle_update_report_marks_latest_session_lag(self):
         before = {"exists": True, "latest_date": "2026-07-16", "rows": 10, "latest_date_rows": 2, "latest_toss_rows": 2, "bad_timestamp_rows": 0}

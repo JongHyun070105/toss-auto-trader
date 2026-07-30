@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from toss_auto_trader.config import Settings
 from toss_auto_trader import breadth_shadow
+from toss_auto_trader import entry_price_audit
 from toss_auto_trader.toss_client import TossApiError, TossInvestClient
 
 BUY_LOG = ROOT / "logs" / "simple_gap_trader_buy.log"
@@ -40,6 +41,7 @@ MONITOR_LOG = ROOT / "logs" / "simple_gap_trader_monitor.log"
 SELL_LOG = ROOT / "logs" / "simple_gap_trader_sell.log"
 REPORT_LOG = ROOT / "logs" / "toss_discord_report.log"
 BREADTH_SHADOW_LOG = ROOT / "logs" / "simple_gap_breadth_shadow.jsonl"
+ENTRY_PRICE_AUDIT_LOG = ROOT / "logs" / "simple_gap_entry_price_audit.jsonl"
 DB_PATH = ROOT / "data" / "edge_research_universe_15y.sqlite3"
 DEFAULT_TARGET_ENV = "TOSS_DISCORD_TARGET"
 
@@ -302,6 +304,10 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         "kosdaq_open": None,
         "sma5": None,
         "buy_line": None,
+        "gate_basis": None,
+        "current_sma5": None,
+        "current_buy_line": None,
+        "current_guard_shadow": None,
         "market_timestamp": None,
         "market_freshness": None,
         "guard": None,
@@ -343,6 +349,15 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
         m = re.search(r"매수 허용선: ([\d.]+)", line)
         if m:
             info["buy_line"] = clean_float(m.group(1))
+        m = re.search(r"가드 기준: ([^|]+)", line)
+        if m:
+            info["gate_basis"] = m.group(1).strip()
+        if "[시장 가드 현재값 섀도]" in line:
+            m = re.search(r"SMA5: ([\d.]+) \| 허용선: ([\d.]+) \| 판정: (통과|차단)", line)
+            if m:
+                info["current_sma5"] = clean_float(m.group(1))
+                info["current_buy_line"] = clean_float(m.group(2))
+                info["current_guard_shadow"] = m.group(3)
         m = re.search(r"지수 시각: (\S+)", line)
         if m:
             info["market_timestamp"] = m.group(1)
@@ -351,7 +366,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
             info["market_freshness"] = m.group(1)
         if "시장 가드 발동" in line or "시장 하락 가드 발동" in line:
             info["guard"] = "차단"
-            info["reason"] = "KOSDAQ이 5일선보다 1% 이상 아래가 아니라 시장 가드 차단"
+            info["reason"] = "KOSDAQ 첫 1분봉 시가가 5일선보다 1% 이상 아래가 아니라 시장 가드 차단"
         if "[시장 가드 차단]" in line:
             info["guard"] = "차단"
             info["reason"] = line.split("]", 1)[-1].strip()
@@ -394,21 +409,44 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
                 "reason": m.group(1).strip(),
                 "applied_to_live_order": False,
             }
-        m = re.search(
-            r"성능 측정: .*?price_chunks=(\d+) .*?price_rows=(\d+) .*?provisional_gap_hits=(\d+) .*?daily_open_calls=(\d+) .*?daily_open_missing=(\d+) .*?daily_open_confirmed_hits=(\d+)(?: .*?gap_integrity_exclusions=(\d+))? .*?scan_elapsed=([\d.]+)s",
-            line,
-        )
-        if m:
-            info["perf"] = {
-                "price_chunks": int(m.group(1)),
-                "price_rows": int(m.group(2)),
-                "provisional_gap_hits": int(m.group(3)),
-                "daily_open_calls": int(m.group(4)),
-                "daily_open_missing": int(m.group(5)),
-                "daily_open_confirmed_hits": int(m.group(6)),
-                "gap_integrity_exclusions": int(m.group(7) or 0),
-                "scan_elapsed_sec": clean_float(m.group(8)),
+        if line.startswith("성능 측정:"):
+            values = {
+                key: value
+                for key, value in re.findall(r"([a-z_]+)=([\d.]+)", line)
             }
+            required = {
+                "price_chunks",
+                "price_rows",
+                "provisional_gap_hits",
+                "daily_open_calls",
+                "daily_open_missing",
+                "daily_open_confirmed_hits",
+                "scan_elapsed",
+            }
+        else:
+            values = {}
+            required = set()
+        if required and required.issubset(values):
+            info["perf"] = {
+                "price_chunks": int(values["price_chunks"]),
+                "price_rows": int(values["price_rows"]),
+                "provisional_gap_hits": int(values["provisional_gap_hits"]),
+                "daily_open_calls": int(values["daily_open_calls"]),
+                "daily_open_missing": int(values["daily_open_missing"]),
+                "entry_reference_errors": int(values.get("entry_reference_errors", 0)),
+                "entry_reference_missing": int(values.get("entry_reference_missing", values["daily_open_missing"])),
+                "zero_volume_open_exclusions": int(values.get("zero_volume_open_exclusions", 0)),
+                "daily_open_confirmed_hits": int(values["daily_open_confirmed_hits"]),
+                "gap_integrity_exclusions": int(values.get("gap_integrity_exclusions", 0)),
+                "price_basis_exclusions": int(values.get("price_basis_exclusions", 0)),
+                "daily_open_reconciliations": int(values.get("daily_open_reconciliations", 0)),
+                "verification_deadline_reached": int(values.get("verification_deadline_reached", 0)),
+                "scan_elapsed_sec": clean_float(values["scan_elapsed"]),
+            }
+        if "[진입가격 검증 실패]" in line:
+            info["reason"] = line.split("]", 1)[-1].strip()
+        if "[진입가격 감사로그 실패]" in line:
+            info["reason"] = line.split("]", 1)[-1].strip()
         if "매수 진입 조건을 통과한 최종 종목이 없습니다" in line:
             info["reason"] = "robust 갭하락 + 전일 거래량 필터 통과 종목 없음"
         m = re.search(r"\[(\w+)\] (.+?) \| 갭률: ([-\d.]+)% \| 시가: ([\d,]+)원 \| 현재가: ([\d,]+)원 \| 전일종가: ([\d,]+)원", line)
@@ -442,7 +480,7 @@ def parse_buy_session(lines: list[str]) -> dict[str, Any]:
             info["order_success"] = False
             info["reason"] = line.strip()
     if info["order"] and info["reason"] is None:
-        info["reason"] = "KOSDAQ 5일선 대비 -1% 이하 가드 통과 + 전일 종가 1천~8천원 + 전일 거래량<20일 평균 0.8배 + 당일 시가 갭하락 -5% 이하 중 최저가"
+        info["reason"] = "KOSDAQ 첫 1분봉 시가 기준 -1% 이하 가드 통과 + 전일 종가 1천~8천원 + 전일 거래량<20일 평균 0.8배 + 종목 첫 1분봉 시가 갭하락 -5% 이하 중 최저가"
     if not info["order"] and info["reason"] is None and info.get("warning_exclusions"):
         info["reason"] = "매수 유의사항 필터로 위험 종목 제외"
     return info
@@ -478,6 +516,10 @@ def aggregate_buy_sessions_for_date(path: Path, date: str) -> dict[str, Any] | N
         "kosdaq_open",
         "sma5",
         "buy_line",
+        "gate_basis",
+        "current_sma5",
+        "current_buy_line",
+        "current_guard_shadow",
         "market_timestamp",
         "market_freshness",
         "guard",
@@ -686,6 +728,7 @@ def buy_report(date: str | None = None) -> str:
         f"- 실행: {b.get('datetime') or '확인 필요'} / {b.get('mode') or '모드 확인 필요'}",
         f"- 종료: {b.get('end_datetime') or '확인 필요'} / 총 실행시간: {b.get('total_elapsed_sec') if b.get('total_elapsed_sec') is not None else '확인 필요'}초",
         f"- KOSDAQ: {b.get('kosdaq') if b.get('kosdaq') is not None else '확인 필요'} / 시가: {kosdaq_open} / SMA5: {b.get('sma5') if b.get('sma5') is not None else '확인 필요'} / 매수 허용선: {buy_line} / 가드: {b.get('guard') or '확인 필요'}",
+        f"- 가드 판정 기준: {b.get('gate_basis') or '기존 로그 미기록'} / 09:01 현재값 섀도: {b.get('current_guard_shadow') or '미기록'}",
         f"- DB 기준일: {db_date} / 스크리닝: {scan_total} / 갭 후보: {gap_count}",
         f"- 예수금: {cash} / 사용예산: {budget}",
     ]
@@ -719,9 +762,13 @@ def buy_report(date: str | None = None) -> str:
             "- API 성능: "
             f"prices {perf.get('price_chunks')}회/{perf.get('price_rows')}행, "
             f"provisional 후보 {perf.get('provisional_gap_hits')}개, "
-            f"daily open candle {perf.get('daily_open_calls')}회, "
-            f"open 누락 {perf.get('daily_open_missing')}개, "
+            f"진입가격 스냅샷 {perf.get('daily_open_calls')}개, "
+            f"API 오류 {perf.get('entry_reference_errors', 0)}개, "
+            f"기준 데이터 누락 {perf.get('entry_reference_missing', perf.get('daily_open_missing', 0))}개, "
+            f"09:01 미체결 봉 제외 {perf.get('zero_volume_open_exclusions', 0)}개, "
             f"기준가 비비교 갭 제외 {perf.get('gap_integrity_exclusions', 0)}개, "
+            f"전일종가 기준 불일치 제외 {perf.get('price_basis_exclusions', 0)}개, "
+            f"잠정 일봉시가 교정 {perf.get('daily_open_reconciliations', 0)}개, "
             f"scan {perf.get('scan_elapsed_sec')}초"
         )
     shadow = b.get("breadth_shadow") or {}
@@ -1076,6 +1123,33 @@ def candle_update_report(
         lines.append("- stderr tail:\n```\n" + "\n".join(stderr.splitlines()[-8:])[:1500] + "\n```")
     latest_date = after.get("latest_date") if after.get("exists") else None
     if code == 0 and not dry_run and limit == 0 and latest_date == today():
+        try:
+            price_reconciliation = entry_price_audit.reconcile_entry_prices(
+                DB_PATH, ENTRY_PRICE_AUDIT_LOG, str(latest_date)
+            )
+            mismatch_count = len(price_reconciliation["mismatch_symbols"])
+            missing_count = len(price_reconciliation["missing_symbols"])
+            max_diff = price_reconciliation["max_diff_pct"]
+            max_diff_label = "n/a" if max_diff is None else f"{max_diff:.3f}%"
+            status_code = price_reconciliation["status"]
+            status = {
+                "ok": "정상",
+                "no_reference": "검증 대상 없음",
+                "mismatch": "검증 실패(가격 불일치)",
+                "missing_official": "검증 실패(확정 일봉 누락)",
+                "missing_audit_file": "검증 실패(감사 로그 없음)",
+                "audit_parse_error": "검증 실패(감사 로그 손상)",
+            }.get(status_code, f"검증 실패({status_code})")
+            lines.append(
+                f"- 진입가격 사후검증: {status} / 첫 1분봉 {price_reconciliation['reference_symbols']}개 / "
+                f"확정 일봉 일치 {price_reconciliation['matched_symbols']}개 / "
+                f"불일치 {mismatch_count}개 / 누락 {missing_count}개 / "
+                f"로그 파싱오류 {price_reconciliation['audit_parse_errors']}개 / 최대차이 {max_diff_label}"
+            )
+            if mismatch_count:
+                lines.append(f"- 진입가격 불일치 종목: {price_reconciliation['mismatch_symbols'][:10]}")
+        except Exception as error:
+            lines.append(f"- 진입가격 사후검증 실패: {type(error).__name__}: {error} / 실매매 영향 없음")
         try:
             reconciliation = breadth_shadow.record_official_reconciliation(
                 DB_PATH, BREADTH_SHADOW_LOG, str(latest_date)

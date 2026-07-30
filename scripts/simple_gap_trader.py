@@ -13,6 +13,7 @@ import os
 import sqlite3
 import re
 import subprocess
+import urllib.error
 import urllib.request
 import urllib.parse
 import sys
@@ -46,6 +47,7 @@ STRATEGY_STATE_PATH = Path("logs") / "simple_gap_trader_state.json"
 STRATEGY_EVENT_LOG = Path("logs") / "simple_gap_trader_events.jsonl"
 STRATEGY_LOCK_PATH = Path("logs") / "simple_gap_trader.lock"
 BREADTH_SHADOW_LOG = Path("logs") / "simple_gap_breadth_shadow.jsonl"
+ENTRY_PRICE_AUDIT_LOG = Path("logs") / "simple_gap_entry_price_audit.jsonl"
 MAX_BUY_AMOUNT_KRW = 10000
 MIN_PRICE = 1000
 MAX_PRICE = 8000
@@ -57,12 +59,15 @@ KOSDAQ_SMA5_BUY_RATIO = 0.99
 MAX_BUY_CHASE_PCT = 0.005
 MARKET_DATA_MAX_AGE_SECONDS = 300
 MARKET_PRICE_CROSSCHECK_MAX_PCT = 0.001
+PREVIOUS_CLOSE_BASIS_MAX_PCT = 0.001
+MARKET_DATA_CHART_MIN_INTERVAL_SECONDS = 0.22
 BUY_ORDER_MAX_WAIT_SECONDS = 30
 ORDER_IDEMPOTENCY_WINDOW_SECONDS = 600
 LIVE_BUY_WINDOW_START = clock_time(9, 0)
 LIVE_BUY_WINDOW_END = clock_time(9, 5)
 KST = ZoneInfo("Asia/Seoul")
 STRATEGY_NAME = "robust_gap5_stop0225_take12"
+_last_market_data_chart_started_at = 0.0
 BLOCKED_WARNING_TYPES = {
     "LIQUIDATION_TRADING",     # 정리매매
     "OVERHEATED",              # 단기과열
@@ -89,13 +94,35 @@ class MarketGateSnapshot:
     open_price: float
     sma5: float
     buy_line: float
+    current_sma5: float
+    current_buy_line: float
     timestamp: str
+    open_timestamp: str
+    daily_open_price: float
     previous_business_day: str
     freshness_source: str = "indicator_timestamp"
 
 
+@dataclass(frozen=True, slots=True)
+class EntryPriceSnapshot:
+    open_price: float
+    open_timestamp: str
+    previous_close: float
+    previous_close_timestamp: str
+    daily_open_price: float | None
+    open_volume: float = 1.0
+    close_price: float | None = None
+    high_price: float | None = None
+    low_price: float | None = None
+    adjusted: bool = True
+
+
 class AmbiguousOrderSubmission(RuntimeError):
     """The request may have reached Toss, but no reliable orderId was observed."""
+
+
+class NoRegularOpeningTrade(RuntimeError):
+    """The 09:01 candle exists but contains no regular-session execution."""
 
 
 @contextmanager
@@ -234,8 +261,10 @@ def acceptable_buy_limit_price(client: TossInvestClient, target: dict) -> int | 
         )
         quote_price = max(quote_price, corrected_price)
     max_allowed = open_price * (1.0 + MAX_BUY_CHASE_PCT)
+    target['observed_buy_quote'] = quote_price
+    target['buy_quote_drift_pct'] = (quote_price - open_price) / open_price * 100.0
     if quote_price > max_allowed:
-        drift_pct = (quote_price - open_price) / open_price * 100.0
+        drift_pct = target['buy_quote_drift_pct']
         print(
             f"  ⏭️ [{target['symbol']}] {target['name']} 매수 호가가 시가 대비 너무 높아 제외 "
             f"(시가 {open_price:,.0f}원, 매수호가 {quote_price:,.0f}원, 이탈 {drift_pct:.2f}%, "
@@ -545,7 +574,7 @@ def fetch_kosdaq_market_data(
         if not isinstance(today_candle, dict):
             print("[시장 가드 차단] Toss KOSDAQ 당일 일봉이 아직 생성되지 않았습니다.")
             return None
-        open_price = parse_positive_float(today_candle.get("openPrice"))
+        daily_open_price = parse_positive_float(today_candle.get("openPrice"))
         candle_close = parse_positive_float(today_candle.get("closePrice"))
         candle_timestamp = str(today_candle.get("timestamp") or "").strip()
         if not indicator_timestamp:
@@ -569,21 +598,65 @@ def fetch_kosdaq_market_data(
                 "[시장 가드 최신성 대체] 현재가 timestamp 누락을 "
                 "당일 일봉 존재와 종가 일치로 교차검증했습니다."
             )
+        minute_cutoff = regular_start + timedelta(minutes=1, seconds=59)
+        minute_resp = client.get_market_indicator_candles(
+            "KOSDAQ",
+            "1m",
+            count=5,
+            before=minute_cutoff.isoformat(),
+        )
+        minute_result = minute_resp.get("result", {}) if isinstance(minute_resp, dict) else {}
+        minute_candles = minute_result.get("candles", []) if isinstance(minute_result, dict) else []
+        first_minutes: list[tuple[datetime, dict]] = []
+        for candle in minute_candles or []:
+            raw_timestamp = str(candle.get("timestamp") or "").strip()
+            try:
+                candle_at = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            if candle_at.tzinfo is None:
+                continue
+            candle_at = candle_at.astimezone(regular_start.tzinfo)
+            if regular_start <= candle_at <= minute_cutoff:
+                first_minutes.append((candle_at, candle))
+        if not first_minutes:
+            print("[시장 가드 차단] KOSDAQ 첫 1분봉을 확인할 수 없습니다.")
+            return None
+        first_minute_at, first_minute = min(first_minutes, key=lambda item: item[0])
+        open_price = parse_positive_float(first_minute.get("openPrice"))
+
         previous_dates = sorted(date for date in by_date if date < today)
-        if open_price is None or len(previous_dates) < 4 or previous_dates[-1] != previous_business_day:
+        if (
+            open_price is None
+            or daily_open_price is None
+            or len(previous_dates) < 4
+            or previous_dates[-1] != previous_business_day
+        ):
             print("[시장 가드 차단] KOSDAQ 당일 시가 또는 직전 4영업일 종가를 검증할 수 없습니다.")
             return None
+        daily_open_diff = abs(daily_open_price - open_price) / open_price
+        if daily_open_diff > MARKET_PRICE_CROSSCHECK_MAX_PCT:
+            print(
+                "[시장 가드 시가 교정] 잠정 일봉시가 대신 첫 1분봉 시가를 사용합니다. "
+                f"(일봉 {daily_open_price:.2f}, 1분봉 {open_price:.2f}, 차이 {daily_open_diff * 100:.3f}%)"
+            )
         previous_closes = [parse_positive_float(by_date[date].get("closePrice")) for date in previous_dates[-4:]]
         if any(value is None for value in previous_closes):
             print("[시장 가드 차단] KOSDAQ 직전 4영업일 종가에 결측치가 있습니다.")
             return None
-        sma5 = (current_index + sum(float(value) for value in previous_closes)) / 5.0
+        previous_close_sum = sum(float(value) for value in previous_closes)
+        sma5 = (open_price + previous_close_sum) / 5.0
+        current_sma5 = (current_index + previous_close_sum) / 5.0
         return MarketGateSnapshot(
             current_index=current_index,
             open_price=open_price,
             sma5=sma5,
             buy_line=sma5 * KOSDAQ_SMA5_BUY_RATIO,
+            current_sma5=current_sma5,
+            current_buy_line=current_sma5 * KOSDAQ_SMA5_BUY_RATIO,
             timestamp=indicator_timestamp,
+            open_timestamp=first_minute_at.isoformat(),
+            daily_open_price=daily_open_price,
             previous_business_day=previous_business_day,
             freshness_source=freshness_source,
         )
@@ -599,13 +672,26 @@ def evaluate_market_gate(snapshot: MarketGateSnapshot | None) -> bool:
     print(
         f"현재 KOSDAQ 지수: {snapshot.current_index:.2f} | 당일 시가: {snapshot.open_price:.2f} | "
         f"5일 이평선: {snapshot.sma5:.2f} | 매수 허용선: {snapshot.buy_line:.2f} | "
-        f"지수 시각: {snapshot.timestamp} | 최신성 검증: {snapshot.freshness_source}"
+        f"지수 시각: {snapshot.timestamp} | 시가 시각: {snapshot.open_timestamp} | "
+        f"최신성 검증: {snapshot.freshness_source} | 가드 기준: 첫 1분봉 시가"
     )
-    if snapshot.current_index > snapshot.buy_line:
-        print("🚨 [시장 가드 발동] KOSDAQ이 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.")
+    current_gate_pass = snapshot.current_index <= snapshot.current_buy_line
+    open_gate_pass = snapshot.open_price <= snapshot.buy_line
+    print(
+        f"[시장 가드 현재값 섀도] SMA5: {snapshot.current_sma5:.2f} | "
+        f"허용선: {snapshot.current_buy_line:.2f} | "
+        f"판정: {'통과' if current_gate_pass else '차단'} | 실매매 미적용"
+    )
+    if current_gate_pass != open_gate_pass:
+        print(
+            "[시장 가드 기준 불일치] 첫 1분봉 시가 판정과 09:01 현재값 판정이 다릅니다. "
+            "실매매는 백테스트와 같은 첫 1분봉 시가 판정을 따릅니다."
+        )
+    if not open_gate_pass:
+        print("🚨 [시장 가드 발동] KOSDAQ 첫 1분봉 시가가 5일선보다 1% 이상 아래가 아니므로 오늘 매매는 정지합니다.")
         return False
 
-    print("✅ 지수 가드 통과: KOSDAQ이 5일선보다 1% 이상 아래인 눌림 국면입니다.")
+    print("✅ 지수 가드 통과: KOSDAQ 첫 1분봉 시가가 5일선보다 1% 이상 아래인 눌림 국면입니다.")
     return True
 
 
@@ -831,26 +917,148 @@ def get_actual_budget(client: TossInvestClient, settings: Settings) -> float:
         return 0.0
 
 
-def get_today_open_price(client: TossInvestClient, symbol: str, *, today: str | None = None) -> float | None:
-    """Return today's official daily-candle open price.
+def _candle_by_date(candles: list[dict], target_date: str) -> dict | None:
+    matches = [candle for candle in candles if str(candle.get("timestamp") or "")[:10] == target_date]
+    return matches[0] if len(matches) == 1 else None
 
-    Toss /prices does not reliably include openPrice. Do not fall back to lastPrice,
-    because that breaks the backtest entry assumption.
+
+def get_stock_candles_paced(
+    client: TossInvestClient,
+    symbol: str,
+    interval: str,
+    *,
+    count: int,
+    before: str | None = None,
+    adjusted: bool = True,
+) -> dict:
+    """Keep stock chart requests below the documented 5 TPS group limit."""
+    global _last_market_data_chart_started_at
+    now = time.monotonic()
+    remaining = MARKET_DATA_CHART_MIN_INTERVAL_SECONDS - (now - _last_market_data_chart_started_at)
+    if remaining > 0:
+        time.sleep(remaining)
+    _last_market_data_chart_started_at = time.monotonic()
+    return client.get_candles(
+        symbol,
+        interval,
+        count=count,
+        before=before,
+        adjusted=adjusted,
+    )
+
+
+def get_entry_price_snapshot(
+    client: TossInvestClient,
+    symbol: str,
+    *,
+    today: str,
+    previous_business_day: str,
+) -> EntryPriceSnapshot | None:
+    """Return a point-in-time comparable open and previous close.
+
+    The current daily candle can expose a provisional open near 09:01. The first
+    one-minute candle is therefore the canonical open, while the adjusted daily
+    response supplies the comparable previous close from the same API basis.
     """
-    target_date = today or datetime.now().strftime("%Y-%m-%d")
-    resp = client.get_candles(symbol, "1d", count=3)
-    result = resp.get("result", {}) if isinstance(resp, dict) else {}
-    candles = result.get("candles", []) if isinstance(result, dict) else []
-    for candle in candles or []:
-        if str(candle.get("timestamp", ""))[:10] != target_date:
-            continue
-        raw = candle.get("openPrice") or candle.get("open_price")
+    daily_resp = get_stock_candles_paced(client, symbol, "1d", count=5, adjusted=True)
+    daily_result = daily_resp.get("result", {}) if isinstance(daily_resp, dict) else {}
+    daily_candles = daily_result.get("candles", []) if isinstance(daily_result, dict) else []
+    previous_candle = _candle_by_date(daily_candles or [], previous_business_day)
+    if previous_candle is None:
+        return None
+    previous_close = parse_positive_float(previous_candle.get("closePrice") or previous_candle.get("close_price"))
+    if previous_close is None:
+        return None
+
+    today_candle = _candle_by_date(daily_candles or [], today)
+    daily_open_price = None
+    if today_candle is not None:
+        daily_open_price = parse_positive_float(today_candle.get("openPrice") or today_candle.get("open_price"))
+
+    first_minute_cutoff = f"{today}T09:01:59+09:00"
+    minute_resp = get_stock_candles_paced(
+        client,
+        symbol,
+        "1m",
+        count=5,
+        before=first_minute_cutoff,
+        adjusted=True,
+    )
+    minute_result = minute_resp.get("result", {}) if isinstance(minute_resp, dict) else {}
+    minute_candles = minute_result.get("candles", []) if isinstance(minute_result, dict) else []
+    first_minutes: list[tuple[datetime, dict, float]] = []
+    zero_volume_open_seen = False
+    for candle in minute_candles or []:
+        raw_timestamp = str(candle.get("timestamp") or "").strip()
         try:
-            open_price = float(str(raw).replace(",", ""))
-        except Exception:
-            return None
-        return open_price if open_price > 0 else None
-    return None
+            candle_at = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if candle_at.tzinfo is None:
+            continue
+        candle_at_kst = candle_at.astimezone(KST)
+        if candle_at_kst.date().isoformat() != today:
+            continue
+        if not (clock_time(9, 0) <= candle_at_kst.time().replace(tzinfo=None) <= clock_time(9, 1, 59)):
+            continue
+        raw_volume = candle.get("volume")
+        try:
+            volume = float(str(raw_volume).replace(",", ""))
+        except (TypeError, ValueError):
+            continue
+        if volume <= 0:
+            zero_volume_open_seen = True
+            continue
+        first_minutes.append((candle_at_kst, candle, volume))
+    if not first_minutes:
+        if zero_volume_open_seen:
+            raise NoRegularOpeningTrade("09:01 first-minute candle has zero volume")
+        return None
+    first_minute_at, first_minute, first_minute_volume = min(first_minutes, key=lambda item: item[0])
+    open_price = parse_positive_float(first_minute.get("openPrice") or first_minute.get("open_price"))
+    if open_price is None:
+        return None
+    return EntryPriceSnapshot(
+        open_price=open_price,
+        open_timestamp=first_minute_at.isoformat(),
+        previous_close=previous_close,
+        previous_close_timestamp=str(previous_candle.get("timestamp") or ""),
+        daily_open_price=daily_open_price,
+        open_volume=first_minute_volume,
+        close_price=parse_positive_float(first_minute.get("closePrice") or first_minute.get("close_price")),
+        high_price=parse_positive_float(first_minute.get("highPrice") or first_minute.get("high_price")),
+        low_price=parse_positive_float(first_minute.get("lowPrice") or first_minute.get("low_price")),
+    )
+
+
+def previous_close_basis_diff_pct(db_previous_close: float, api_previous_close: float) -> float:
+    return abs(float(db_previous_close) - float(api_previous_close)) / float(api_previous_close) * 100.0
+
+
+def append_entry_price_audit(record: dict) -> None:
+    payload = {
+        "captured_at": datetime.now().astimezone(KST).isoformat(),
+        "strategy_name": STRATEGY_NAME,
+        **record,
+    }
+    try:
+        simple_gap_state.append_event(ENTRY_PRICE_AUDIT_LOG, payload)
+    except OSError as error:
+        print(f"[진입가격 감사로그 실패] {type(error).__name__}: {error} / 신규 주문 차단")
+        raise
+
+
+def candidate_entry_audit_fields(target: dict) -> dict:
+    return {
+        "first_minute_open": target.get("open_price"),
+        "first_minute_close": target.get("first_minute_close"),
+        "first_minute_return_pct": target.get("first_minute_return_pct"),
+        "first_minute_volume": target.get("open_volume"),
+        "gap_pct": target.get("gap_pct"),
+        "last_price_at_scan": target.get("last_price"),
+        "observed_buy_quote": target.get("observed_buy_quote"),
+        "buy_quote_drift_pct": target.get("buy_quote_drift_pct"),
+    }
 
 
 def load_strategy_state() -> dict | None:
@@ -1294,9 +1502,16 @@ def run_buy(
         'provisional_gap_hits': 0,
         'daily_open_calls': 0,
         'daily_open_missing': 0,
+        'entry_reference_errors': 0,
+        'entry_reference_missing': 0,
+        'zero_volume_open_exclusions': 0,
         'daily_open_confirmed_hits': 0,
         'gap_integrity_exclusions': 0,
+        'price_basis_exclusions': 0,
+        'daily_open_reconciliations': 0,
+        'verification_deadline_reached': 0,
     }
+    verification_deadline_reached = False
     scan_started = time.perf_counter()
     print("실시간 현재가 수집 및 갭 하락 검사 시작...")
 
@@ -1331,18 +1546,119 @@ def run_buy(
                     continue
                 perf['provisional_gap_hits'] += 1
 
-                # 최종 갭 계산/주문가는 당일 일봉 시가 기준 (백테스트 조건과 일치). lastPrice로 폴백 금지.
+                if live_submission and not live_buy_window_allows(settings, datetime.now().astimezone(KST)):
+                    verification_deadline_reached = True
+                    perf['verification_deadline_reached'] = 1
+                    break
+
+                # 최종 갭은 첫 1분봉 시가와 동일 수정주가 응답의 전일 종가로 계산한다.
+                # 09:01 당일 일봉 시가는 잠정 현재가로 시작했다가 사후 변경될 수 있다.
                 perf['daily_open_calls'] += 1
-                open_price = get_today_open_price(client, sym)
-                if open_price is None:
+                try:
+                    entry_snapshot = get_entry_price_snapshot(
+                        client,
+                        sym,
+                        today=trade_date,
+                        previous_business_day=market_snapshot.previous_business_day,
+                    )
+                except NoRegularOpeningTrade as error:
                     perf['daily_open_missing'] += 1
-                    print(f"  ⏭️ [{sym}] 당일 일봉 시가 확인 실패 → 백테스트 불일치 방지를 위해 제외")
+                    perf['entry_reference_missing'] += 1
+                    perf['zero_volume_open_exclusions'] += 1
+                    append_entry_price_audit({
+                        "trade_date": trade_date,
+                        "symbol": sym,
+                        "db_previous_close": prev_close,
+                        "last_price": last_price,
+                        "decision": "excluded_no_regular_opening_trade",
+                        "error": str(error),
+                    })
+                    print(f"  ⏭️ [{sym}] 09:01 첫 1분봉 거래량이 0이라 정규장 시가 미확정 → 제외")
+                    continue
+                except (TossApiError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
+                    perf['daily_open_missing'] += 1
+                    perf['entry_reference_errors'] += 1
+                    append_entry_price_audit({
+                        "trade_date": trade_date,
+                        "symbol": sym,
+                        "db_previous_close": prev_close,
+                        "last_price": last_price,
+                        "decision": "excluded_entry_reference_error",
+                        "error": f"{type(error).__name__}: {str(error)[:200]}",
+                    })
+                    print(f"  ⏭️ [{sym}] 진입가격 API 교차검증 실패 → 제외: {type(error).__name__}: {error}")
+                    continue
+                if entry_snapshot is None:
+                    perf['daily_open_missing'] += 1
+                    perf['entry_reference_missing'] += 1
+                    append_entry_price_audit({
+                        "trade_date": trade_date,
+                        "symbol": sym,
+                        "db_previous_close": prev_close,
+                        "last_price": last_price,
+                        "decision": "excluded_entry_reference_missing",
+                    })
+                    print(f"  ⏭️ [{sym}] 첫 1분봉 시가 또는 동일 기준 전일 종가 확인 실패 → 제외")
                     continue
 
-                gap = (open_price - prev_close) / prev_close
+                basis_diff_pct = previous_close_basis_diff_pct(prev_close, entry_snapshot.previous_close)
+                daily_open_diff_pct = None
+                if entry_snapshot.daily_open_price is not None:
+                    daily_open_diff_pct = (
+                        abs(entry_snapshot.daily_open_price - entry_snapshot.open_price)
+                        / entry_snapshot.open_price
+                        * 100.0
+                    )
+                    if daily_open_diff_pct > MARKET_PRICE_CROSSCHECK_MAX_PCT * 100.0:
+                        perf['daily_open_reconciliations'] += 1
+                        print(
+                            f"  🔎 [{sym}] 09:01 잠정 일봉시가 {entry_snapshot.daily_open_price:,.0f}원 대신 "
+                            f"첫 1분봉 시가 {entry_snapshot.open_price:,.0f}원 사용 "
+                            f"(차이 {daily_open_diff_pct:.2f}%)"
+                        )
+
+                audit_record = {
+                    "trade_date": trade_date,
+                    "symbol": sym,
+                    "last_price": last_price,
+                    "db_previous_close": prev_close,
+                    "api_previous_close": entry_snapshot.previous_close,
+                    "previous_close_timestamp": entry_snapshot.previous_close_timestamp,
+                    "previous_close_basis_diff_pct": basis_diff_pct,
+                    "first_minute_open": entry_snapshot.open_price,
+                    "first_minute_close": entry_snapshot.close_price,
+                    "first_minute_high": entry_snapshot.high_price,
+                    "first_minute_low": entry_snapshot.low_price,
+                    "first_minute_return_pct": (
+                        (entry_snapshot.close_price - entry_snapshot.open_price)
+                        / entry_snapshot.open_price
+                        * 100.0
+                        if entry_snapshot.close_price is not None
+                        else None
+                    ),
+                    "first_minute_timestamp": entry_snapshot.open_timestamp,
+                    "first_minute_volume": entry_snapshot.open_volume,
+                    "daily_open_observed": entry_snapshot.daily_open_price,
+                    "daily_open_diff_pct": daily_open_diff_pct,
+                    "adjusted": entry_snapshot.adjusted,
+                }
+                if basis_diff_pct > PREVIOUS_CLOSE_BASIS_MAX_PCT * 100.0:
+                    perf['price_basis_exclusions'] += 1
+                    append_entry_price_audit({**audit_record, "decision": "excluded_previous_close_basis_mismatch"})
+                    print(
+                        f"  ⏭️ [{sym}] DB 전일종가 {prev_close:,.0f}원과 동일 API 수정주가 종가 "
+                        f"{entry_snapshot.previous_close:,.0f}원이 달라 제외 "
+                        f"(차이 {basis_diff_pct:.2f}%, 허용 {PREVIOUS_CLOSE_BASIS_MAX_PCT * 100:.2f}%)"
+                    )
+                    continue
+
+                open_price = entry_snapshot.open_price
+                comparable_prev_close = entry_snapshot.previous_close
+                gap = (open_price - comparable_prev_close) / comparable_prev_close
 
                 if is_noncomparable_base_gap(gap):
                     perf['gap_integrity_exclusions'] += 1
+                    append_entry_price_audit({**audit_record, "gap_pct": gap * 100.0, "decision": "excluded_gap_integrity"})
                     print(
                         f"  ⏭️ [{sym}] raw 시가 갭 {gap * 100:.2f}%가 "
                         f"데이터 무결성 안전선 {MIN_RAW_ENTRY_GAP * 100:.0f}% 미만이라 제외 "
@@ -1351,17 +1667,31 @@ def run_buy(
                     continue
                 if is_entry_gap_candidate(gap):
                     perf['daily_open_confirmed_hits'] += 1
+                    append_entry_price_audit({**audit_record, "gap_pct": gap * 100.0, "decision": "candidate"})
                     triggered.append({
                         'symbol': sym,
                         'name': p.get('name', sym),
                         'open_price': open_price,
                         'last_price': last_price,
-                        'prev_close': prev_close,
+                        'prev_close': comparable_prev_close,
+                        'db_prev_close': prev_close,
+                        'open_timestamp': entry_snapshot.open_timestamp,
+                        'open_volume': entry_snapshot.open_volume,
+                        'first_minute_close': entry_snapshot.close_price,
+                        'first_minute_high': entry_snapshot.high_price,
+                        'first_minute_low': entry_snapshot.low_price,
+                        'first_minute_return_pct': audit_record['first_minute_return_pct'],
+                        'daily_open_price': entry_snapshot.daily_open_price,
+                        'previous_close_basis_diff_pct': basis_diff_pct,
                         'gap_pct': gap * 100.0,
                     })
-        except Exception as e:
+                else:
+                    append_entry_price_audit({**audit_record, "gap_pct": gap * 100.0, "decision": "excluded_gap_threshold"})
+        except (TossApiError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             print(f"[경고] 시세 조회 실패 청크 (첫종목: {chunk[0]}): {e}")
             continue
+        if verification_deadline_reached:
+            break
         time.sleep(0.5)
 
     scan_elapsed = time.perf_counter() - scan_started
@@ -1372,13 +1702,24 @@ def run_buy(
         f"provisional_gap_hits={perf['provisional_gap_hits']} "
         f"daily_open_calls={perf['daily_open_calls']} "
         f"daily_open_missing={perf['daily_open_missing']} "
+        f"entry_reference_errors={perf['entry_reference_errors']} "
+        f"entry_reference_missing={perf['entry_reference_missing']} "
+        f"zero_volume_open_exclusions={perf['zero_volume_open_exclusions']} "
         f"daily_open_confirmed_hits={perf['daily_open_confirmed_hits']} "
         f"gap_integrity_exclusions={perf['gap_integrity_exclusions']} "
+        f"price_basis_exclusions={perf['price_basis_exclusions']} "
+        f"daily_open_reconciliations={perf['daily_open_reconciliations']} "
+        f"verification_deadline_reached={perf['verification_deadline_reached']} "
         f"scan_elapsed={scan_elapsed:.2f}s"
     )
     print(f"갭 하락 {abs(GAP_THRESHOLD) * 100:.1f}% 돌파 종목 수: {len(triggered)}개")
 
     triggered.sort(key=lambda x: (x['open_price'], x['symbol']))
+
+    if verification_deadline_reached:
+        record_breadth_shadow_skipped(trade_date, "09:05 진입가격 검증 마감")
+        print("[진입가격 검증 실패] 스캔 중 09:05가 지나 전체 후보 비교를 완료하지 못해 주문을 차단합니다.")
+        return
 
     if not triggered:
         collect_breadth_shadow_snapshot(
@@ -1388,19 +1729,39 @@ def run_buy(
             base_symbols=set(base_map),
             base_quote_rows=base_quote_rows,
         )
-        print("매수 진입 조건을 통과한 최종 종목이 없습니다.")
+        reference_failures = perf['entry_reference_errors'] + perf['entry_reference_missing']
+        if perf['provisional_gap_hits'] > 0 and reference_failures == perf['provisional_gap_hits']:
+            print(
+                "[진입가격 검증 실패] 모든 잠정 후보의 첫 1분봉 또는 동일 기준 전일 종가를 "
+                "확인하지 못해 주문을 차단합니다."
+            )
+        else:
+            print("매수 진입 조건을 통과한 최종 종목이 없습니다.")
         return
 
     print("\n=== 최종 진입 대기 종목 (상위 5개) ===")
     for f in triggered[:5]:
-        print(f"  [{f['symbol']}] {f['name']} | 갭률: {f['gap_pct']:.2f}% | 시가: {f['open_price']:,}원 | 현재가: {f['last_price']:,}원 | 전일종가: {f['prev_close']:,}원")
+        print(
+            f"  [{f['symbol']}] {f['name']} | 갭률: {f['gap_pct']:.2f}% | "
+            f"시가: {f['open_price']:,}원 | 현재가: {f['last_price']:,}원 | "
+            f"전일종가: {f['prev_close']:,}원 | 시가소스: 첫 1분봉"
+        )
 
     # 1종목 집중 매수: 최상위 1종목에 예산 전액 투입.
     # 단, Toss 매수 유의사항(투자경고/단기과열/VI 등)은 주문 전 fail-closed로 제외.
     orders_to_send = []
-    for target in triggered:
+    for candidate_rank, target in enumerate(triggered, 1):
+        target['candidate_rank'] = candidate_rank
         warnings = blocking_warnings_for_symbol(client, target['symbol'])
         if warnings:
+            append_entry_price_audit({
+                "trade_date": trade_date,
+                "symbol": target['symbol'],
+                "candidate_rank": candidate_rank,
+                **candidate_entry_audit_fields(target),
+                "decision": "excluded_warning",
+                "warnings": warnings,
+            })
             print(f"  ⛔ [{target['symbol']}] {target['name']} 매수 유의사항 필터 제외: {', '.join(warnings)}")
             time.sleep(0.25)
             continue
@@ -1408,8 +1769,23 @@ def run_buy(
 
         limit_price = acceptable_buy_limit_price(client, target)
         if limit_price is None:
+            append_entry_price_audit({
+                "trade_date": trade_date,
+                "symbol": target['symbol'],
+                "candidate_rank": candidate_rank,
+                **candidate_entry_audit_fields(target),
+                "decision": "excluded_quote_drift",
+            })
             continue
         if remaining_budget < limit_price:
+            append_entry_price_audit({
+                "trade_date": trade_date,
+                "symbol": target['symbol'],
+                "candidate_rank": candidate_rank,
+                **candidate_entry_audit_fields(target),
+                "limit_price": limit_price,
+                "decision": "excluded_budget",
+            })
             print(f"  ⏭️ [{target['symbol']}] {target['name']} 매수 지정가 {limit_price:,}원이 예산 {remaining_budget:,.0f}원 초과로 제외")
             continue
 
@@ -1418,6 +1794,16 @@ def run_buy(
             cost = qty * limit_price
             remaining_budget -= cost
             target['limit_price'] = limit_price
+            append_entry_price_audit({
+                "trade_date": trade_date,
+                "symbol": target['symbol'],
+                "candidate_rank": candidate_rank,
+                **candidate_entry_audit_fields(target),
+                "limit_price": limit_price,
+                "quantity": qty,
+                "allocated_amount": cost,
+                "decision": "selected_for_order",
+            })
             orders_to_send.append((target, qty, cost))
             break  # 최상위 1종목만 매수하고 종료
 
@@ -1447,6 +1833,23 @@ def run_buy(
                 now=submitted_at,
                 order_payload=payload,
             )
+            state["entry_price_snapshot"] = {
+                "first_minute_open": target["open_price"],
+                "first_minute_timestamp": target.get("open_timestamp"),
+                "first_minute_volume": target.get("open_volume"),
+                "first_minute_close": target.get("first_minute_close"),
+                "first_minute_high": target.get("first_minute_high"),
+                "first_minute_low": target.get("first_minute_low"),
+                "first_minute_return_pct": target.get("first_minute_return_pct"),
+                "observed_buy_quote": target.get("observed_buy_quote"),
+                "buy_quote_drift_pct": target.get("buy_quote_drift_pct"),
+                "daily_open_observed": target.get("daily_open_price"),
+                "api_previous_close": target["prev_close"],
+                "db_previous_close": target.get("db_prev_close"),
+                "previous_close_basis_diff_pct": target.get("previous_close_basis_diff_pct"),
+                "last_price_at_scan": target.get("last_price"),
+                "candidate_rank": target.get("candidate_rank"),
+            }
             save_strategy_state(state, event="buy_submitting")
         try:
             print(
